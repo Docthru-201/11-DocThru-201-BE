@@ -1,0 +1,69 @@
+{
+  "name": "11-docthru-201-be",
+  "version": "1.0.0",
+  "description": "개발 문서 번역 챌린지 서비스 '독스루(DocThru)'의 백엔드 서버 레포지토리",
+  "type": "module",
+  "main": "./src/main.js",
+  "imports": {
+    "#generated/*": "./generated/*",
+    "#config": "./src/config/config.js",
+    "#db/*": "./src/db/*",
+    "#docs/*": "./src/docs/*",
+    "#repository": "./src/repository/index.js",
+    "#constants": "./src/common/constants/index.js",
+    "#exceptions": "./src/common/exceptions/index.js",
+    "#controllers": "./src/controllers/index.js",
+    "#controllers/*": "./src/controllers/*",
+    "#services": "./src/services/index.js",
+    "#middlewares": "./src/middlewares/index.js",
+    "#providers": "./src/providers/index.js"
+  },
+  "scripts": {
+    "dev": "nodemon --env-file=./env/.env.development ./src/main.js",
+    "prod": "node --env-file=./env/.env.production src/main.js",
+    "prisma:push": "dotenv -e ./env/.env.development -- prisma db push",
+    "prisma:migrate": "dotenv -e ./env/.env.development -- prisma migrate dev",
+    "prisma:studio": "dotenv -e ./env/.env.development -- prisma studio",
+    "prisma:generate": "dotenv -e ./env/.env.development -- prisma generate",
+    "seed": "pnpm run prisma:generate && node --env-file=./env/.env.development ./scripts/seed.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "keywords": [],
+  "author": "Docthru-201",
+  "license": "ISC",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "^7.4.2",
+    "awilix": "^13.0.3",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "pg": "^8.17.2",
+    "pino": "^10.3.1",
+    "swagger-ui-express": "^5.0.1",
+    "ulid": "^3.0.2",
+    "zod": "^4.3.6",
+    "zod-openapi": "^5.4.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@faker-js/faker": "^10.2.0",
+    "dotenv-cli": "^11.0.0",
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.3",
+    "nodemon": "^3.1.11",
+    "prettier": "^3.8.1",
+    "prisma": "^7.3.0"
+  }
+}
