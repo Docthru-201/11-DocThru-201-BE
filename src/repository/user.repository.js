@@ -1,56 +1,35 @@
-// src/repositories/UserRepository.js
-export class UserRepository {
-  #prisma;
-
+export class UsersRepository {
   constructor({ prisma }) {
-    this.#prisma = prisma;
+    this.prisma = prisma; // Prisma DB 인스턴스
   }
 
-  // 모든 유저 조회
-  findAll() {
-    return this.#prisma.user.findMany({
-      select: { id: true, email: true, nickname: true, createdAt: true },
+  // 1️⃣ 전체 유저 조회
+  findAllUsers() {
+    return this.prisma.user.findMany({
+      select: { id: true, nickname: true, image: true },
     });
   }
 
-  // ID로 유저 조회
-  findById(id) {
-    return this.#prisma.user.findUnique({
-      where: { id: Number(id) },
-      select: { id: true, email: true, nickname: true, createdAt: true },
-    });
+  // 2️⃣ ID로 유저 조회
+  findUserById(id) {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
-  // 이메일로 유저 조회 (로그인용)
-  findByEmail(email) {
-    return this.#prisma.user.findUnique({
-      where: { email },
-    });
-  }
-
-  // 유저 생성
-  create(data) {
-    // data: { email, nickname, password }
-    return this.#prisma.user.create({
+  // 3️⃣ 유저 정보 수정
+  updateUser(id, data) {
+    return this.prisma.user.update({
+      where: { id },
       data,
-      select: { id: true, email: true, nickname: true, createdAt: true },
     });
   }
 
-  // 유저 업데이트
-  update(id, data) {
-    // data: { nickname?, password? }
-    return this.#prisma.user.update({
-      where: { id: Number(id) },
-      data,
-      select: { id: true, email: true, nickname: true, createdAt: true },
-    });
+  // 4️⃣ 유저 삭제
+  deleteUser(id) {
+    return this.prisma.user.delete({ where: { id } });
   }
 
-  // 유저 삭제
-  delete(id) {
-    return this.#prisma.user.delete({
-      where: { id: Number(id) },
-    });
+  // 5️⃣ 이메일로 유저 조회 (추후 필요시)
+  findUserByEmail(email) {
+    return this.prisma.user.findUnique({ where: { email } });
   }
 }
