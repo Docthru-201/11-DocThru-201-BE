@@ -1,3 +1,6 @@
+// 수업시간에 했던 예제 코드입니다.
+// 참고하셔서 본인 파트 작성해주세요.
+
 import { ForbiddenException, NotFoundException } from '#exceptions';
 import { ERROR_MESSAGE } from '#constants';
 

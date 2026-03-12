@@ -1,10 +1,3 @@
-import {
-  ConflictException,
-  NotFoundException,
-  UnauthorizedException,
-} from '#exceptions';
-import { ERROR_MESSAGE } from '#constants';
-
 export class AuthService {
   #userRepository;
   #passwordProvider;
@@ -16,73 +9,9 @@ export class AuthService {
     this.#tokenProvider = tokenProvider;
   }
 
-  async signUp({ email, password, name }) {
-    const existingUser = await this.#userRepository.findByEmail(email);
-    if (existingUser) {
-      throw new ConflictException(ERROR_MESSAGE.EMAIL_ALREADY_EXISTS);
-    }
+  async signUp() {}
 
-    const hashedPassword = await this.#passwordProvider.hash(password);
+  async login() {}
 
-    const user = await this.#userRepository.create({
-      email,
-      password: hashedPassword,
-      name,
-    });
-
-    const tokens = this.#tokenProvider.generateTokens(user);
-
-    return { user, tokens };
-  }
-
-  async login({ email, password }) {
-    const authUser = await this.#userRepository.findByEmail(email, {
-      includePassword: true,
-    });
-
-    if (!authUser) {
-      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_CREDENTIALS);
-    }
-
-    const isPasswordValid = await this.#passwordProvider.compare(
-      password,
-      authUser.password,
-    );
-    if (!isPasswordValid) {
-      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_CREDENTIALS);
-    }
-
-    const user = await this.#userRepository.findById(authUser.id);
-    if (!user) {
-      throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND_FROM_TOKEN);
-    }
-
-    const tokens = this.#tokenProvider.generateTokens(user);
-
-    return { user, tokens };
-  }
-
-  async getMe(userId) {
-    const user = await this.#userRepository.findById(userId);
-    if (!user) {
-      throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
-    }
-    return user;
-  }
-
-  async refreshTokens(refreshToken) {
-    const payload = this.#tokenProvider.verifyRefreshToken(refreshToken);
-    if (!payload) {
-      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_TOKEN);
-    }
-
-    const user = await this.#userRepository.findById(payload.userId);
-    if (!user) {
-      throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND_FROM_TOKEN);
-    }
-
-    const tokens = this.#tokenProvider.generateTokens(user);
-
-    return { user, tokens };
-  }
+  async getMe() {}
 }
