@@ -1,4 +1,4 @@
-export class UserRepository {
+export class ChallengeRepository {
   #prisma;
 
   constructor({ prisma }) {
@@ -8,8 +8,6 @@ export class UserRepository {
   findMany() {}
 
   findById() {}
-
-  findByEmail() {}
 
   create() {}
 
