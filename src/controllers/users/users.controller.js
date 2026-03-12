@@ -8,7 +8,9 @@ export class UsersController extends BaseController {
     this.#usersService = usersService;
   }
 
-  routes() {}
+  routes() {
+    return this.router;
+  }
 
   async findAll(req, res) {}
 

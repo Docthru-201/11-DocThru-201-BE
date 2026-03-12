@@ -8,7 +8,9 @@ export class ProfilesController extends BaseController {
     this.#profilesService = profilesService;
   }
 
-  routes() {}
+  routes() {
+    return this.router;
+  }
 
   async getMyProfile(req, res) {}
 

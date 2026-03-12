@@ -5,7 +5,9 @@ export class AdminController extends BaseController {
     super();
   }
 
-  routes() {}
+  routes() {
+    return this.router;
+  }
 
   async getManagement(req, res) {}
 }
