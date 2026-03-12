@@ -1,15 +1,13 @@
-export class UserRepository {
+export class NotificationRepository {
   #prisma;
 
   constructor({ prisma }) {
     this.#prisma = prisma;
   }
 
-  findMany() {}
+  findManyByUserId() {}
 
   findById() {}
-
-  findByEmail() {}
 
   create() {}
 

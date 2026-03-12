@@ -1,15 +1,13 @@
-export class UserRepository {
+export class CommentRepository {
   #prisma;
 
   constructor({ prisma }) {
     this.#prisma = prisma;
   }
 
-  findMany() {}
+  findManyByWorkId() {}
 
   findById() {}
-
-  findByEmail() {}
 
   create() {}
 
