@@ -7,10 +7,6 @@ datasource db {
     provider = "postgresql"
 }
 
-//////////////////////////////////////////////////
-// ENUMS
-//////////////////////////////////////////////////
-
 enum Role {
     USER
     ADMIN
@@ -38,6 +34,7 @@ enum ChallengeStatus {
     PENDING_APPROVAL
     RECRUITING
     CLOSED
+    DELETED
 }
 
 enum Category {
@@ -52,16 +49,6 @@ enum Type {
     MODERN_JS
     WEB
 }
-
-enum ApplicationStatus {
-    PENDING
-    APPROVED
-    REJECTED
-}
-
-//////////////////////////////////////////////////
-// USER DOMAIN
-//////////////////////////////////////////////////
 
 model User {
     id String @id @default(ulid())
@@ -84,7 +71,6 @@ model User {
     refreshTokens RefreshToken[]
     socials       SocialAccount[]
 
-    applications Application[]
     participates Participant[]
     works        Work[]
 
@@ -107,10 +93,6 @@ model Profile {
 
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
-
-//////////////////////////////////////////////////
-// AUTH DOMAIN
-//////////////////////////////////////////////////
 
 model RefreshToken {
     id String @id @default(ulid())
@@ -141,10 +123,6 @@ model SocialAccount {
     @@unique([userId, provider])
 }
 
-//////////////////////////////////////////////////
-// CHALLENGE DOMAIN
-//////////////////////////////////////////////////
-
 model Challenge {
     id String @id @default(ulid())
 
@@ -161,36 +139,16 @@ model Challenge {
     deadline        DateTime
     maxParticipants Int
 
-    status ChallengeStatus @default(PENDING_APPROVAL)
+    status        ChallengeStatus @default(PENDING_APPROVAL)
+    declineReason String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     // relations
     author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-    applications Application[]
     participants Participant[]
     works        Work[]
-}
-
-model Application {
-    id String @id @default(ulid())
-
-    challengeId String
-    userId      String
-
-    message String
-
-    status ApplicationStatus @default(PENDING)
-
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    deletedAt DateTime?
-
-    challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    @@unique([challengeId, userId])
 }
 
 model Participant {
@@ -207,10 +165,6 @@ model Participant {
 
     @@unique([challengeId, userId])
 }
-
-//////////////////////////////////////////////////
-// WORK DOMAIN
-//////////////////////////////////////////////////
 
 model Work {
     id String @id @default(ulid())
@@ -268,10 +222,6 @@ model Like {
 
     @@unique([workId, userId])
 }
-
-//////////////////////////////////////////////////
-// NOTIFICATION
-//////////////////////////////////////////////////
 
 model Notification {
     id String @id @default(ulid())
