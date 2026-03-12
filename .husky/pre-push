@@ -1,4 +1,2 @@
-
-
 echo "husky : 🚀 Push 전 전체 린트 검사를 시작합니다..."
 pnpm run lint
