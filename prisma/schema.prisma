@@ -7,12 +7,238 @@ datasource db {
     provider = "postgresql"
 }
 
+enum Role {
+    USER
+    ADMIN
+}
+
+enum Grade {
+    NORMAL
+    EXPERT
+}
+
+enum AuthProvider {
+    GOOGLE
+}
+
+enum NotificationType {
+    NEW_WORK
+    NEW_COMMENT
+    NEW_REPLY
+    STATUS_CHANGE
+    DEADLINE
+    ADMIN_ACTION
+}
+
+enum ChallengeStatus {
+    PENDING_APPROVAL
+    RECRUITING
+    CLOSED
+    DELETED
+}
+
+enum Category {
+    DOCUMENT
+    BLOG
+}
+
+enum Type {
+    NEXT_JS
+    API
+    CAREER
+    MODERN_JS
+    WEB
+}
+
 model User {
-    id       Int     @id @default(autoincrement())
+    id String @id @default(ulid())
+
+    role  Role  @default(USER)
+    grade Grade @default(NORMAL)
+
     email    String  @unique
-    name     String?
-    password String
+    password String?
+    nickname String  @unique
+    image    String?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    // relations
+    profile Profile?
+
+    refreshTokens RefreshToken[]
+    socials       SocialAccount[]
+
+    participates Participant[]
+    works        Work[]
+
+    comments Comment[]
+    likes    Like[]
+
+    notifications Notification[]
+    challenges    Challenge[]
+}
+
+model Profile {
+    id     String @id @default(ulid())
+    userId String @unique
+
+    introduction String?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+    id String @id @default(ulid())
+
+    userId String
+    token  String  @unique
+    device String?
+
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SocialAccount {
+    id String @id @default(ulid())
+
+    userId String
+
+    provider   AuthProvider
+    providerId String
+
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerId])
+    @@unique([userId, provider])
+}
+
+model Challenge {
+    id String @id @default(ulid())
+
+    authorId String
+
+    title       String
+    originalUrl String
+
+    type     Type
+    category Category
+
+    description String
+
+    deadline        DateTime
+    maxParticipants Int
+
+    status        ChallengeStatus @default(PENDING_APPROVAL)
+    declineReason String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    // relations
+    author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    participants Participant[]
+    works        Work[]
+}
+
+model Participant {
+    id String @id @default(ulid())
+
+    challengeId String
+    userId      String
+
+    joinedAt DateTime @default(now())
+
+    challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    work      Work?
+
+    @@unique([challengeId, userId])
+}
+
+model Work {
+    id String @id @default(ulid())
+
+    challengeId   String
+    participantId String?
+
+    content String @db.Text
+
+    likeCount Int @default(0)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    challenge   Challenge    @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+    participant Participant? @relation(fields: [participantId], references: [id], onDelete: SetNull)
+
+    comments Comment[]
+    likes    Like[]
+    user     User?     @relation(fields: [userId], references: [id])
+    userId   String?
+
+    @@unique([participantId])
+}
+
+model Comment {
+    id String @id @default(ulid())
+
+    workId   String
+    authorId String?
+
+    content String
+
+    parentId String?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    parent  Comment?  @relation("ReplyTo", fields: [parentId], references: [id], onDelete: SetNull)
+    replies Comment[] @relation("ReplyTo")
+
+    work   Work  @relation(fields: [workId], references: [id], onDelete: Cascade)
+    author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+}
+
+model Like {
+    workId String
+    userId String
+
+    createdAt DateTime @default(now())
+
+    work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([workId, userId])
+}
+
+model Notification {
+    id String @id @default(ulid())
+
+    userId String
+
+    message String
+
+    targetType NotificationType
+
+    targetId  String?
+    targetUrl String?
+
+    isRead Boolean   @default(false)
+    readAt DateTime?
+
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
