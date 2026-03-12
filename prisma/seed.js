@@ -10,7 +10,11 @@ class Seeder {
   #numChallengesToCreate;
   #hashedPassword;
 
-  constructor(prisma, numUsersToCreate = seedConstants.USERS_COUNT, numChallengesToCreate = seedConstants.CHALLENGES_COUNT) {
+  constructor(
+    prisma,
+    numUsersToCreate = seedConstants.USERS_COUNT,
+    numChallengesToCreate = seedConstants.CHALLENGES_COUNT,
+  ) {
     this.#prisma = prisma;
     this.#numUsersToCreate = numUsersToCreate;
     this.#numChallengesToCreate = numChallengesToCreate;
