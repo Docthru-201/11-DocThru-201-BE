@@ -1,0 +1,2 @@
+echo "husky : 🎨 커밋 전 변경된 파일에 Prettier를 적용합니다..."
+npx lint-staged
