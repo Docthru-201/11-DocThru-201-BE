@@ -1,0 +1,17 @@
+//저장할 때 eslint 설정들을 자동적용 옵션
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "nextjs",
+    "typescript",
+    "typescriptreact",
+    "javascript.module",
+    "markdown"
+  ]
+}
