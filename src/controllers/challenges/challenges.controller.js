@@ -1,11 +1,11 @@
 import { BaseController } from '#controllers/base.controller.js';
 
-export class UsersController extends BaseController {
-  #usersService;
+export class ChallengesController extends BaseController {
+  #challengesService;
 
-  constructor({ usersService }) {
+  constructor({ challengesService }) {
     super();
-    this.#usersService = usersService;
+    this.#challengesService = challengesService;
   }
 
   routes() {}
@@ -19,5 +19,6 @@ export class UsersController extends BaseController {
   async update(req, res) {}
 
   async delete(req, res) {}
-}
 
+  async getMyChallenges(req, res) {}
+}

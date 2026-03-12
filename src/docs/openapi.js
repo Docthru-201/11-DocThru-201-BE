@@ -1,11 +1,14 @@
 import { z } from 'zod';
 import { createDocument } from 'zod-openapi';
-import { signUpSchema, loginSchema } from '#controllers/auth/dto/auth.dto.js';
+import {
+  signUpSchema,
+  loginSchema,
+} from '#controllers/_example_auth/dto/auth.dto.js';
 import {
   createUserSchema,
   idParamSchema,
   updateUserSchema,
-} from '#controllers/users/dto/users.dto.js';
+} from '#controllers/_example_users/dto/users.dto.js';
 
 const userResponseSchema = z
   .object({
