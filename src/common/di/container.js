@@ -9,6 +9,7 @@ import { prisma } from '#db/prisma.js';
 import {
   UserRepository,
   ProfileRepository,
+  AuthRepository,
   ChallengeRepository,
   ParticipantRepository,
   WorkRepository,
@@ -38,14 +39,6 @@ import {
   LikesController,
   NotificationsController,
   AdminController,
-  Controller,
-} from '#controllers';
-import { UserRepository, AuthRepository, ProfileRepository } from '#repository';
-import { AuthService, UsersService, ProfilesService } from '#services';
-import {
-  AuthController,
-  UsersController,
-  ProfilesController,
   Controller,
 } from '#controllers';
 import { PasswordProvider, TokenProvider, CookieProvider } from '#providers';
