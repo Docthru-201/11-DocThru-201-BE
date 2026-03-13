@@ -19,23 +19,7 @@ enum Grade {
 
 enum AuthProvider {
     GOOGLE
-    // 추후 확장 가능
-}
-
-enum NotificationType {
-    NEW_WORK // 본인 챌린지에 새로운 작업물 제출됨
-    NEW_COMMENT // 본인 작업물에 새로운 댓글 추가됨
-    NEW_REPLY // 본인 댓글에 새로운 대댓글 추가됨
-    CHALLENGE_APPROVAL_RESULT // 챌린지 승인 결과 알림 (승인/거절)
-    CLOSED // 본인의 챌린지가 마감됨
-    ADMIN_ACTION // 어드민에 의한 챌린지/피드백의 수정 및 삭제
-}
-
-enum ChallengeStatus {
-    PENDING // 승인 대기
-    APPROVED // 신청 승인
-    REJECTED // 신청 거절
-    DELETED // 어드민에 의한 삭제
+    // 추후 확장
 }
 
 enum Category {
@@ -49,6 +33,22 @@ enum Type {
     CAREER
     MODERN_JS
     WEB
+}
+
+enum ChallengeStatus {
+    PENDING // 승인 대기
+    APPROVED // 신청 승인
+    REJECTED // 신청 거절
+    DELETED // 어드민에 의한 삭제
+}
+
+enum NotificationType {
+    NEW_WORK // 본인 챌린지에 새로운 작업물 제출됨
+    NEW_COMMENT // 본인 작업물에 새로운 댓글 추가됨
+    NEW_REPLY // 본인 댓글에 새로운 대댓글 추가됨
+    CHALLENGE_APPROVAL_RESULT // 챌린지 승인 결과 알림 (승인/거절)
+    CLOSED // 본인의 챌린지가 마감됨
+    ADMIN_ACTION // 어드민에 의한 챌린지/피드백의 수정 및 삭제
 }
 
 model User {
@@ -225,11 +225,9 @@ model Like {
 model Notification {
     id String @id @default(ulid())
 
-    userId String
-
+    userId  String
+    type    NotificationType
     message String
-
-    type NotificationType
 
     targetId  String? // 알림과 관련된 대상 ID (댓글 ID, 챌린지 ID 등)
     targetUrl String? // 클릭 이동 경로
