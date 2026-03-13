@@ -147,8 +147,8 @@ export const ChallengeScalarFieldEnum = {
   isClosed: 'isClosed',
   declineReason: 'declineReason',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
+  updatedAt: 'updatedAt',
+} as const;
 
 export type ChallengeScalarFieldEnum =
   (typeof ChallengeScalarFieldEnum)[keyof typeof ChallengeScalarFieldEnum];
@@ -158,8 +158,8 @@ export const ParticipantScalarFieldEnum = {
   userId: 'userId',
   challengeId: 'challengeId',
   userId: 'userId',
-  joinedAt: 'joinedAt'
-} as const
+  joinedAt: 'joinedAt',
+} as const;
 
 export type ParticipantScalarFieldEnum =
   (typeof ParticipantScalarFieldEnum)[keyof typeof ParticipantScalarFieldEnum];
@@ -209,8 +209,8 @@ export const NotificationScalarFieldEnum = {
   targetUrl: 'targetUrl',
   isRead: 'isRead',
   readAt: 'readAt',
-  createdAt: 'createdAt'
-} as const
+  createdAt: 'createdAt',
+} as const;
 
 export type NotificationScalarFieldEnum =
   (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum];
