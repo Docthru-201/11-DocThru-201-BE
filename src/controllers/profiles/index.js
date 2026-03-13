@@ -1,2 +1,2 @@
-export * from './profiles.controller.js';
+export * from './profile.controller.js';
 

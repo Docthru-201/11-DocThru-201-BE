@@ -1,2 +1,2 @@
-export * from './notifications.controller.js';
+export * from './notification.controller.js';
 

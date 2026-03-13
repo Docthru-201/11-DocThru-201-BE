@@ -1,2 +1,2 @@
-export * from './works.controller.js';
+export * from './work.controller.js';
 

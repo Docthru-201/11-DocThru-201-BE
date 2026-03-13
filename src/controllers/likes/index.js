@@ -1,2 +1,2 @@
-export * from './likes.controller.js';
+export * from './like.controller.js';
 

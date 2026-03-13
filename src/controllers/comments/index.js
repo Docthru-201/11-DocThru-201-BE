@@ -1,2 +1,2 @@
-export * from './comments.controller.js';
+export * from './comment.controller.js';
 

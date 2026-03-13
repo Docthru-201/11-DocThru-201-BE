@@ -1,2 +1,2 @@
-export * from './challenges.controller.js';
+export * from './challenge.controller.js';
 

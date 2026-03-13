@@ -9,7 +9,7 @@
     "#config": "./src/config/config.js",
     "#db/*": "./src/db/*",
     "#docs/*": "./src/docs/*",
-    "#repository": "./src/repository/index.js",
+    "#repositories": "./src/repositories/index.js",
     "#constants": "./src/common/constants/index.js",
     "#exceptions": "./src/common/exceptions/index.js",
     "#controllers": "./src/controllers/index.js",
