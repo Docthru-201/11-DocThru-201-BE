@@ -1,4 +1,3 @@
-// src/repositories/AuthRepository.js
 export class AuthRepository {
   #prisma;
 
@@ -6,15 +5,24 @@ export class AuthRepository {
     this.#prisma = prisma;
   }
 
-  // 이메일 중복 체크
-  existsByEmail(email) {
+  findUserByEmail(email) {
     return this.#prisma.user.findUnique({
       where: { email },
-      select: { id: true },
     });
   }
 
-  // refresh token 저장
+  findUserByNickname(nickname) {
+    return this.#prisma.user.findUnique({
+      where: { nickname },
+    });
+  }
+
+  createUser(data) {
+    return this.#prisma.user.create({
+      data,
+    });
+  }
+
   saveRefreshToken(userId, token) {
     return this.#prisma.refreshToken.upsert({
       where: { userId },
@@ -23,14 +31,12 @@ export class AuthRepository {
     });
   }
 
-  // refresh token 조회
   findRefreshToken(userId) {
     return this.#prisma.refreshToken.findUnique({
       where: { userId },
     });
   }
 
-  // refresh token 삭제 (로그아웃)
   deleteRefreshToken(userId) {
     return this.#prisma.refreshToken.delete({
       where: { userId },

@@ -6,83 +6,89 @@ import {
 import { ERROR_MESSAGE } from '#constants';
 
 export class AuthService {
-  #userRepository;
+  #authRepository;
   #passwordProvider;
   #tokenProvider;
 
-  constructor({ userRepository, passwordProvider, tokenProvider }) {
-    this.#userRepository = userRepository;
+  constructor({ authRepository, passwordProvider, tokenProvider }) {
+    this.#authRepository = authRepository;
     this.#passwordProvider = passwordProvider;
     this.#tokenProvider = tokenProvider;
   }
 
-  async signUp({ email, password, name }) {
-    const existingUser = await this.#userRepository.findByEmail(email);
-    if (existingUser) {
+  async signup(data) {
+    const { email, nickname, password } = data;
+
+    const existEmail = await this.#authRepository.findUserByEmail(email);
+    if (existEmail) {
       throw new ConflictException(ERROR_MESSAGE.EMAIL_ALREADY_EXISTS);
     }
 
-    const hashedPassword = await this.#passwordProvider.hash(password);
+    const existNickname =
+      await this.#authRepository.findUserByNickname(nickname);
 
-    const user = await this.#userRepository.create({
+    if (existNickname) {
+      throw new ConflictException(ERROR_MESSAGE.NICKNAME_ALREADY_EXISTS);
+    }
+
+    const hashedPassword = await this.#passwordProvider.hashPassword(password);
+
+    const user = await this.#authRepository.createUser({
       email,
+      nickname,
       password: hashedPassword,
-      name,
     });
 
-    const tokens = this.#tokenProvider.generateTokens(user);
+    const { password: _pw, ...userWithoutPassword } = user;
 
-    return { user, tokens };
+    return userWithoutPassword;
   }
 
-  async login({ email, password }) {
-    const authUser = await this.#userRepository.findByEmail(email, {
-      includePassword: true,
-    });
+  async login(data) {
+    const { email, password } = data;
 
-    if (!authUser) {
-      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_CREDENTIALS);
-    }
+    const user = await this.#authRepository.findUserByEmail(email);
 
-    const isPasswordValid = await this.#passwordProvider.compare(
-      password,
-      authUser.password,
-    );
-    if (!isPasswordValid) {
-      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_CREDENTIALS);
-    }
-
-    const user = await this.#userRepository.findById(authUser.id);
     if (!user) {
-      throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND_FROM_TOKEN);
+      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
     }
 
-    const tokens = this.#tokenProvider.generateTokens(user);
+    const isMatch = await this.#passwordProvider.comparePassword(
+      password,
+      user.password,
+    );
 
-    return { user, tokens };
+    if (!isMatch) {
+      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
+    }
+
+    const accessToken = this.#tokenProvider.generateAccessToken(user.id);
+    const refreshToken = this.#tokenProvider.generateRefreshToken(user.id);
+
+    await this.#authRepository.saveRefreshToken(user.id, refreshToken);
+
+    const { password: _pw, ...userWithoutPassword } = user;
+
+    return {
+      user: userWithoutPassword,
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async logout(userId) {
+    await this.#authRepository.deleteRefreshToken(userId);
   }
 
   async getMe(userId) {
-    const user = await this.#userRepository.findById(userId);
+    const user = await this.#authRepository.findUserByEmail(userId);
+
     if (!user) {
       throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
     }
-    return user;
-  }
 
-  async refreshTokens(refreshToken) {
-    const payload = this.#tokenProvider.verifyRefreshToken(refreshToken);
-    if (!payload) {
-      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_TOKEN);
-    }
+    const { password, ...userWithoutPassword } = user;
 
-    const user = await this.#userRepository.findById(payload.userId);
-    if (!user) {
-      throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND_FROM_TOKEN);
-    }
-
-    const tokens = this.#tokenProvider.generateTokens(user);
-
-    return { user, tokens };
+    return userWithoutPassword;
   }
 }

@@ -3,6 +3,7 @@ import { BaseController } from './base.controller.js';
 
 export * from './auth/index.js';
 export * from './users/index.js';
+export * from './profiles/index.js';
 
 export class Controller extends BaseController {
   #authController;

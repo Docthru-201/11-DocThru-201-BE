@@ -10,10 +10,12 @@ const idParamSchema = z.object({
 
 export class UsersController extends BaseController {
   #usersService;
+  #profilesController;
 
-  constructor({ usersService }) {
+  constructor({ usersService, profilesController }) {
     super();
     this.#usersService = usersService;
+    this.#profilesController = profilesController;
   }
 
   routes() {
@@ -30,17 +32,17 @@ export class UsersController extends BaseController {
     this.router.get('/:id', validate('params', idParamSchema), (req, res) =>
       this.getUserById(req, res),
     );
-
+    this.router.use('/', this.#profilesController.routes());
     return this.router;
   }
 
   async getMe(req, res) {
-    const user = await this.#usersService.getMyInfo(req.user.id);
+    const user = await this.#usersService.getUserById(req.user.id);
     res.status(HTTP_STATUS.OK).json(user);
   }
 
   async updateMe(req, res) {
-    const updatedUser = await this.#usersService.updateMyInfo(
+    const updatedUser = await this.#usersService.updateUser(
       req.user.id,
       req.body,
     );
@@ -48,12 +50,12 @@ export class UsersController extends BaseController {
   }
 
   async deleteMe(req, res) {
-    await this.#usersService.deleteMyAccount(req.user.id);
+    await this.#usersService.deleteUser(req.user.id);
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 
   async getUserById(req, res) {
-    const user = await this.#usersService.getUserBasicInfo(req.params.id);
+    const user = await this.#usersService.getPublicProfile(req.params.id);
     res.status(HTTP_STATUS.OK).json(user);
   }
 }
