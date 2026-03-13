@@ -225,9 +225,9 @@ model Like {
 model Notification {
     id String @id @default(ulid())
 
-    userId  String
-    type    NotificationType
-    message String
+    userId String
+    type   NotificationType
+    // message String // TODO: 논의중인 사안
 
     targetId  String? // 알림과 관련된 대상 ID (댓글 ID, 챌린지 ID 등)
     targetUrl String? // 클릭 이동 경로
