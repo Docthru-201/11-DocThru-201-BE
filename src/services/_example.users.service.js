@@ -1,58 +1,69 @@
-import { ForbiddenException, NotFoundException } from '#exceptions';
+// src/services/users.service.js
+import { ConflictException, NotFoundException } from '#exceptions';
 import { ERROR_MESSAGE } from '#constants';
 
 export class UsersService {
-  #usersRepo;
-  #passwordProvider;
+  #userRepository;
 
-  constructor({ usersRepo, passwordProvider }) {
-    this.#usersRepo = usersRepo;
-    this.#passwordProvider = passwordProvider;
+  // 생성자 주입 이름을 userRepository로 변경하여 컨테이너와 일치시킵니다.
+  constructor({ userRepository }) {
+    this.#userRepository = userRepository;
   }
 
-  // 1️⃣ 내 기본 정보 조회
-  async getMyInfo(userId) {
-    const user = await this.#usersRepo.findUserById(userId);
-    if (!user) {
-      throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
-    }
-    return user;
-  }
-
-  // 2️⃣ 내 정보 수정 (닉네임, 이미지)
-  async updateMyInfo(userId, data) {
-    const user = await this.#usersRepo.findUserById(userId);
+  // 1️⃣ ID로 내 정보 조회 (전체 필드)
+  async getUserById(userId) {
+    const user = await this.#userRepository.findUserById(userId);
     if (!user) {
       throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
     }
 
-    return await this.#usersRepo.updateUser(userId, data);
+    // 비밀번호 제외하고 반환 (보안 강화)
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
-  // 3️⃣ 내 계정 삭제
-  async deleteMyAccount(userId) {
-    const user = await this.#usersRepo.findUserById(userId);
+  async updateUser(userId, data) {
+    const user = await this.#userRepository.findUserById(userId);
     if (!user) {
       throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
     }
 
-    await this.#usersRepo.deleteUser(userId);
+    if (data.nickname && data.nickname !== user.nickname) {
+      const exist = await this.#userRepository.findUserByNickname(
+        data.nickname,
+      );
+
+      if (exist) {
+        throw new ConflictException(ERROR_MESSAGE.NICKNAME_ALREADY_EXISTS);
+      }
+    }
+
+    return this.#userRepository.updateUser(userId, data);
   }
 
-  // 4️⃣ 특정 유저 기본 정보 조회
-  async getUserBasicInfo(userId) {
-    const user = await this.#usersRepo.findUserById(userId);
+  // 3️⃣ 계정 삭제
+  async deleteUser(userId) {
+    const user = await this.#userRepository.findUserById(userId);
     if (!user) {
       throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
     }
 
-    // 공개 가능한 기본 정보만 반환 (nickname, image 등)
+    return this.#userRepository.deleteUser(userId);
+  }
+
+  // 4️⃣ 다른 유저 공개 프로필 조회
+  async getPublicProfile(userId) {
+    const user = await this.#userRepository.findUserById(userId);
+    if (!user) {
+      throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
+    }
+
     const { id, nickname, image } = user;
     return { id, nickname, image };
   }
 
-  // 5️⃣ 전체 유저 조회 (필요시)
-  async listUsers() {
-    return await this.#usersRepo.findAllUsers();
+  // 5️⃣ 전체 유저 목록 조회
+  async getAllUsers() {
+    return this.#userRepository.findAllUsers();
   }
 }

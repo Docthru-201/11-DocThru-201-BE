@@ -1,21 +1,22 @@
 import { z } from 'zod';
 import { createDocument } from 'zod-openapi';
-import {
-  signUpSchema,
-  loginSchema,
-} from '#controllers/_example_auth/dto/auth.dto.js';
-import {
-  createUserSchema,
-  idParamSchema,
-  updateUserSchema,
-} from '#controllers/_example_users/dto/users.dto.js';
+import { signupSchema, loginSchema } from '#controllers/auth/dto/auth.dto.js';
+import { updateUserSchema } from '#controllers/users/dto/users.dto.js';
+
+const idParamSchema = z.object({
+  id: z.string().describe('사용자 ID'),
+});
 
 const userResponseSchema = z
   .object({
-    id: z.number().int().positive(),
+    id: z.string(), // z.number()에서 z.string()으로 변경!
     email: z.string().email(),
-    name: z.string().nullable(),
-    createdAt: z.string(),
+    nickname: z.string(),
+    image: z.string().nullable().optional(),
+    createdAt: z.string(), // ISOString 형태로 응답되므로 string 유지
+    // Role이나 Grade도 추가하고 싶다면 아래처럼 가능합니다.
+    role: z.enum(['USER', 'ADMIN']).optional(),
+    grade: z.enum(['NORMAL', 'EXPERT']).optional(),
   })
   .meta({
     id: 'UserResponse',
@@ -108,7 +109,7 @@ export const openApiDocument = createDocument({
           required: true,
           content: {
             'application/json': {
-              schema: signUpSchema,
+              schema: signupSchema,
             },
           },
         },
@@ -231,46 +232,8 @@ export const openApiDocument = createDocument({
           },
         },
       },
-      post: {
-        tags: ['Users'],
-        summary: '사용자 생성',
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: createUserSchema,
-            },
-          },
-        },
-        responses: {
-          201: {
-            description: '사용자 생성 성공',
-            content: {
-              'application/json': {
-                schema: userResponseSchema,
-              },
-            },
-          },
-          400: {
-            description: '입력값 검증 실패',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          409: {
-            description: '이메일 중복',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-        },
-      },
     },
-    '/api/users/{id}': {
+    '/api/users/me': {
       get: {
         tags: ['Users'],
         summary: '단일 사용자 조회',
