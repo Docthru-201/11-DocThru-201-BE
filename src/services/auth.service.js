@@ -55,8 +55,8 @@ export class AuthService {
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
     }
 
-    const accessToken = this.#tokenProvider.generateAccessToken(user.id);
-    const refreshToken = this.#tokenProvider.generateRefreshToken(user.id);
+    const accessToken = this.#tokenProvider.generateAccessToken(user);
+    const refreshToken = this.#tokenProvider.generateRefreshToken(user);
 
     await this.#authRepository.saveRefreshToken(user.id, refreshToken);
 
@@ -73,15 +73,42 @@ export class AuthService {
     await this.#authRepository.deleteRefreshToken(userId);
   }
 
-  async getMe(userId) {
-    const user = await this.#authRepository.findUserByEmail(userId);
+  async logoutAll(userId) {
+    await this.#authRepository.deleteRefreshToken(userId);
+  }
 
-    if (!user) {
-      throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
+  async refresh(refreshToken) {
+    if (!refreshToken) {
+      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_TOKEN);
     }
 
-    const { password, ...userWithoutPassword } = user;
+    const payload = this.#tokenProvider.verifyRefreshToken(refreshToken);
 
-    return userWithoutPassword;
+    if (!payload) {
+      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_TOKEN);
+    }
+
+    const savedToken = await this.#authRepository.findRefreshToken(
+      payload.userId,
+    );
+
+    if (!savedToken || savedToken.token !== refreshToken) {
+      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_TOKEN);
+    }
+
+    const user = { id: payload.userId };
+
+    const newAccessToken = this.#tokenProvider.generateAccessToken(user);
+    const newRefreshToken = this.#tokenProvider.generateRefreshToken(user);
+
+    await this.#authRepository.saveRefreshToken(
+      payload.userId,
+      newRefreshToken,
+    );
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
   }
 }
