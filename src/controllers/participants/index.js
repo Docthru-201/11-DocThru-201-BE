@@ -1,2 +1,2 @@
-export * from './participants.controller.js';
+export * from './participant.controller.js';
 
