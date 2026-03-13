@@ -32,8 +32,6 @@ export class AuthController extends BaseController {
 
     this.router.post('/refresh', (req, res) => this.refresh(req, res));
 
-    this.router.get('/me', needsLogin, (req, res) => this.getMe(req, res));
-
     return this.router;
   }
 
@@ -80,11 +78,5 @@ export class AuthController extends BaseController {
     this.#cookieProvider.setRefreshToken(res, newRefreshToken);
 
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
-  }
-
-  async getMe(req, res) {
-    const user = await this.#authService.getMe(req.user.id);
-
-    res.status(HTTP_STATUS.OK).json(user);
   }
 }
