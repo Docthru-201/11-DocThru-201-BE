@@ -26,4 +26,9 @@ export class CookieProvider {
     res.clearCookie('accessToken', { path: '/' });
     res.clearCookie('refreshToken', { path: '/' });
   }
+
+  // 🔹 새로 추가: 요청(req)에서 refreshToken 읽기
+  getRefreshToken(req) {
+    return req.cookies?.refreshToken;
+  }
 }
