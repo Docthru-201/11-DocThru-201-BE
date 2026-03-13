@@ -65,16 +65,24 @@ export class AuthController extends BaseController {
 
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
-
   async refresh(req, res) {
+    // 요청에서 기존 refreshToken 가져오기
     const refreshToken = this.#cookieProvider.getRefreshToken(req);
 
+    // authService를 통해 새로운 토큰 발급
     const { accessToken, refreshToken: newRefreshToken } =
       await this.#authService.refresh(refreshToken);
 
-    this.#cookieProvider.setAccessToken(res, accessToken);
-    this.#cookieProvider.setRefreshToken(res, newRefreshToken);
+    // 쿠키에도 토큰 세팅 (원하면)
+    this.#cookieProvider.setAuthCookies(res, {
+      accessToken,
+      refreshToken: newRefreshToken,
+    });
 
-    res.sendStatus(HTTP_STATUS.NO_CONTENT);
+    // ✅ HTTP 200 OK + JSON 바디로 새 토큰 반환
+    res.status(HTTP_STATUS.OK).json({
+      accessToken,
+      refreshToken: newRefreshToken,
+    });
   }
 }

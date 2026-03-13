@@ -15,6 +15,11 @@ export const ERROR_MESSAGE = {
   FAILED_TO_CREATE_USER: 'Failed to create user',
   FAILED_TO_UPDATE_USER: 'Failed to update user',
   FAILED_TO_DELETE_USER: 'Failed to delete user',
+  NICKNAME_ALREADY_EXISTS: 'Nickname already exists',
+  INVALID_LOGIN: 'Invalid login credentials',
+
+  // Profile 관련
+  PROFILE_NOT_FOUND: 'Profile not found',
 
   // Auth 관련
   NO_AUTH_TOKEN: 'No authentication token provided',

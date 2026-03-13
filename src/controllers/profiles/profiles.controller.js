@@ -5,7 +5,7 @@ import { updateProfileSchema } from './dto/profiles.dto.js';
 import { z } from 'zod';
 
 const userIdParamSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.string(),
 });
 
 export class ProfilesController extends BaseController {
