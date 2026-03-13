@@ -24,10 +24,13 @@ export class AuthRepository {
   }
 
   saveRefreshToken(userId, token) {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7일 후 만료 예시
+
     return this.#prisma.refreshToken.upsert({
       where: { userId },
-      update: { token },
-      create: { userId, token },
+      update: { token, expiresAt },
+      create: { userId, token, expiresAt },
     });
   }
 
