@@ -33,6 +33,11 @@
     "lint:fix": "eslint . --fix",
     "prepare": "husky"
   },
+  "lint-staged": {
+    "*.{js,jsx,mjs,json,md}": [
+      "pnpm format"
+    ]
+  },
   "keywords": [],
   "author": "Docthru-201",
   "license": "ISC",
