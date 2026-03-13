@@ -1,3 +1,5 @@
+export const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
 // 시드 생성 개수
 export const SEED_PASSWORD = 'Test1234!'; // 시드용 공통 비밀번호 (개발 환경 전용)
 
@@ -18,6 +20,8 @@ export const LIKERS_TAKE = 5;
 export const NOTIFICATIONS_PER_USER_MIN = 1;
 export const NOTIFICATIONS_PER_USER_MAX = 5;
 
+export const NOTIFICATION_RECENT_DAYS = 14;
+
 // ENUMS
 export const ROLES = ['USER', 'ADMIN'];
 export const DEFAULT_ROLE = ROLES[0];
@@ -25,28 +29,30 @@ export const DEFAULT_ROLE = ROLES[0];
 export const GRADES = ['NORMAL', 'EXPERT'];
 export const DEFAULT_GRADE = GRADES[0];
 
-export const CHALLENGE_TYPES = ['NEXT_JS', 'API', 'CAREER', 'MODERN_JS', 'WEB'];
-export const CHALLENGE_CATEGORIES = ['DOCUMENT', 'BLOG'];
-export const CHALLENGE_STATUSES = [
-  'PENDING_APPROVAL',
-  'RECRUITING',
-  'CLOSED',
-  'DELETED',
-];
-
-export const APPLICATION_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
-export const APPLICATION_STATUS_APPROVED = APPLICATION_STATUSES[1];
+export const AUTH_PROVIDERS = ['GOOGLE'];
 
 export const NOTIFICATION_TYPES = [
   'NEW_WORK',
   'NEW_COMMENT',
   'NEW_REPLY',
-  'STATUS_CHANGE',
-  'DEADLINE',
+  'CHALLENGE_APPROVAL_RESULT',
+  'CLOSED',
   'ADMIN_ACTION',
 ];
 
-export const AUTH_PROVIDERS = ['GOOGLE'];
+export const CHALLENGE_STATUSES = [
+  'PENDING',
+  'APPROVED',
+  'REJECTED',
+  'DELETED',
+];
+
+export const CHALLENGE_CATEGORIES = ['DOCUMENT', 'BLOG'];
+
+export const CHALLENGE_TYPES = ['NEXT_JS', 'API', 'CAREER', 'MODERN_JS', 'WEB'];
+
+export const APPLICATION_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
+export const APPLICATION_STATUS_APPROVED = APPLICATION_STATUSES[1];
 
 // 템플릿
 export const PROFILE_INTRO_TEMPLATES = [
@@ -157,4 +163,10 @@ export const NOTIFICATION_TEMPLATES = [
   '내 번역에 새로운 좋아요가 추가되었습니다.',
   '참여 중인 챌린지의 상태가 변경되었습니다.',
   '신청하신 챌린지가 마감되었습니다.',
+];
+
+export const DECLINE_REASON_TEMPLATES = [
+  '챌린지 주제와 관련이 없는 사이트입니다. 주제를 다시 검토해 신청해주세요.',
+  '독스루는 개발 문서 번역 플랫폼으로, 다른 종류의 번역 챌린지를 개최할 수 없음을 알려드립니다. 감사합니다.',
+  '저희 사이트의 목적과 맞지 않는 챌린지입니다.',
 ];
