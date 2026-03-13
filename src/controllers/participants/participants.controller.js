@@ -8,7 +8,9 @@ export class ParticipantsController extends BaseController {
     this.#participantsService = participantsService;
   }
 
-  routes() {}
+  routes() {
+    return this.router;
+  }
 
   async listParticipants(req, res) {}
 }

@@ -8,7 +8,9 @@ export class LikesController extends BaseController {
     this.#likesService = likesService;
   }
 
-  routes() {}
+  routes() {
+    return this.router;
+  }
 
   async count(req, res) {}
 

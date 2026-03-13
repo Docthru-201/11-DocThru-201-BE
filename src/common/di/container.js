@@ -6,9 +6,40 @@ import {
   Lifetime,
 } from 'awilix';
 import { prisma } from '#db/prisma.js';
-import { UserRepository } from '#repository';
-import { AuthService, UsersService } from '#services';
-import { AuthController, UsersController, Controller } from '#controllers';
+import {
+  UserRepository,
+  ProfileRepository,
+  ChallengeRepository,
+  ParticipantRepository,
+  WorkRepository,
+  CommentRepository,
+  LikeRepository,
+  NotificationRepository,
+} from '#repository';
+import {
+  AuthService,
+  UsersService,
+  ProfilesService,
+  ChallengesService,
+  ParticipantsService,
+  WorksService,
+  CommentsService,
+  LikesService,
+  NotificationsService,
+} from '#services';
+import {
+  AuthController,
+  UsersController,
+  ProfilesController,
+  ChallengesController,
+  ParticipantsController,
+  WorksController,
+  CommentsController,
+  LikesController,
+  NotificationsController,
+  AdminController,
+  Controller,
+} from '#controllers';
 import { PasswordProvider, TokenProvider, CookieProvider } from '#providers';
 import { AuthMiddleware } from '#middlewares';
 
@@ -19,27 +50,78 @@ export const createContainer = () => {
   });
 
   container.register({
-    // 1. Providers / Data Access
     prisma: asValue(prisma),
     userRepository: asClass(UserRepository, { lifetime: Lifetime.SINGLETON }),
+    profileRepository: asClass(ProfileRepository, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    challengeRepository: asClass(ChallengeRepository, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    participantRepository: asClass(ParticipantRepository, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    workRepository: asClass(WorkRepository, { lifetime: Lifetime.SINGLETON }),
+    commentRepository: asClass(CommentRepository, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    likeRepository: asClass(LikeRepository, { lifetime: Lifetime.SINGLETON }),
+    notificationRepository: asClass(NotificationRepository, {
+      lifetime: Lifetime.SINGLETON,
+    }),
     passwordProvider: asClass(PasswordProvider, {
       lifetime: Lifetime.SINGLETON,
     }),
     tokenProvider: asClass(TokenProvider, { lifetime: Lifetime.SINGLETON }),
     cookieProvider: asClass(CookieProvider, { lifetime: Lifetime.SINGLETON }),
 
-    // 2. Services
     authService: asClass(AuthService, { lifetime: Lifetime.SINGLETON }),
     usersService: asClass(UsersService, { lifetime: Lifetime.SINGLETON }),
+    profilesService: asClass(ProfilesService, { lifetime: Lifetime.SINGLETON }),
+    challengesService: asClass(ChallengesService, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    participantsService: asClass(ParticipantsService, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    worksService: asClass(WorksService, { lifetime: Lifetime.SINGLETON }),
+    commentsService: asClass(CommentsService, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    likesService: asClass(LikesService, { lifetime: Lifetime.SINGLETON }),
+    notificationsService: asClass(NotificationsService, {
+      lifetime: Lifetime.SINGLETON,
+    }),
 
-    // 3. Middlewares
     authMiddleware: asClass(AuthMiddleware, { lifetime: Lifetime.SINGLETON }),
 
-    // 4. Controllers
     authController: asClass(AuthController, { lifetime: Lifetime.SINGLETON }),
     usersController: asClass(UsersController, { lifetime: Lifetime.SINGLETON }),
+    profilesController: asClass(ProfilesController, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    challengesController: asClass(ChallengesController, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    participantsController: asClass(ParticipantsController, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    worksController: asClass(WorksController, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    commentsController: asClass(CommentsController, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    likesController: asClass(LikesController, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    notificationsController: asClass(NotificationsController, {
+      lifetime: Lifetime.SINGLETON,
+    }),
+    adminController: asClass(AdminController, {
+      lifetime: Lifetime.SINGLETON,
+    }),
 
-    // 5. Root Controller
     controller: asClass(Controller, { lifetime: Lifetime.SINGLETON }),
   });
 

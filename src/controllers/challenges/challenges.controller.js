@@ -8,7 +8,9 @@ export class ChallengesController extends BaseController {
     this.#challengesService = challengesService;
   }
 
-  routes() {}
+  routes() {
+    return this.router;
+  }
 
   async findAll(req, res) {}
 

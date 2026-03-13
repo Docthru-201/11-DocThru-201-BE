@@ -8,7 +8,9 @@ export class CommentsController extends BaseController {
     this.#commentsService = commentsService;
   }
 
-  routes() {}
+  routes() {
+    return this.router;
+  }
 
   async create(req, res) {}
 

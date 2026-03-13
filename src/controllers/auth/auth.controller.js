@@ -10,7 +10,9 @@ export class AuthController extends BaseController {
     this.#cookieProvider = cookieProvider;
   }
 
-  routes() {}
+  routes() {
+    return this.router;
+  }
 
   async signUp(req, res) {}
 

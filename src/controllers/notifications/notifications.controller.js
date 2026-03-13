@@ -8,7 +8,9 @@ export class NotificationsController extends BaseController {
     this.#notificationsService = notificationsService;
   }
 
-  routes() {}
+  routes() {
+    return this.router;
+  }
 
   async create(req, res) {}
 
