@@ -25,48 +25,49 @@ export type AggregateParticipant = {
 };
 
 export type ParticipantMinAggregateOutputType = {
-  id: string | null;
-  challengeId: string | null;
-  userId: string | null;
-  joinedAt: Date | null;
-};
+  id: string | null
+  challengeId: string | null
+  userId: string | null
+  joinedAt: Date | null
+}
 
 export type ParticipantMaxAggregateOutputType = {
-  id: string | null;
-  challengeId: string | null;
-  userId: string | null;
-  joinedAt: Date | null;
-};
+  id: string | null
+  challengeId: string | null
+  userId: string | null
+  joinedAt: Date | null
+}
 
 export type ParticipantCountAggregateOutputType = {
-  id: number;
-  challengeId: number;
-  userId: number;
-  joinedAt: number;
-  _all: number;
-};
+  id: number
+  challengeId: number
+  userId: number
+  joinedAt: number
+  _all: number
+}
+
 
 export type ParticipantMinAggregateInputType = {
-  id?: true;
-  challengeId?: true;
-  userId?: true;
-  joinedAt?: true;
-};
+  id?: true
+  challengeId?: true
+  userId?: true
+  joinedAt?: true
+}
 
 export type ParticipantMaxAggregateInputType = {
-  id?: true;
-  challengeId?: true;
-  userId?: true;
-  joinedAt?: true;
-};
+  id?: true
+  challengeId?: true
+  userId?: true
+  joinedAt?: true
+}
 
 export type ParticipantCountAggregateInputType = {
-  id?: true;
-  challengeId?: true;
-  userId?: true;
-  joinedAt?: true;
-  _all?: true;
-};
+  id?: true
+  challengeId?: true
+  userId?: true
+  joinedAt?: true
+  _all?: true
+}
 
 export type ParticipantAggregateArgs<
   ExtArgs extends runtime.Types.Extensions.InternalArgs =
@@ -148,14 +149,14 @@ export type ParticipantGroupByArgs<
 };
 
 export type ParticipantGroupByOutputType = {
-  id: string;
-  challengeId: string;
-  userId: string;
-  joinedAt: Date;
-  _count: ParticipantCountAggregateOutputType | null;
-  _min: ParticipantMinAggregateOutputType | null;
-  _max: ParticipantMaxAggregateOutputType | null;
-};
+  id: string
+  challengeId: string
+  userId: string
+  joinedAt: Date
+  _count: ParticipantCountAggregateOutputType | null
+  _min: ParticipantMinAggregateOutputType | null
+  _max: ParticipantMaxAggregateOutputType | null
+}
 
 type GetParticipantGroupByPayload<T extends ParticipantGroupByArgs> =
   Prisma.PrismaPromise<
@@ -171,119 +172,100 @@ type GetParticipantGroupByPayload<T extends ParticipantGroupByArgs> =
   >;
 
 export type ParticipantWhereInput = {
-  AND?: Prisma.ParticipantWhereInput | Prisma.ParticipantWhereInput[];
-  OR?: Prisma.ParticipantWhereInput[];
-  NOT?: Prisma.ParticipantWhereInput | Prisma.ParticipantWhereInput[];
-  id?: Prisma.StringFilter<'Participant'> | string;
-  challengeId?: Prisma.StringFilter<'Participant'> | string;
-  userId?: Prisma.StringFilter<'Participant'> | string;
-  joinedAt?: Prisma.DateTimeFilter<'Participant'> | Date | string;
-  challenge?: Prisma.XOR<
-    Prisma.ChallengeScalarRelationFilter,
-    Prisma.ChallengeWhereInput
-  >;
-  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
-  work?: Prisma.XOR<
-    Prisma.WorkNullableScalarRelationFilter,
-    Prisma.WorkWhereInput
-  > | null;
-};
+  AND?: Prisma.ParticipantWhereInput | Prisma.ParticipantWhereInput[]
+  OR?: Prisma.ParticipantWhereInput[]
+  NOT?: Prisma.ParticipantWhereInput | Prisma.ParticipantWhereInput[]
+  id?: Prisma.StringFilter<"Participant"> | string
+  challengeId?: Prisma.StringFilter<"Participant"> | string
+  userId?: Prisma.StringFilter<"Participant"> | string
+  joinedAt?: Prisma.DateTimeFilter<"Participant"> | Date | string
+  challenge?: Prisma.XOR<Prisma.ChallengeScalarRelationFilter, Prisma.ChallengeWhereInput>
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  work?: Prisma.XOR<Prisma.WorkNullableScalarRelationFilter, Prisma.WorkWhereInput> | null
+}
 
 export type ParticipantOrderByWithRelationInput = {
-  id?: Prisma.SortOrder;
-  challengeId?: Prisma.SortOrder;
-  userId?: Prisma.SortOrder;
-  joinedAt?: Prisma.SortOrder;
-  challenge?: Prisma.ChallengeOrderByWithRelationInput;
-  user?: Prisma.UserOrderByWithRelationInput;
-  work?: Prisma.WorkOrderByWithRelationInput;
-};
+  id?: Prisma.SortOrder
+  challengeId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  joinedAt?: Prisma.SortOrder
+  challenge?: Prisma.ChallengeOrderByWithRelationInput
+  user?: Prisma.UserOrderByWithRelationInput
+  work?: Prisma.WorkOrderByWithRelationInput
+}
 
-export type ParticipantWhereUniqueInput = Prisma.AtLeast<
-  {
-    id?: string;
-    challengeId_userId?: Prisma.ParticipantChallengeIdUserIdCompoundUniqueInput;
-    AND?: Prisma.ParticipantWhereInput | Prisma.ParticipantWhereInput[];
-    OR?: Prisma.ParticipantWhereInput[];
-    NOT?: Prisma.ParticipantWhereInput | Prisma.ParticipantWhereInput[];
-    challengeId?: Prisma.StringFilter<'Participant'> | string;
-    userId?: Prisma.StringFilter<'Participant'> | string;
-    joinedAt?: Prisma.DateTimeFilter<'Participant'> | Date | string;
-    challenge?: Prisma.XOR<
-      Prisma.ChallengeScalarRelationFilter,
-      Prisma.ChallengeWhereInput
-    >;
-    user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
-    work?: Prisma.XOR<
-      Prisma.WorkNullableScalarRelationFilter,
-      Prisma.WorkWhereInput
-    > | null;
-  },
-  'id' | 'challengeId_userId'
->;
+export type ParticipantWhereUniqueInput = Prisma.AtLeast<{
+  id?: string
+  challengeId_userId?: Prisma.ParticipantChallengeIdUserIdCompoundUniqueInput
+  AND?: Prisma.ParticipantWhereInput | Prisma.ParticipantWhereInput[]
+  OR?: Prisma.ParticipantWhereInput[]
+  NOT?: Prisma.ParticipantWhereInput | Prisma.ParticipantWhereInput[]
+  challengeId?: Prisma.StringFilter<"Participant"> | string
+  userId?: Prisma.StringFilter<"Participant"> | string
+  joinedAt?: Prisma.DateTimeFilter<"Participant"> | Date | string
+  challenge?: Prisma.XOR<Prisma.ChallengeScalarRelationFilter, Prisma.ChallengeWhereInput>
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  work?: Prisma.XOR<Prisma.WorkNullableScalarRelationFilter, Prisma.WorkWhereInput> | null
+}, "id" | "challengeId_userId">
 
 export type ParticipantOrderByWithAggregationInput = {
-  id?: Prisma.SortOrder;
-  challengeId?: Prisma.SortOrder;
-  userId?: Prisma.SortOrder;
-  joinedAt?: Prisma.SortOrder;
-  _count?: Prisma.ParticipantCountOrderByAggregateInput;
-  _max?: Prisma.ParticipantMaxOrderByAggregateInput;
-  _min?: Prisma.ParticipantMinOrderByAggregateInput;
-};
+  id?: Prisma.SortOrder
+  challengeId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  joinedAt?: Prisma.SortOrder
+  _count?: Prisma.ParticipantCountOrderByAggregateInput
+  _max?: Prisma.ParticipantMaxOrderByAggregateInput
+  _min?: Prisma.ParticipantMinOrderByAggregateInput
+}
 
 export type ParticipantScalarWhereWithAggregatesInput = {
-  AND?:
-    | Prisma.ParticipantScalarWhereWithAggregatesInput
-    | Prisma.ParticipantScalarWhereWithAggregatesInput[];
-  OR?: Prisma.ParticipantScalarWhereWithAggregatesInput[];
-  NOT?:
-    | Prisma.ParticipantScalarWhereWithAggregatesInput
-    | Prisma.ParticipantScalarWhereWithAggregatesInput[];
-  id?: Prisma.StringWithAggregatesFilter<'Participant'> | string;
-  challengeId?: Prisma.StringWithAggregatesFilter<'Participant'> | string;
-  userId?: Prisma.StringWithAggregatesFilter<'Participant'> | string;
-  joinedAt?: Prisma.DateTimeWithAggregatesFilter<'Participant'> | Date | string;
-};
+  AND?: Prisma.ParticipantScalarWhereWithAggregatesInput | Prisma.ParticipantScalarWhereWithAggregatesInput[]
+  OR?: Prisma.ParticipantScalarWhereWithAggregatesInput[]
+  NOT?: Prisma.ParticipantScalarWhereWithAggregatesInput | Prisma.ParticipantScalarWhereWithAggregatesInput[]
+  id?: Prisma.StringWithAggregatesFilter<"Participant"> | string
+  challengeId?: Prisma.StringWithAggregatesFilter<"Participant"> | string
+  userId?: Prisma.StringWithAggregatesFilter<"Participant"> | string
+  joinedAt?: Prisma.DateTimeWithAggregatesFilter<"Participant"> | Date | string
+}
 
 export type ParticipantCreateInput = {
-  id?: string;
-  joinedAt?: Date | string;
-  challenge: Prisma.ChallengeCreateNestedOneWithoutParticipantsInput;
-  user: Prisma.UserCreateNestedOneWithoutParticipatesInput;
-  work?: Prisma.WorkCreateNestedOneWithoutParticipantInput;
-};
+  id?: string
+  joinedAt?: Date | string
+  challenge: Prisma.ChallengeCreateNestedOneWithoutParticipantsInput
+  user: Prisma.UserCreateNestedOneWithoutParticipatesInput
+  work?: Prisma.WorkCreateNestedOneWithoutParticipantInput
+}
 
 export type ParticipantUncheckedCreateInput = {
-  id?: string;
-  challengeId: string;
-  userId: string;
-  joinedAt?: Date | string;
-  work?: Prisma.WorkUncheckedCreateNestedOneWithoutParticipantInput;
-};
+  id?: string
+  challengeId: string
+  userId: string
+  joinedAt?: Date | string
+  work?: Prisma.WorkUncheckedCreateNestedOneWithoutParticipantInput
+}
 
 export type ParticipantUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string;
-  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  challenge?: Prisma.ChallengeUpdateOneRequiredWithoutParticipantsNestedInput;
-  user?: Prisma.UserUpdateOneRequiredWithoutParticipatesNestedInput;
-  work?: Prisma.WorkUpdateOneWithoutParticipantNestedInput;
-};
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  challenge?: Prisma.ChallengeUpdateOneRequiredWithoutParticipantsNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutParticipatesNestedInput
+  work?: Prisma.WorkUpdateOneWithoutParticipantNestedInput
+}
 
 export type ParticipantUncheckedUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string;
-  challengeId?: Prisma.StringFieldUpdateOperationsInput | string;
-  userId?: Prisma.StringFieldUpdateOperationsInput | string;
-  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  work?: Prisma.WorkUncheckedUpdateOneWithoutParticipantNestedInput;
-};
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  challengeId?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  work?: Prisma.WorkUncheckedUpdateOneWithoutParticipantNestedInput
+}
 
 export type ParticipantCreateManyInput = {
-  id?: string;
-  challengeId: string;
-  userId: string;
-  joinedAt?: Date | string;
-};
+  id?: string
+  challengeId: string
+  userId: string
+  joinedAt?: Date | string
+}
 
 export type ParticipantUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -291,11 +273,11 @@ export type ParticipantUpdateManyMutationInput = {
 };
 
 export type ParticipantUncheckedUpdateManyInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string;
-  challengeId?: Prisma.StringFieldUpdateOperationsInput | string;
-  userId?: Prisma.StringFieldUpdateOperationsInput | string;
-  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-};
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  challengeId?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
 
 export type ParticipantListRelationFilter = {
   every?: Prisma.ParticipantWhereInput;
@@ -313,25 +295,25 @@ export type ParticipantChallengeIdUserIdCompoundUniqueInput = {
 };
 
 export type ParticipantCountOrderByAggregateInput = {
-  id?: Prisma.SortOrder;
-  challengeId?: Prisma.SortOrder;
-  userId?: Prisma.SortOrder;
-  joinedAt?: Prisma.SortOrder;
-};
+  id?: Prisma.SortOrder
+  challengeId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  joinedAt?: Prisma.SortOrder
+}
 
 export type ParticipantMaxOrderByAggregateInput = {
-  id?: Prisma.SortOrder;
-  challengeId?: Prisma.SortOrder;
-  userId?: Prisma.SortOrder;
-  joinedAt?: Prisma.SortOrder;
-};
+  id?: Prisma.SortOrder
+  challengeId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  joinedAt?: Prisma.SortOrder
+}
 
 export type ParticipantMinOrderByAggregateInput = {
-  id?: Prisma.SortOrder;
-  challengeId?: Prisma.SortOrder;
-  userId?: Prisma.SortOrder;
-  joinedAt?: Prisma.SortOrder;
-};
+  id?: Prisma.SortOrder
+  challengeId?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  joinedAt?: Prisma.SortOrder
+}
 
 export type ParticipantNullableScalarRelationFilter = {
   is?: Prisma.ParticipantWhereInput | null;
@@ -644,18 +626,14 @@ export type ParticipantUpdateManyWithWhereWithoutUserInput = {
 };
 
 export type ParticipantScalarWhereInput = {
-  AND?:
-    | Prisma.ParticipantScalarWhereInput
-    | Prisma.ParticipantScalarWhereInput[];
-  OR?: Prisma.ParticipantScalarWhereInput[];
-  NOT?:
-    | Prisma.ParticipantScalarWhereInput
-    | Prisma.ParticipantScalarWhereInput[];
-  id?: Prisma.StringFilter<'Participant'> | string;
-  challengeId?: Prisma.StringFilter<'Participant'> | string;
-  userId?: Prisma.StringFilter<'Participant'> | string;
-  joinedAt?: Prisma.DateTimeFilter<'Participant'> | Date | string;
-};
+  AND?: Prisma.ParticipantScalarWhereInput | Prisma.ParticipantScalarWhereInput[]
+  OR?: Prisma.ParticipantScalarWhereInput[]
+  NOT?: Prisma.ParticipantScalarWhereInput | Prisma.ParticipantScalarWhereInput[]
+  id?: Prisma.StringFilter<"Participant"> | string
+  challengeId?: Prisma.StringFilter<"Participant"> | string
+  userId?: Prisma.StringFilter<"Participant"> | string
+  joinedAt?: Prisma.DateTimeFilter<"Participant"> | Date | string
+}
 
 export type ParticipantCreateWithoutChallengeInput = {
   id?: string;
@@ -715,18 +693,18 @@ export type ParticipantUpdateManyWithWhereWithoutChallengeInput = {
 };
 
 export type ParticipantCreateWithoutWorkInput = {
-  id?: string;
-  joinedAt?: Date | string;
-  challenge: Prisma.ChallengeCreateNestedOneWithoutParticipantsInput;
-  user: Prisma.UserCreateNestedOneWithoutParticipatesInput;
-};
+  id?: string
+  joinedAt?: Date | string
+  challenge: Prisma.ChallengeCreateNestedOneWithoutParticipantsInput
+  user: Prisma.UserCreateNestedOneWithoutParticipatesInput
+}
 
 export type ParticipantUncheckedCreateWithoutWorkInput = {
-  id?: string;
-  challengeId: string;
-  userId: string;
-  joinedAt?: Date | string;
-};
+  id?: string
+  challengeId: string
+  userId: string
+  joinedAt?: Date | string
+}
 
 export type ParticipantCreateOrConnectWithoutWorkInput = {
   where: Prisma.ParticipantWhereUniqueInput;
@@ -757,18 +735,18 @@ export type ParticipantUpdateToOneWithWhereWithoutWorkInput = {
 };
 
 export type ParticipantUpdateWithoutWorkInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string;
-  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-  challenge?: Prisma.ChallengeUpdateOneRequiredWithoutParticipantsNestedInput;
-  user?: Prisma.UserUpdateOneRequiredWithoutParticipatesNestedInput;
-};
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  challenge?: Prisma.ChallengeUpdateOneRequiredWithoutParticipantsNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutParticipatesNestedInput
+}
 
 export type ParticipantUncheckedUpdateWithoutWorkInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string;
-  challengeId?: Prisma.StringFieldUpdateOperationsInput | string;
-  userId?: Prisma.StringFieldUpdateOperationsInput | string;
-  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
-};
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  challengeId?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
 
 export type ParticipantCreateManyUserInput = {
   id?: string;
@@ -822,88 +800,55 @@ export type ParticipantUncheckedUpdateManyWithoutChallengeInput = {
   joinedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 
-export type ParticipantSelect<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
-> = runtime.Types.Extensions.GetSelect<
-  {
-    id?: boolean;
-    challengeId?: boolean;
-    userId?: boolean;
-    joinedAt?: boolean;
-    challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>;
-    user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
-    work?: boolean | Prisma.Participant$workArgs<ExtArgs>;
-  },
-  ExtArgs['result']['participant']
->;
+export type ParticipantSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  id?: boolean
+  challengeId?: boolean
+  userId?: boolean
+  joinedAt?: boolean
+  challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  work?: boolean | Prisma.Participant$workArgs<ExtArgs>
+}, ExtArgs["result"]["participant"]>
 
-export type ParticipantSelectCreateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
-> = runtime.Types.Extensions.GetSelect<
-  {
-    id?: boolean;
-    challengeId?: boolean;
-    userId?: boolean;
-    joinedAt?: boolean;
-    challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>;
-    user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
-  },
-  ExtArgs['result']['participant']
->;
+export type ParticipantSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  id?: boolean
+  challengeId?: boolean
+  userId?: boolean
+  joinedAt?: boolean
+  challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+}, ExtArgs["result"]["participant"]>
 
-export type ParticipantSelectUpdateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
-> = runtime.Types.Extensions.GetSelect<
-  {
-    id?: boolean;
-    challengeId?: boolean;
-    userId?: boolean;
-    joinedAt?: boolean;
-    challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>;
-    user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
-  },
-  ExtArgs['result']['participant']
->;
+export type ParticipantSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  id?: boolean
+  challengeId?: boolean
+  userId?: boolean
+  joinedAt?: boolean
+  challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+}, ExtArgs["result"]["participant"]>
 
 export type ParticipantSelectScalar = {
-  id?: boolean;
-  challengeId?: boolean;
-  userId?: boolean;
-  joinedAt?: boolean;
-};
+  id?: boolean
+  challengeId?: boolean
+  userId?: boolean
+  joinedAt?: boolean
+}
 
-export type ParticipantOmit<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
-> = runtime.Types.Extensions.GetOmit<
-  'id' | 'challengeId' | 'userId' | 'joinedAt',
-  ExtArgs['result']['participant']
->;
-export type ParticipantInclude<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
-> = {
-  challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>;
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
-  work?: boolean | Prisma.Participant$workArgs<ExtArgs>;
-};
-export type ParticipantIncludeCreateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
-> = {
-  challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>;
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
-};
-export type ParticipantIncludeUpdateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
-> = {
-  challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>;
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
-};
+export type ParticipantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "challengeId" | "userId" | "joinedAt", ExtArgs["result"]["participant"]>
+export type ParticipantInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  work?: boolean | Prisma.Participant$workArgs<ExtArgs>
+}
+export type ParticipantIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+}
+export type ParticipantIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  challenge?: boolean | Prisma.ChallengeDefaultArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+}
 
 export type $ParticipantPayload<
   ExtArgs extends runtime.Types.Extensions.InternalArgs =
@@ -911,21 +856,18 @@ export type $ParticipantPayload<
 > = {
   name: 'Participant';
   objects: {
-    challenge: Prisma.$ChallengePayload<ExtArgs>;
-    user: Prisma.$UserPayload<ExtArgs>;
-    work: Prisma.$WorkPayload<ExtArgs> | null;
-  };
-  scalars: runtime.Types.Extensions.GetPayloadResult<
-    {
-      id: string;
-      challengeId: string;
-      userId: string;
-      joinedAt: Date;
-    },
-    ExtArgs['result']['participant']
-  >;
-  composites: {};
-};
+    challenge: Prisma.$ChallengePayload<ExtArgs>
+    user: Prisma.$UserPayload<ExtArgs>
+    work: Prisma.$WorkPayload<ExtArgs> | null
+  }
+  scalars: runtime.Types.Extensions.GetPayloadResult<{
+    id: string
+    challengeId: string
+    userId: string
+    joinedAt: Date
+  }, ExtArgs["result"]["participant"]>
+  composites: {}
+}
 
 export type ParticipantGetPayload<
   S extends boolean | null | undefined | ParticipantDefaultArgs,
@@ -1466,55 +1408,11 @@ export interface ParticipantDelegate<
  * Because we want to prevent naming conflicts as mentioned in
  * https://github.com/prisma/prisma-client-js/issues/707
  */
-export interface Prisma__ParticipantClient<
-  T,
-  Null = never,
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
-  GlobalOmitOptions = {},
-> extends Prisma.PrismaPromise<T> {
-  readonly [Symbol.toStringTag]: 'PrismaPromise';
-  challenge<T extends Prisma.ChallengeDefaultArgs<ExtArgs> = {}>(
-    args?: Prisma.Subset<T, Prisma.ChallengeDefaultArgs<ExtArgs>>,
-  ): Prisma.Prisma__ChallengeClient<
-    | runtime.Types.Result.GetResult<
-        Prisma.$ChallengePayload<ExtArgs>,
-        T,
-        'findUniqueOrThrow',
-        GlobalOmitOptions
-      >
-    | Null,
-    Null,
-    ExtArgs,
-    GlobalOmitOptions
-  >;
-  user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(
-    args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>,
-  ): Prisma.Prisma__UserClient<
-    | runtime.Types.Result.GetResult<
-        Prisma.$UserPayload<ExtArgs>,
-        T,
-        'findUniqueOrThrow',
-        GlobalOmitOptions
-      >
-    | Null,
-    Null,
-    ExtArgs,
-    GlobalOmitOptions
-  >;
-  work<T extends Prisma.Participant$workArgs<ExtArgs> = {}>(
-    args?: Prisma.Subset<T, Prisma.Participant$workArgs<ExtArgs>>,
-  ): Prisma.Prisma__WorkClient<
-    runtime.Types.Result.GetResult<
-      Prisma.$WorkPayload<ExtArgs>,
-      T,
-      'findUniqueOrThrow',
-      GlobalOmitOptions
-    > | null,
-    null,
-    ExtArgs,
-    GlobalOmitOptions
-  >;
+export interface Prisma__ParticipantClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  readonly [Symbol.toStringTag]: "PrismaPromise"
+  challenge<T extends Prisma.ChallengeDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChallengeDefaultArgs<ExtArgs>>): Prisma.Prisma__ChallengeClient<runtime.Types.Result.GetResult<Prisma.$ChallengePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  work<T extends Prisma.Participant$workArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Participant$workArgs<ExtArgs>>): Prisma.Prisma__WorkClient<runtime.Types.Result.GetResult<Prisma.$WorkPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1557,10 +1455,10 @@ export interface Prisma__ParticipantClient<
  * Fields of the Participant model
  */
 export interface ParticipantFieldRefs {
-  readonly id: Prisma.FieldRef<'Participant', 'String'>;
-  readonly challengeId: Prisma.FieldRef<'Participant', 'String'>;
-  readonly userId: Prisma.FieldRef<'Participant', 'String'>;
-  readonly joinedAt: Prisma.FieldRef<'Participant', 'DateTime'>;
+  readonly id: Prisma.FieldRef<"Participant", 'String'>
+  readonly challengeId: Prisma.FieldRef<"Participant", 'String'>
+  readonly userId: Prisma.FieldRef<"Participant", 'String'>
+  readonly joinedAt: Prisma.FieldRef<"Participant", 'DateTime'>
 }
 
 // Custom InputTypes

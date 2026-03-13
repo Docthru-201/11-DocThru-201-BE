@@ -2551,18 +2551,18 @@ export type WorkDeleteManyArgs<
 };
 
 /**
- * Work.participant
+ * Work.likes
  */
 export type Work$participantArgs<
   ExtArgs extends runtime.Types.Extensions.InternalArgs =
     runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
-   * Select specific fields to fetch from the Participant
+   * Select specific fields to fetch from the Like
    */
   select?: Prisma.ParticipantSelect<ExtArgs> | null;
   /**
-   * Omit specific fields from the Participant
+   * Omit specific fields from the Like
    */
   omit?: Prisma.ParticipantOmit<ExtArgs> | null;
   /**
@@ -2602,18 +2602,18 @@ export type Work$commentsArgs<
 };
 
 /**
- * Work.likes
+ * Work.participant
  */
 export type Work$likesArgs<
   ExtArgs extends runtime.Types.Extensions.InternalArgs =
     runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
-   * Select specific fields to fetch from the Like
+   * Select specific fields to fetch from the Participant
    */
   select?: Prisma.LikeSelect<ExtArgs> | null;
   /**
-   * Omit specific fields from the Like
+   * Omit specific fields from the Participant
    */
   omit?: Prisma.LikeOmit<ExtArgs> | null;
   /**

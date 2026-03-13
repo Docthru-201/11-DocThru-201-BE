@@ -84,12 +84,12 @@ export type TransactionIsolationLevel =
 
 export const UserScalarFieldEnum = {
   id: 'id',
+  email: 'email',
+  nickname: 'nickname',
+  password: 'password',
+  image: 'image',
   role: 'role',
   grade: 'grade',
-  email: 'email',
-  password: 'password',
-  nickname: 'nickname',
-  image: 'image',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   deletedAt: 'deletedAt',
@@ -138,26 +138,28 @@ export const ChallengeScalarFieldEnum = {
   authorId: 'authorId',
   title: 'title',
   originalUrl: 'originalUrl',
-  type: 'type',
   category: 'category',
-  description: 'description',
+  type: 'type',
   deadline: 'deadline',
   maxParticipants: 'maxParticipants',
+  description: 'description',
   status: 'status',
+  isClosed: 'isClosed',
   declineReason: 'declineReason',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-} as const;
+  updatedAt: 'updatedAt'
+} as const
 
 export type ChallengeScalarFieldEnum =
   (typeof ChallengeScalarFieldEnum)[keyof typeof ChallengeScalarFieldEnum];
 
 export const ParticipantScalarFieldEnum = {
   id: 'id',
+  userId: 'userId',
   challengeId: 'challengeId',
   userId: 'userId',
-  joinedAt: 'joinedAt',
-} as const;
+  joinedAt: 'joinedAt'
+} as const
 
 export type ParticipantScalarFieldEnum =
   (typeof ParticipantScalarFieldEnum)[keyof typeof ParticipantScalarFieldEnum];
@@ -202,14 +204,13 @@ export type LikeScalarFieldEnum =
 export const NotificationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  message: 'message',
-  targetType: 'targetType',
+  type: 'type',
   targetId: 'targetId',
   targetUrl: 'targetUrl',
   isRead: 'isRead',
   readAt: 'readAt',
-  createdAt: 'createdAt',
-} as const;
+  createdAt: 'createdAt'
+} as const
 
 export type NotificationScalarFieldEnum =
   (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum];
