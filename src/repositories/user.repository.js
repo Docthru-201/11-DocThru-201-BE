@@ -5,6 +5,13 @@ export class UserRepository {
     this.#prisma = prisma;
   }
 
+async findUserById(userId) {
+  return await this.#prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+}
   findMany() {}
 
   findById() {}

@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { BaseController } from './base.controller.js';
-
+import { adminValidator } from "#middlewares";
 export * from './auth/index.js';
 export * from './users/index.js';
 export * from './profiles/index.js';
@@ -59,7 +59,7 @@ export class Controller extends BaseController {
     this.router.use('/works', this.#commentsController.routes());
     this.router.use('/works', this.#likesController.routes());
     this.router.use('/notifications', this.#notificationsController.routes());
-    this.router.use('/admin', this.#adminController.routes());
+    this.router.use('/admin', adminValidator, this.#adminController.routes());
 
     this.router.get('/ping', (req, res) => this.ping(req, res));
 
