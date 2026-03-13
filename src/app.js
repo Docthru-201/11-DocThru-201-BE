@@ -1,7 +1,14 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import { errorHandler, cors } from '#middlewares';
-import { registerSwagger } from '#docs/swagger.js';
+// import { registerSwagger } from '#docs/swagger.js';
+
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+
+const swaggerDocument = YAML.load(
+  new URL('../swagger.yaml', import.meta.url).pathname,
+);
 
 export class App {
   constructor(controller, authMiddleware) {
@@ -21,9 +28,18 @@ export class App {
     );
   }
 
-  routes(controller) {
-    registerSwagger(this.app);
-    this.app.use('/api', controller.routes());
+  // routes(controller) {
+  //   registerSwagger(this.app);
+  //   this.app.use('/api', controller.routes());
+  // }
+
+  // 임시 swagger
+  routes() {
+    this.app.use(
+      '/api-docs',
+      swaggerUi.serve,
+      swaggerUi.setup(swaggerDocument),
+    );
   }
 
   errorHandling() {
@@ -33,6 +49,7 @@ export class App {
   listen(port) {
     return this.app.listen(port, () => {
       console.log(`Server is running port number is ${port}`);
+      console.log('Swagger UI is running on http://localhost:5001/api-docs');
     });
   }
 }

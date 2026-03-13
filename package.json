@@ -60,6 +60,7 @@
     "pino": "^10.3.1",
     "swagger-ui-express": "^5.0.1",
     "ulid": "^3.0.2",
+    "yamljs": "^0.3.0",
     "zod": "^4.3.6",
     "zod-openapi": "^5.4.6"
   },
