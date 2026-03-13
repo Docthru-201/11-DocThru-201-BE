@@ -15,7 +15,7 @@ import {
   CommentRepository,
   LikeRepository,
   NotificationRepository,
-} from '../../repositories/index.js';
+} from '#repositories/index.js';
 import {
   AuthService,
   UsersService,
