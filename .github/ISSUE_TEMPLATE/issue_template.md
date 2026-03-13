@@ -4,7 +4,6 @@ about: 이슈 요약 및 작업 목록 정리
 title: ''
 labels: ''
 assignees: ''
-
 ---
 
 ## 📌 이슈 요약

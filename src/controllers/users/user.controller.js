@@ -22,4 +22,3 @@ export class UsersController extends BaseController {
 
   async delete(req, res) {}
 }
-
