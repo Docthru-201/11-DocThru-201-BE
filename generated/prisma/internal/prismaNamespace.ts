@@ -1258,12 +1258,12 @@ export type TransactionIsolationLevel =
 
 export const UserScalarFieldEnum = {
   id: 'id',
+  email: 'email',
+  nickname: 'nickname',
+  password: 'password',
+  image: 'image',
   role: 'role',
   grade: 'grade',
-  email: 'email',
-  password: 'password',
-  nickname: 'nickname',
-  image: 'image',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   deletedAt: 'deletedAt',
@@ -1312,12 +1312,13 @@ export const ChallengeScalarFieldEnum = {
   authorId: 'authorId',
   title: 'title',
   originalUrl: 'originalUrl',
-  type: 'type',
   category: 'category',
-  description: 'description',
+  type: 'type',
   deadline: 'deadline',
   maxParticipants: 'maxParticipants',
+  description: 'description',
   status: 'status',
+  isClosed: 'isClosed',
   declineReason: 'declineReason',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -1328,7 +1329,6 @@ export type ChallengeScalarFieldEnum =
 
 export const ParticipantScalarFieldEnum = {
   id: 'id',
-  challengeId: 'challengeId',
   userId: 'userId',
   joinedAt: 'joinedAt',
 } as const;
@@ -1376,8 +1376,7 @@ export type LikeScalarFieldEnum =
 export const NotificationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  message: 'message',
-  targetType: 'targetType',
+  type: 'type',
   targetId: 'targetId',
   targetUrl: 'targetUrl',
   isRead: 'isRead',
@@ -1494,7 +1493,7 @@ export type ListEnumAuthProviderFieldRefInput<$PrismaModel> = FieldRefInputType<
 >;
 
 /**
- * Reference to a field of type 'Type'
+ * Reference to a field of type 'Category'
  */
 export type EnumTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
   $PrismaModel,
@@ -1502,7 +1501,7 @@ export type EnumTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
 >;
 
 /**
- * Reference to a field of type 'Type[]'
+ * Reference to a field of type 'Category[]'
  */
 export type ListEnumTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
   $PrismaModel,
@@ -1510,7 +1509,7 @@ export type ListEnumTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
 >;
 
 /**
- * Reference to a field of type 'Category'
+ * Reference to a field of type 'Type'
  */
 export type EnumCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<
   $PrismaModel,
@@ -1518,7 +1517,7 @@ export type EnumCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<
 >;
 
 /**
- * Reference to a field of type 'Category[]'
+ * Reference to a field of type 'Type[]'
  */
 export type ListEnumCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<
   $PrismaModel,
@@ -1556,7 +1555,7 @@ export type ListEnumChallengeStatusFieldRefInput<$PrismaModel> =
   FieldRefInputType<$PrismaModel, 'ChallengeStatus[]'>;
 
 /**
- * Reference to a field of type 'NotificationType'
+ * Reference to a field of type 'Boolean'
  */
 export type EnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
   $PrismaModel,
@@ -1564,13 +1563,13 @@ export type EnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
 >;
 
 /**
- * Reference to a field of type 'NotificationType[]'
+ * Reference to a field of type 'NotificationType'
  */
 export type ListEnumNotificationTypeFieldRefInput<$PrismaModel> =
   FieldRefInputType<$PrismaModel, 'NotificationType[]'>;
 
 /**
- * Reference to a field of type 'Boolean'
+ * Reference to a field of type 'NotificationType[]'
  */
 export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<
   $PrismaModel,
