@@ -48,8 +48,8 @@ export class App {
 
   listen(port) {
     return this.app.listen(port, () => {
-      console.log(`Server is running port number is ${port}`);
-      console.log('Swagger UI is running on http://localhost:5001/api-docs');
+      console.log(`Server is running at http://localhost:${port}`);
+      console.log('API Swagger: http://localhost:5001/api-docs');
     });
   }
 }
