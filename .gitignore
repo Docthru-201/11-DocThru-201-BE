@@ -1,6 +1,9 @@
 # DS_STORE
 .DS_STORE
 
+# generated
+generated/
+
 # Logs
 logs
 *.log
