@@ -20,4 +20,3 @@ export class WorksController extends BaseController {
 
   async delete(req, res) {}
 }
-

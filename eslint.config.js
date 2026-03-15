@@ -26,6 +26,7 @@ export default [
       'no-console': 'off',
       'prefer-const': 'error',
       'no-var': 'error',
+      'no-unused-private-class-members': 'off', // 임시
     },
   },
 ];
