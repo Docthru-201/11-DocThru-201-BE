@@ -10,9 +10,9 @@ const PARTICIPANT_MIN_LIMIT = 1;
 
 // export const listChallengesQuerySchema = z.object({}); // TODO: 추후 페이지네이션 추가
 
-export const ulidSchema = z.string().trim();
-z.ulid({ message: `유효한 id 형식(ULID)이 아닙니다.` });
-
+export const ulidSchema = z.ulid({
+  message: `유효한 id 형식(ULID)이 아닙니다.`,
+});
 export const challengeIdParamSchema = z.object({
   id: ulidSchema,
 });
@@ -39,7 +39,7 @@ export const createChallengeSchema = z.object({
       DESCRIPTION_MAX_LIMIT,
       `설명은 ${DESCRIPTION_MAX_LIMIT}자를 넘길 수 없습니다.`,
     ),
-  deadline: z.string().trim().iso.datetime(),
+  deadline: z.iso.datetime(),
   maxParticipants: z
     .number()
     .int(`참가자 수는 정수로 입력해주세요.`)
