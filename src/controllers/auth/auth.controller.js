@@ -45,6 +45,7 @@ export class AuthController extends BaseController {
     const { user, accessToken, refreshToken } = await this.#authService.login(
       req.body,
     );
+
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
 
     res.status(HTTP_STATUS.OK).json(user);

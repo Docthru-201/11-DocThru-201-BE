@@ -159,6 +159,9 @@ CREATE UNIQUE INDEX "User_nickname_key" ON "User"("nickname");
 CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "RefreshToken_userId_key" ON "RefreshToken"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "RefreshToken_token_key" ON "RefreshToken"("token");
 
 -- CreateIndex

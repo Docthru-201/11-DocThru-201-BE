@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createDocument } from 'zod-openapi';
 import { signupSchema, loginSchema } from '#controllers/auth/dto/auth.dto.js';
-import { updateUserSchema } from '#controllers/users/dto/users.dto.js';
+import { updateUserSchema } from '#controllers/users/dto/user.dto.js';
 
 const idParamSchema = z.object({
   id: z.string().describe('사용자 ID'),

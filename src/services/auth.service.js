@@ -1,3 +1,6 @@
+import { ERROR_MESSAGE } from '#constants';
+import { ConflictException, UnauthorizedException } from '#exceptions';
+
 export class AuthService {
   #authRepository;
   #passwordProvider;
