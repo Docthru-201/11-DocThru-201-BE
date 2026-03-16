@@ -11,7 +11,7 @@ export class ChallengesService {
   async getAllChallenges({
     page = 1,
     pageSize = 10,
-    sort = 'createdAt_desc',
+    sort = '',
     keyword,
     userId,
   }) {
@@ -20,16 +20,18 @@ export class ChallengesService {
     const options = {
       skip: offset,
       take: pageSize,
-      orderBy: {},
       where: {},
+      orderBy: { createdAt: 'desc' },
     };
 
+    //admin인 경우는 전체라서 넘겨주지 않음
     if (userId) {
       options.where.authorId = userId;
     }
 
-    if (['pending_approval', 'recruting', 'rejected'].includes(sort)) {
-      options.where.adminStatus = sort.toUpperCase();
+    const statusValues = ['pending', 'approved', 'rejected'];
+    if (statusValues.includes(sort.toLowerCase())) {
+      options.where.status = sort.toUpperCase();
     }
 
     if (sort === 'createdAt_asc') {
@@ -43,19 +45,15 @@ export class ChallengesService {
     }
 
     if (keyword) {
-      const keywordFilter = {
-        OR: [
-          { challenge: { title: { contains: keyword, mode: 'insensitive' } } },
-          {
-            challenge: {
-              description: { contains: keyword, mode: 'insensitive' },
-            },
-          },
-        ],
-      };
-      options.where = { ...options.where, ...keywordFilter };
+      options.where.OR = [
+        { title: { contains: keyword, mode: 'insensitive' } },
+        { description: { contains: keyword, mode: 'insensitive' } },
+      ];
     }
-
+    console.log(
+      '🔍 Repository로 전달되는 where 조건:',
+      JSON.stringify(options.where, null, 2),
+    );
     return this.#challengeRepository.findAllChallenges(options);
   }
 
@@ -67,41 +65,43 @@ export class ChallengesService {
   // Admin 챌린지 신청승인/신청거절
   async updateChallengeStatus(challengeId, data, userId) {
     try {
-      const challenge = await this.#challengeRepository.findChallengeById(challengeId);
+      const challenge =
+        await this.#challengeRepository.findChallengeById(challengeId);
       if (challenge.isClosed) {
         const error = new Error('완료된 챌린지는 수정 및 삭제가 불가능합니다.');
         error.statusCode = 403;
         throw error;
       }
-      
-      const updatedChallenge = await this.#challengeRepository.updateChallengeStatus(
-        challengeId,
-        data,
-      );
 
-      // // 알림 전송
-      // if (challenge.authorId !== userId) {
-      //   const { adminStatus, adminMessage } = updatedChallenge;
-      //   let message;
+      const updatedChallenge =
+        await this.#challengeRepository.updateChallengeStatus(
+          challengeId,
+          data,
+        );
 
-      //   if (['REJECTED', 'DELETED'].includes(adminStatus)) {
-      //     message = this.#notificationsService.notificationMessages.adminAction(
-      //       challenge.title,
-      //       adminStatus,
-      //       adminMessage,
-      //     );
-      //   } else {
-      //     message = this.#notificationsService.notificationMessages.challengeStatusChange(
-      //       challenge.title,
-      //       adminStatus,
-      //     );
-      //   }
+      // 알림 전송
+      if (challenge.authorId !== userId) {
+        const { status, declineReason, title, id } = updatedChallenge;
+         // message String // TODO: 논의중인 사안
+        const message = ['REJECTED', 'DELETED'].includes(status)
+          ? this.#notificationsService.notificationMessages.adminReviewResult(
+              title,
+              status,
+              declineReason,
+            )
+          : this.#notificationsService.notificationMessages.challengeProgressUpdate(
+              title,
+              status,
+            );
 
-      //   await this.#notificationsService.createNotification(
-      //     challenge.authorId,
-      //     message,
-      //   );
-      // }
+        await this.#notificationsService.createNotification({
+          userId: challenge.authorId,
+          type: 'CHALLENGE_APPROVAL_RESULT',
+          targetId: id,
+          targetUrl: `/challenges/${id}`,
+          // message,
+        });
+      }
 
       return updatedChallenge;
     } catch (e) {
@@ -111,7 +111,7 @@ export class ChallengesService {
         error.statusCode = 404;
         throw error;
       }
-      throw e; 
+      throw e;
     }
   }
 }

@@ -8,26 +8,26 @@ CREATE TYPE "Grade" AS ENUM ('NORMAL', 'EXPERT');
 CREATE TYPE "AuthProvider" AS ENUM ('GOOGLE');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('NEW_WORK', 'NEW_COMMENT', 'NEW_REPLY', 'STATUS_CHANGE', 'DEADLINE', 'ADMIN_ACTION');
-
--- CreateEnum
-CREATE TYPE "ChallengeStatus" AS ENUM ('PENDING_APPROVAL', 'RECRUITING', 'CLOSED', 'DELETED');
-
--- CreateEnum
 CREATE TYPE "Category" AS ENUM ('DOCUMENT', 'BLOG');
 
 -- CreateEnum
 CREATE TYPE "Type" AS ENUM ('NEXT_JS', 'API', 'CAREER', 'MODERN_JS', 'WEB');
 
+-- CreateEnum
+CREATE TYPE "ChallengeStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'DELETED');
+
+-- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('NEW_WORK', 'NEW_COMMENT', 'NEW_REPLY', 'CHALLENGE_APPROVAL_RESULT', 'CLOSED', 'ADMIN_ACTION');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "nickname" TEXT NOT NULL,
+    "password" TEXT,
+    "image" TEXT,
     "role" "Role" NOT NULL DEFAULT 'USER',
     "grade" "Grade" NOT NULL DEFAULT 'NORMAL',
-    "email" TEXT NOT NULL,
-    "password" TEXT,
-    "nickname" TEXT NOT NULL,
-    "image" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
@@ -76,15 +76,17 @@ CREATE TABLE "Challenge" (
     "authorId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "originalUrl" TEXT NOT NULL,
-    "type" "Type" NOT NULL,
     "category" "Category" NOT NULL,
-    "description" TEXT NOT NULL,
+    "type" "Type" NOT NULL,
     "deadline" TIMESTAMP(3) NOT NULL,
     "maxParticipants" INTEGER NOT NULL,
-    "status" "ChallengeStatus" NOT NULL DEFAULT 'PENDING_APPROVAL',
+    "description" TEXT NOT NULL,
+    "status" "ChallengeStatus" NOT NULL DEFAULT 'PENDING',
+    "isClosed" BOOLEAN NOT NULL DEFAULT false,
     "declineReason" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Challenge_pkey" PRIMARY KEY ("id")
 );
@@ -92,8 +94,8 @@ CREATE TABLE "Challenge" (
 -- CreateTable
 CREATE TABLE "Participant" (
     "id" TEXT NOT NULL,
-    "challengeId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
+    "challengeId" TEXT NOT NULL,
     "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Participant_pkey" PRIMARY KEY ("id")
@@ -138,13 +140,14 @@ CREATE TABLE "Like" (
 CREATE TABLE "Notification" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "message" TEXT NOT NULL,
-    "targetType" "NotificationType" NOT NULL,
+    "type" "NotificationType" NOT NULL,
     "targetId" TEXT,
     "targetUrl" TEXT,
     "isRead" BOOLEAN NOT NULL DEFAULT false,
     "readAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
@@ -189,10 +192,10 @@ ALTER TABLE "SocialAccount" ADD CONSTRAINT "SocialAccount_userId_fkey" FOREIGN K
 ALTER TABLE "Challenge" ADD CONSTRAINT "Challenge_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Participant" ADD CONSTRAINT "Participant_challengeId_fkey" FOREIGN KEY ("challengeId") REFERENCES "Challenge"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Participant" ADD CONSTRAINT "Participant_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Participant" ADD CONSTRAINT "Participant_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Participant" ADD CONSTRAINT "Participant_challengeId_fkey" FOREIGN KEY ("challengeId") REFERENCES "Challenge"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Work" ADD CONSTRAINT "Work_challengeId_fkey" FOREIGN KEY ("challengeId") REFERENCES "Challenge"("id") ON DELETE CASCADE ON UPDATE CASCADE;

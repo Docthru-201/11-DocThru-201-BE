@@ -9,7 +9,8 @@ export async function adminValidator(req, res, next) {
   try {
 
     // const { userId } = req.user;
-    const userId = "01KKGAP404XG67S71QNTDEA27D";
+    console.log("임시userId:01KKGAP404XG67S71QNTDEA27D");
+    const userId = "01KKS351GWZ7G620NTJ6F2DKR7";
     if (!userId) {
       return res.status(401).json({ message: "사용자 ID가 필요합니다." });
     }

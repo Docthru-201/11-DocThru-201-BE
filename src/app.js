@@ -32,19 +32,19 @@ export class App {
     );
   }
 
-  // routes(controller) {
-  //   registerSwagger(this.app);
-  //   this.app.use('/api', controller.routes());
-  // }
+  routes(controller) {
+    // registerSwagger(this.app);
+    this.app.use('/api', controller.routes());
+  }
 
   // 임시: swagger
-  routes() {
-    this.app.use(
-      '/api-docs',
-      swaggerUi.serve,
-      swaggerUi.setup(swaggerDocument),
-    );
-  }
+  // routes() {
+  //   this.app.use(
+  //     '/api-docs',
+  //     swaggerUi.serve,
+  //     swaggerUi.setup(swaggerDocument),
+  //   );
+  // }
 
   errorHandling() {
     this.app.use(errorHandler);
