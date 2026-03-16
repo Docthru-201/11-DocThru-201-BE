@@ -5,13 +5,35 @@ export class ChallengeRepository {
     this.#prisma = prisma;
   }
 
-  findMany() {}
+  async findMany(query) {
+    //나중에 pagination 조건넣기
+    return await this.#prisma.challenge.findMany();
+  }
 
-  findById() {}
+  async findById(id) {
+    return await this.#prisma.challenge.findUnique({ where: { id } });
+  }
 
-  create() {}
+  async create(data) {
+    return await this.#prisma.challenge.create({ data });
+  }
 
-  update() {}
+  async update(id, updateData) {
+    return await this.#prisma.challenge.update({
+      where: { id: id },
+      data: updateData,
+    });
+  }
 
-  delete() {}
+  async delete(id) {
+    return await this.#prisma.challenge.delete({
+      where: { id: id },
+    });
+  }
+
+  async findByUserId(userId) {
+    return await this.#prisma.challenge.findMany({
+      where: { authorId: userId },
+    });
+  }
 }

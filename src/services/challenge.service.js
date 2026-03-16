@@ -14,4 +14,6 @@ export class ChallengesService {
   async updateChallenge() {}
 
   async deleteChallenge() {}
+
+  async getChallengeByUser() {}
 }
