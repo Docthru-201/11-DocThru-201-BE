@@ -1,7 +1,18 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import { errorHandler, cors } from '#middlewares';
-import { registerSwagger } from '#docs/swagger.js';
+// import { registerSwagger } from '#docs/swagger.js';
+
+// 임시: 스웨거
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// 임시: 윈도우 상에서의 경로문제 해결
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const swaggerPath = path.join(__dirname, '..', 'swagger.yaml');
+const swaggerDocument = YAML.load(swaggerPath);
 
 export class App {
   constructor(controller, authMiddleware) {
@@ -21,9 +32,18 @@ export class App {
     );
   }
 
-  routes(controller) {
-    registerSwagger(this.app);
-    this.app.use('/api', controller.routes());
+  // routes(controller) {
+  //   registerSwagger(this.app);
+  //   this.app.use('/api', controller.routes());
+  // }
+
+  // 임시: swagger
+  routes() {
+    this.app.use(
+      '/api-docs',
+      swaggerUi.serve,
+      swaggerUi.setup(swaggerDocument),
+    );
   }
 
   errorHandling() {
@@ -32,7 +52,8 @@ export class App {
 
   listen(port) {
     return this.app.listen(port, () => {
-      console.log(`Server is running port number is ${port}`);
+      console.log(`Server is running at http://localhost:${port}`);
+      console.log('API Swagger: http://localhost:5001/api-docs');
     });
   }
 }

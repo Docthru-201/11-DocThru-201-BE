@@ -1,0 +1,1929 @@
+openapi: 3.0.3
+info:
+  title: DocThru API
+  version: 1.0.0
+  description: |
+    DocThru 백엔드 API 명세 초안
+    - 현재 확정된 Prisma 스키마 기준
+
+servers:
+  - url: http://localhost:5001/api
+
+tags:
+  - name: Challenges
+  - name: Works
+  - name: Applications
+  - name: Comments
+  - name: Likes
+  - name: Notifications
+  - name: Users
+  - name: Profile
+  - name: Auth
+  - name: Admin
+
+paths:
+  /admin/management:
+    get:
+      tags: [Admin]
+      summary: 챌린지 관리 목록 조회 (승인 대기 챌린지 등)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursorQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/ChallengeStatus'
+      responses:
+        '200':
+          description: 관리 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/management/{challengeId}:
+    get:
+      tags: [Admin]
+      summary: 특정 챌린지 신청 목록 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChallengeIdParam'
+        - $ref: '#/components/parameters/CursorQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+      responses:
+        '200':
+          description: 해당 챌린지 신청 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/management/{applicationId}:
+    patch:
+      tags: [Admin]
+      summary: 신청 승인/거절 (Application 상태 변경)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApplicationIdParam'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApplicationRequest'
+      responses:
+        '200':
+          description: 신청 상태 변경 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /applications/{applicationId}:
+    get:
+      tags: [Applications]
+      summary: 특정 참가 신청 상세 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ApplicationIdParam'
+      responses:
+        '200':
+          description: 참가 신청 상세 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /auth/signup:
+    post:
+      tags: [Auth]
+      summary: 회원가입
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: 회원가입 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 로그인
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: 현재 기기 로그아웃
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 로그아웃 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOnlyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout/all:
+    post:
+      tags: [Auth]
+      summary: 모든 기기 로그아웃
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 모든 기기 로그아웃 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOnlyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: access token 재발급
+      responses:
+        '200':
+          description: 토큰 재발급 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/{provider}/login:
+    get:
+      tags: [Auth]
+      summary: OAuth 로그인 시작
+      parameters:
+        - $ref: '#/components/parameters/ProviderParam'
+      responses:
+        '302':
+          description: OAuth 제공자 로그인 페이지로 리다이렉트
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/{provider}/callback:
+    get:
+      tags: [Auth]
+      summary: OAuth 인증 처리
+      parameters:
+        - $ref: '#/components/parameters/ProviderParam'
+        - in: query
+          name: code
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: state
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OAuth 인증 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '302':
+          description: 프론트 페이지로 리다이렉트
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: 내 기본 정보 조회
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 내 정보 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      tags: [Users]
+      summary: 내 기본 정보 수정
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeRequest'
+      responses:
+        '200':
+          description: 내 정보 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+    delete:
+      tags: [Users]
+      summary: 회원 탈퇴
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 회원 탈퇴 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOnlyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{userId}:
+    get:
+      tags: [Users]
+      summary: 특정 유저 기본 정보 조회
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: 특정 유저 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/me/profile:
+    get:
+      tags: [Profile]
+      summary: 내 확장 정보 조회
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 내 프로필 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Profile]
+      summary: 내 확장 정보 수정
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: 내 프로필 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/profile:
+    get:
+      tags: [Profile]
+      summary: 특정 유저 확장 정보 조회
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: 특정 유저 프로필 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /challenges:
+    get:
+      tags: [Challenges]
+      summary: 전체 챌린지 목록 조회
+      parameters:
+        - $ref: '#/components/parameters/CursorQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/ChallengeStatus'
+        - in: query
+          name: category
+          schema:
+            $ref: '#/components/schemas/Category'
+        - in: query
+          name: type
+          schema:
+            $ref: '#/components/schemas/Type'
+        - in: query
+          name: keyword
+          schema:
+            type: string
+        - in: query
+          name: sort
+          schema:
+            type: string
+            example: latest
+      responses:
+        '200':
+          description: 챌린지 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    post:
+      tags: [Challenges]
+      summary: 새 챌린지 생성
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChallengeRequest'
+      responses:
+        '201':
+          description: 챌린지 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /challenges/me:
+    get:
+      tags: [Challenges]
+      summary: 내가 신청한 챌린지 목록 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursorQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/ApplicationStatus'
+      responses:
+        '200':
+          description: 내가 신청한 챌린지 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /challenges/{challengeId}:
+    get:
+      tags: [Challenges]
+      summary: 특정 챌린지 상세 조회
+      parameters:
+        - $ref: '#/components/parameters/ChallengeIdParam'
+      responses:
+        '200':
+          description: 챌린지 상세 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Challenges]
+      summary: 특정 챌린지 정보 수정
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChallengeIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateChallengeRequest'
+      responses:
+        '200':
+          description: 챌린지 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+    delete:
+      tags: [Challenges]
+      summary: 특정 챌린지 삭제
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChallengeIdParam'
+      responses:
+        '200':
+          description: 챌린지 삭제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOnlyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/me/challenges:
+    get:
+      tags: [Challenges]
+      summary: 내가 만든 챌린지 목록 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursorQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/ChallengeStatus'
+      responses:
+        '200':
+          description: 내가 만든 챌린지 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /challenges/me/{challengeId}:
+    get:
+      tags: [Challenges]
+      summary: 내가 신청한 특정 챌린지 상세 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChallengeIdParam'
+      responses:
+        '200':
+          description: 내가 신청한 챌린지 상세 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Challenges]
+      summary: 챌린지 신청 취소 (삭제 대신 상태 변경)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChallengeIdParam'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApplicationRequest'
+      responses:
+        '200':
+          description: 신청 취소 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /challenges/{challengeId}/participants:
+    get:
+      tags: [Challenges]
+      summary: 참가자 목록 조회
+      parameters:
+        - $ref: '#/components/parameters/ChallengeIdParam'
+        - $ref: '#/components/parameters/CursorQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+      responses:
+        '200':
+          description: 참가자 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /challenges/{challengeId}/applications:
+    post:
+      tags: [Applications]
+      summary: 챌린지 신청
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChallengeIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApplicationRequest'
+      responses:
+        '201':
+          description: 챌린지 신청 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /works:
+    get:
+      tags: [Works]
+      summary: 작업물 목록 조회
+      parameters:
+        - in: query
+          name: challengeId
+          required: false
+          schema:
+            type: string
+            description: 특정 챌린지의 작업물만 조회할 때 사용
+        - $ref: '#/components/parameters/CursorQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - in: query
+          name: sort
+          schema:
+            type: string
+            example: latest
+      responses:
+        '200':
+          description: 작업물 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkListResponse'
+
+    post:
+      tags: [Works]
+      summary: 작업물 등록
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkRequest'
+      responses:
+        '201':
+          description: 작업물 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /works/{workId}:
+    get:
+      tags: [Works]
+      summary: 작업물 상세 조회
+      parameters:
+        - $ref: '#/components/parameters/WorkIdParam'
+      responses:
+        '200':
+          description: 작업물 상세 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Works]
+      summary: 작업물 수정
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkRequest'
+      responses:
+        '200':
+          description: 작업물 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Works]
+      summary: 작업물 삭제
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkIdParam'
+      responses:
+        '200':
+          description: 작업물 삭제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOnlyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /works/{workId}/comments:
+    get:
+      tags: [Comments]
+      summary: 댓글 목록 조회
+      parameters:
+        - $ref: '#/components/parameters/WorkIdParam'
+        - $ref: '#/components/parameters/CursorQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+      responses:
+        '200':
+          description: 댓글 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Comments]
+      summary: 댓글 또는 대댓글 작성
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+      responses:
+        '201':
+          description: 댓글 작성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /comments/{commentId}:
+    patch:
+      tags: [Comments]
+      summary: 댓글 수정
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CommentIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCommentRequest'
+      responses:
+        '200':
+          description: 댓글 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Comments]
+      summary: 댓글 삭제
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CommentIdParam'
+      responses:
+        '200':
+          description: 댓글 삭제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOnlyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /works/{workId}/likes/count:
+    get:
+      tags: [Likes]
+      summary: 좋아요 개수 조회
+      parameters:
+        - $ref: '#/components/parameters/WorkIdParam'
+      responses:
+        '200':
+          description: 좋아요 개수 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeCountResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /works/{workId}/likes/me:
+    get:
+      tags: [Likes]
+      summary: 내 좋아요 여부 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkIdParam'
+      responses:
+        '200':
+          description: 좋아요 여부 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /works/{workId}/likes:
+    post:
+      tags: [Likes]
+      summary: 좋아요 추가
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkIdParam'
+      responses:
+        '200':
+          description: 좋아요 추가 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+    delete:
+      tags: [Likes]
+      summary: 좋아요 취소
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkIdParam'
+      responses:
+        '200':
+          description: 좋아요 취소 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeActionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /notifications:
+    post:
+      tags: [Notifications]
+      summary: 특정 알림 생성
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotificationRequest'
+      responses:
+        '201':
+          description: 알림 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /notifications/me:
+    get:
+      tags: [Notifications]
+      summary: 내 알림 조회
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursorQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - in: query
+          name: isRead
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: 내 알림 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications/me/{notificationId}:
+    patch:
+      tags: [Notifications]
+      summary: 내 알림 읽음 처리
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdParam'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotificationReadRequest'
+      responses:
+        '200':
+          description: 알림 읽음 처리 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Notifications]
+      summary: 내 알림 삭제
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/NotificationIdParam'
+      responses:
+        '200':
+          description: 알림 삭제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOnlyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ProviderParam:
+      in: path
+      name: provider
+      required: true
+      schema:
+        $ref: '#/components/schemas/AuthProvider'
+
+    UserIdParam:
+      in: path
+      name: userId
+      required: true
+      schema:
+        type: string
+        example: 01HV123ABC456DEF789GHIJKL
+
+    ChallengeIdParam:
+      in: path
+      name: challengeId
+      required: true
+      schema:
+        type: string
+        example: 01HV123ABC456DEF789GHIJKL
+
+    WorkIdParam:
+      in: path
+      name: workId
+      required: true
+      schema:
+        type: string
+        example: 01HV123ABC456DEF789GHIJKL
+
+    CommentIdParam:
+      in: path
+      name: commentId
+      required: true
+      schema:
+        type: string
+        example: 01HV123ABC456DEF789GHIJKL
+
+    NotificationIdParam:
+      in: path
+      name: notificationId
+      required: true
+      schema:
+        type: string
+        example: 01HV123ABC456DEF789GHIJKL
+
+    ApplicationIdParam:
+      in: path
+      name: applicationId
+      required: true
+      schema:
+        type: string
+        description: 참가 신청 ID (Application id)
+        example: 01HV123ABC456DEF789GHIJKL
+
+    CursorQuery:
+      in: query
+      name: cursor
+      required: false
+      schema:
+        type: string
+
+    LimitQuery:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 10
+
+  responses:
+    BadRequest:
+      description: 잘못된 요청
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: 인증 실패
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: 권한 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: 리소스를 찾을 수 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: 충돌 발생
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    Role:
+      type: string
+      enum:
+        - USER
+        - ADMIN
+
+    Grade:
+      type: string
+      enum:
+        - NORMAL
+        - EXPERT
+
+    AuthProvider:
+      type: string
+      enum:
+        - GOOGLE
+
+    NotificationType:
+      type: string
+      enum:
+        - NEW_WORK
+        - NEW_COMMENT
+        - NEW_REPLY
+        - CHALLENGE_APPROVAL_RESULT
+        - CLOSED
+        - ADMIN_ACTION
+
+    ChallengeStatus:
+      type: string
+      enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+        - DELETED
+
+    Category:
+      type: string
+      enum:
+        - DOCUMENT
+        - BLOG
+
+    Type:
+      type: string
+      enum:
+        - NEXT_JS
+        - API
+        - CAREER
+        - MODERN_JS
+        - WEB
+
+    ApplicationStatus:
+      type: string
+      enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+
+    MessageOnlyResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 성공했습니다.
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 잘못된 요청입니다.
+        code:
+          type: string
+          example: BAD_REQUEST
+        details:
+          type: object
+          nullable: true
+
+    Pagination:
+      type: object
+      properties:
+        nextCursor:
+          type: string
+          nullable: true
+        hasNext:
+          type: boolean
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        grade:
+          $ref: '#/components/schemas/Grade'
+        email:
+          type: string
+          format: email
+        nickname:
+          type: string
+        image:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    PublicUser:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        grade:
+          $ref: '#/components/schemas/Grade'
+        nickname:
+          type: string
+        image:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        nickname:
+          type: string
+        image:
+          type: string
+          nullable: true
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        introduction:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    Challenge:
+      type: object
+      properties:
+        id:
+          type: string
+        authorId:
+          type: string
+        title:
+          type: string
+        originalUrl:
+          type: string
+          format: uri
+        type:
+          $ref: '#/components/schemas/Type'
+        category:
+          $ref: '#/components/schemas/Category'
+        description:
+          type: string
+        deadline:
+          type: string
+          format: date-time
+        maxParticipants:
+          type: integer
+        status:
+          $ref: '#/components/schemas/ChallengeStatus'
+        isClosed:
+          type: boolean
+        declineReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        author:
+          $ref: '#/components/schemas/UserSummary'
+
+    Participant:
+      type: object
+      properties:
+        id:
+          type: string
+        challengeId:
+          type: string
+        userId:
+          type: string
+        joinedAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserSummary'
+
+    Work:
+      type: object
+      properties:
+        id:
+          type: string
+        challengeId:
+          type: string
+        participantId:
+          type: string
+          nullable: true
+        userId:
+          type: string
+          nullable: true
+        content:
+          type: string
+          description: TipTap JSON 문자열 또는 일반 텍스트
+        likeCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserSummary'
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        workId:
+          type: string
+        authorId:
+          type: string
+          nullable: true
+        content:
+          type: string
+        parentId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        author:
+          $ref: '#/components/schemas/UserSummary'
+        replies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        targetId:
+          type: string
+          nullable: true
+        targetUrl:
+          type: string
+          nullable: true
+        isRead:
+          type: boolean
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    SignupRequest:
+      type: object
+      required:
+        - email
+        - password
+        - nickname
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        nickname:
+          type: string
+          minLength: 2
+          maxLength: 20
+        image:
+          type: string
+          format: uri
+          nullable: true
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    UpdateMeRequest:
+      type: object
+      properties:
+        nickname:
+          type: string
+          minLength: 2
+          maxLength: 20
+        image:
+          type: string
+          format: uri
+          nullable: true
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        introduction:
+          type: string
+          nullable: true
+          maxLength: 500
+
+    CreateChallengeRequest:
+      type: object
+      required:
+        - title
+        - originalUrl
+        - type
+        - category
+        - description
+        - deadline
+        - maxParticipants
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        originalUrl:
+          type: string
+          format: uri
+        type:
+          $ref: '#/components/schemas/Type'
+        category:
+          $ref: '#/components/schemas/Category'
+        description:
+          type: string
+        deadline:
+          type: string
+          format: date-time
+        maxParticipants:
+          type: integer
+          minimum: 1
+
+    UpdateChallengeRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        originalUrl:
+          type: string
+          format: uri
+        type:
+          $ref: '#/components/schemas/Type'
+        category:
+          $ref: '#/components/schemas/Category'
+        description:
+          type: string
+        deadline:
+          type: string
+          format: date-time
+        maxParticipants:
+          type: integer
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/ChallengeStatus'
+        declineReason:
+          type: string
+          nullable: true
+
+    CreateApplicationRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: 신청 메시지
+
+    CreateWorkRequest:
+      type: object
+      required:
+        - challengeId
+        - content
+      properties:
+        challengeId:
+          type: string
+        content:
+          type: string
+          description: TipTap JSON 문자열
+
+    UpdateWorkRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: TipTap JSON 문자열
+
+    CreateCommentRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+        parentId:
+          type: string
+          nullable: true
+
+    UpdateCommentRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+
+    CreateNotificationRequest:
+      type: object
+      required:
+        - userId
+        - message
+        - targetType
+      properties:
+        userId:
+          type: string
+        message:
+          type: string
+        targetType:
+          $ref: '#/components/schemas/NotificationType'
+        targetId:
+          type: string
+          nullable: true
+        targetUrl:
+          type: string
+          nullable: true
+
+    UpdateNotificationReadRequest:
+      type: object
+      properties:
+        isRead:
+          type: boolean
+          example: true
+
+    LoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 로그인 성공
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+            user:
+              $ref: '#/components/schemas/User'
+
+    RefreshTokenResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 토큰 재발급 성공
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+
+    UserResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/User'
+
+    PublicUserResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PublicUser'
+
+    ProfileResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Profile'
+
+    ChallengeDetailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Challenge'
+
+    ChallengeListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Challenge'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    Application:
+      type: object
+      properties:
+        id:
+          type: string
+        challengeId:
+          type: string
+        userId:
+          type: string
+        message:
+          type: string
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        prevId:
+          type: string
+          nullable: true
+          description: 이전 신청 ID (관리 화면 내 내비게이션용)
+        nextId:
+          type: string
+          nullable: true
+          description: 다음 신청 ID (관리 화면 내 내비게이션용)
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        user:
+          $ref: '#/components/schemas/UserSummary'
+
+    ApplicationListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Application'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    ApplicationDetailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Application'
+
+    ParticipantListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Participant'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    ParticipantDetailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Participant'
+
+    UpdateApplicationRequest:
+      type: object
+      description: 참가 신청 수정 (승인/거절 등) - 관리자/사용자 공통
+      properties:
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+
+    WorkDetailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Work'
+
+    WorkListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Work'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    CommentDetailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Comment'
+
+    CommentListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Comment'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    LikeCountResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            count:
+              type: integer
+
+    LikeStatusResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            isLiked:
+              type: boolean
+
+    LikeActionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            isLiked:
+              type: boolean
+            count:
+              type: integer
+
+    NotificationDetailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Notification'
+
+    NotificationListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Notification'
+            pagination:
+              $ref: '#/components/schemas/Pagination'

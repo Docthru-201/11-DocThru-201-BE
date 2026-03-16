@@ -14,4 +14,3 @@ export class ParticipantsController extends BaseController {
 
   async listParticipants(req, res) {}
 }
-

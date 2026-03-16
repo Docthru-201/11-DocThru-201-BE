@@ -2,6 +2,7 @@ import { PrismaClient } from '#generated/prisma/client.ts';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { fakerKO as faker } from '@faker-js/faker';
 import bcrypt from 'bcrypt';
+import crypto from 'node:crypto';
 import * as seedConstants from './seed.constants.js';
 
 class Seeder {
@@ -22,6 +23,30 @@ class Seeder {
 
   #xs(n) {
     return Array.from({ length: n }, (_, i) => i + 1);
+  }
+
+  #buildWorkContent() {
+    const topic = faker.helpers.arrayElement(
+      seedConstants.CHALLENGE_TOPIC_TEMPLATES,
+    );
+    const text = faker.helpers
+      .arrayElement(seedConstants.WORK_CONTENT_TEMPLATES)
+      .replace('{topic}', topic);
+
+    return {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text,
+            },
+          ],
+        },
+      ],
+    };
   }
 
   async #resetDb() {
@@ -70,6 +95,41 @@ class Seeder {
     return users;
   }
 
+  async #seedSocialAccounts(users) {
+    const sampled = faker.helpers.arrayElements(users, {
+      min: Math.floor(users.length / 2),
+      max: users.length,
+    });
+
+    for (const user of sampled) {
+      await this.#prisma.socialAccount.create({
+        data: {
+          userId: user.id,
+          provider: seedConstants.AUTH_PROVIDERS[0],
+          providerId: faker.string.uuid(),
+        },
+      });
+    }
+  }
+
+  async #seedRefreshTokens(users) {
+    const now = new Date();
+    const expiresInDays = 30;
+
+    for (const user of users) {
+      await this.#prisma.refreshToken.create({
+        data: {
+          userId: user.id,
+          token: crypto.randomBytes(32).toString('hex'),
+          device: faker.internet.userAgent(),
+          expiresAt: new Date(
+            now.getTime() + expiresInDays * seedConstants.DAY_IN_MS,
+          ),
+        },
+      });
+    }
+  }
+
   async #seedChallenges(users) {
     const challenges = [];
 
@@ -81,10 +141,20 @@ class Seeder {
       const titleTemplate = faker.helpers.arrayElement(
         seedConstants.CHALLENGE_TITLE_TEMPLATES,
       );
-      const status =
+      const statusIndex =
         i === 0
-          ? 'RECRUITING'
-          : faker.helpers.arrayElement(seedConstants.CHALLENGE_STATUSES);
+          ? 1
+          : faker.number.int({
+              min: 0,
+              max: seedConstants.CHALLENGE_STATUSES.length - 1,
+            });
+      const status = seedConstants.CHALLENGE_STATUSES[statusIndex];
+
+      const shouldClose = faker.number.int({ min: 1, max: 10 }) <= 3; // 1~10 중 3 이하 → 약 30%
+      const rawDeadline = shouldClose
+        ? faker.date.recent({ days: seedConstants.CHALLENGE_DEADLINE })
+        : faker.date.soon({ days: seedConstants.CHALLENGE_DEADLINE });
+      const isClosed = shouldClose;
 
       const challenge = await this.#prisma.challenge.create({
         data: {
@@ -100,14 +170,19 @@ class Seeder {
           description: faker.helpers.arrayElement(
             seedConstants.CHALLENGE_DESCRIPTION_TEMPLATES,
           ),
-          deadline: faker.date.soon({
-            days: seedConstants.CHALLENGE_DEADLINE,
-          }),
+          deadline: rawDeadline,
           maxParticipants: faker.number.int({
             min: seedConstants.CHALLENGE_MIN_PARTICIPANTS,
             max: seedConstants.CHALLENGE_MAX_PARTICIPANTS,
           }),
           status,
+          declineReason:
+            status === 'REJECTED'
+              ? faker.helpers.arrayElement(
+                  seedConstants.DECLINE_REASON_TEMPLATES,
+                )
+              : null,
+          isClosed,
         },
       });
 
@@ -118,12 +193,12 @@ class Seeder {
   }
 
   async #seedParticipants(challenges, users) {
-    const recruitingStatus = 'RECRUITING';
-    const recruitingChallenges = challenges.filter(
-      (c) => c.status === recruitingStatus,
+    const approvedStatus = 'APPROVED';
+    const openChallenges = challenges.filter(
+      (c) => c.status === approvedStatus && !c.isClosed,
     );
 
-    for (const challenge of recruitingChallenges) {
+    for (const challenge of openChallenges) {
       const participants = faker.helpers.arrayElements(users, {
         min: seedConstants.APPLICANTS_MIN,
         max: Math.min(seedConstants.APPLICANTS_MAX, users.length),
@@ -146,43 +221,34 @@ class Seeder {
         where: { challengeId: challenge.id },
       });
 
+      if (participants.length === 0) continue;
+
+      const commenters = await this.#prisma.user.findMany({
+        take: seedConstants.COMMENTERS_TAKE,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const likers = await this.#prisma.user.findMany({
+        take: seedConstants.LIKERS_TAKE,
+        orderBy: { createdAt: 'asc' },
+      });
+
       for (const participant of participants) {
+        const content = this.#buildWorkContent();
+
         const work = await this.#prisma.work.create({
           data: {
             challengeId: challenge.id,
             participantId: participant.id,
             userId: participant.userId,
-            content: JSON.stringify({
-              type: 'doc',
-              content: [
-                {
-                  type: 'paragraph',
-                  content: [
-                    {
-                      type: 'text',
-                      text: faker.helpers
-                        .arrayElement(seedConstants.WORK_CONTENT_TEMPLATES)
-                        .replace(
-                          '{topic}',
-                          faker.helpers.arrayElement(
-                            seedConstants.CHALLENGE_TOPIC_TEMPLATES,
-                          ),
-                        ),
-                    },
-                  ],
-                },
-              ],
-            }),
+            content: JSON.stringify(content),
           },
         });
 
-        const commenters = await this.#prisma.user.findMany({
-          take: seedConstants.COMMENTERS_TAKE,
-          orderBy: { createdAt: 'desc' },
-        });
+        const parentComments = [];
 
         for (const commenter of commenters) {
-          await this.#prisma.comment.create({
+          const parent = await this.#prisma.comment.create({
             data: {
               workId: work.id,
               authorId: commenter.id,
@@ -191,12 +257,31 @@ class Seeder {
               ),
             },
           });
+          parentComments.push(parent);
         }
 
-        const likers = await this.#prisma.user.findMany({
-          take: seedConstants.LIKERS_TAKE,
-          orderBy: { createdAt: 'asc' },
-        });
+        // 일부 댓글에 대해서는 대댓글도 생성 (parentId가 있는 댓글)
+        if (parentComments.length > 0) {
+          const replyTargets = faker.helpers.arrayElements(parentComments, {
+            min: 1,
+            max: Math.min(2, parentComments.length),
+          });
+
+          for (const parent of replyTargets) {
+            const replyAuthor = faker.helpers.arrayElement(commenters);
+
+            await this.#prisma.comment.create({
+              data: {
+                workId: work.id,
+                authorId: replyAuthor.id,
+                parentId: parent.id,
+                content: faker.helpers.arrayElement(
+                  seedConstants.COMMENT_TEMPLATES,
+                ),
+              },
+            });
+          }
+        }
 
         for (const liker of likers) {
           await this.#prisma.like.upsert({
@@ -234,18 +319,19 @@ class Seeder {
       });
 
       for (const _ of this.#xs(count)) {
+        const isRead = faker.helpers.arrayElement([true, false]);
         await this.#prisma.notification.create({
           data: {
             userId: user.id,
-            message: faker.helpers.arrayElement(
-              seedConstants.NOTIFICATION_TEMPLATES,
-            ),
-            targetType: faker.helpers.arrayElement(
-              seedConstants.NOTIFICATION_TYPES,
-            ),
+            type: faker.helpers.arrayElement(seedConstants.NOTIFICATION_TYPES),
             targetId: null,
             targetUrl: null,
-            isRead: faker.helpers.arrayElement([true, false]),
+            isRead,
+            readAt: isRead
+              ? faker.date.recent({
+                  days: seedConstants.NOTIFICATION_RECENT_DAYS,
+                })
+              : null,
           },
         });
       }
@@ -273,6 +359,12 @@ class Seeder {
     const users = await this.#seedUsers();
     console.log(`👥 ${users.length}명의 유저가 생성되었습니다`);
     console.log(`🔑 모든 유저의 비밀번호: ${seedConstants.SEED_PASSWORD}`);
+
+    await this.#seedSocialAccounts(users);
+    console.log('🔗 소셜 계정 데이터 생성 완료');
+
+    await this.#seedRefreshTokens(users);
+    console.log('🔐 리프레시 토큰 데이터 생성 완료');
 
     const challenges = await this.#seedChallenges(users);
     console.log(`🎯 ${challenges.length}개의 챌린지가 생성되었습니다`);
