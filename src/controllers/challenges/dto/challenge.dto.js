@@ -1,12 +1,6 @@
 import { z } from 'zod';
 import { Category, ChallengeStatus, Type } from '#generated/prisma/enums.js';
 
-//규량st
-// const typeEnum = z.enum(['NEXT_JS', 'API', 'CAREER', 'MODERN_JS', 'WEB']);
-// const categoryEnum = z.enum(['DOCUMENT', 'BLOG']);
-// const statusEnum = z.enum(['PENDING', 'APPROVAL', 'CLOSED', 'DELETED'], {
-//   error: '유효한 상태 값이 아닙니다.',
-// });
 const DESCRIPTION_MIN_LENGTH = 10;
 const DESCRIPTION_MAX_LIMIT = 500;
 const TITLE_MAX_LENGTH = 100;
@@ -16,7 +10,6 @@ const PARTICIPANT_MIN_LIMIT = 1;
 
 // export const listChallengesQuerySchema = z.object({}); // TODO: 추후 페이지네이션 추가
 
-//나도 ⭐️수전전
 export const ulidSchema = z.string().trim();
 z.ulid({ message: `유효한 id 형식(ULID)이 아닙니다.` });
 
