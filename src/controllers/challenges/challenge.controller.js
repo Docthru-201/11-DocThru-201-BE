@@ -58,11 +58,43 @@ export class ChallengesController extends BaseController {
     res.status(HTTP_STATUS.OK).json(challenge);
   }
 
-  async create(req, res) {}
+  async create(req, res) {
+    const challengeData = req.body;
+    const userId = req.user.id;
 
-  async update(req, res) {}
+    const newChallenge = await this.#challengesService.createChallengeSchema({
+      ...challengeData,
+      authorId: userId,
+    });
+    res.status(HTTP_STATUS.CREATED).json(newChallenge);
+  }
 
-  async delete(req, res) {}
+  async update(req, res) {
+    const { id } = req.params;
+    const updataData = req.body;
+    const userId = req.user.id;
 
-  async getMyChallenges(req, res) {}
+    const updateChallenge = await this.#challengesService.editChallenge(
+      id,
+      userId,
+      updataData,
+    );
+    res.status(HTTP_STATUS.OK).json(updateChallenge);
+  }
+
+  async delete(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    await this.#challengesService.removeChallenge(id, userId);
+    res.sendStatus(HTTP_STATUS.NO_CONTENT);
+  }
+
+  async getMyChallenges(req, res) {
+    const userId = req.user.id;
+
+    const myChallenges =
+      await this.#challengesService.getChallengesByUser(userId);
+    res.status(HTTP_STATUS.OK).json(myChallenges);
+  }
 }
