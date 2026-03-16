@@ -1,3 +1,4 @@
+import { PRISMA_ERROR, ERROR_MESSAGE, HTTP_STATUS } from '#constants/errors.js';
 export class ChallengesService {
   #challengeRepository;
   #notificationsService;
@@ -24,7 +25,7 @@ export class ChallengesService {
       orderBy: { createdAt: 'desc' },
     };
 
-    //admin인 경우는 전체라서 넘겨주지 않음
+    //admin인 경우는 전체라서 userId 넘겨주지 않음
     if (userId) {
       options.where.authorId = userId;
     }
@@ -50,10 +51,6 @@ export class ChallengesService {
         { description: { contains: keyword, mode: 'insensitive' } },
       ];
     }
-    console.log(
-      '🔍 Repository로 전달되는 where 조건:',
-      JSON.stringify(options.where, null, 2),
-    );
     return this.#challengeRepository.findAllChallenges(options);
   }
 
@@ -69,7 +66,7 @@ export class ChallengesService {
         await this.#challengeRepository.findChallengeById(challengeId);
       if (challenge.isClosed) {
         const error = new Error('완료된 챌린지는 수정 및 삭제가 불가능합니다.');
-        error.statusCode = 403;
+        error.statusCode = HTTP_STATUS.FORBIDDEN;
         throw error;
       }
 
@@ -82,7 +79,7 @@ export class ChallengesService {
       // 알림 전송
       if (challenge.authorId !== userId) {
         const { status, declineReason, title, id } = updatedChallenge;
-         // message String // TODO: 논의중인 사안
+        // message String // TODO: 논의중인 사안
         const message = ['REJECTED', 'DELETED'].includes(status)
           ? this.#notificationsService.notificationMessages.adminReviewResult(
               title,
@@ -105,10 +102,9 @@ export class ChallengesService {
 
       return updatedChallenge;
     } catch (e) {
-      // Prisma 에러 및 커스텀 에러 처리
-      if (e.code === 'P2025') {
-        const error = new Error('챌린지를 찾을 수 없습니다.');
-        error.statusCode = 404;
+      if (e.code === PRISMA_ERROR.RECORD_NOT_FOUND) {
+        const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND);
+        error.statusCode = HTTP_STATUS.NOT_FOUND;
         throw error;
       }
       throw e;
