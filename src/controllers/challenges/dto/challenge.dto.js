@@ -25,6 +25,7 @@ export const challengeIdParamSchema = z.object({
 export const ulidSchema = z.ulid({
   message: `유효한 id 형식(ULID)이 아닙니다.`,
 });
+
 export const challengeIdParamSchema = z.object({
   id: ulidSchema,
 });
@@ -48,7 +49,6 @@ export const createChallengeSchema = z.object({
   category: z.enum(Category, { required_error: `카테고리를 선택해 주세요.` }),
   description: z
     .string()
-    .trim()
     .min(
       DESCRIPTION_MIN_LENGTH,
       `설명은 최소 ${DESCRIPTION_MIN_LENGTH}자 이상이어야 합니다.`,
@@ -123,8 +123,7 @@ export const updateChallengeSchema = z
       `설명은 ${DESCRIPTION_MAX_LIMIT}자를 넘길 수 없습니다.`,
     ),
   deadline: z.iso.datetime(),
-  maxParticipants: z
-    .number()
+  maxParticipants: z.coerce
     .int(`참가자 수는 정수로 입력해주세요.`)
     .min(
       PARTICIPANT_MIN_LIMIT,
@@ -154,12 +153,8 @@ export const updateChallengeSchema = z.object({
       DESCRIPTION_MAX_LIMIT,
       `설명은 ${DESCRIPTION_MAX_LIMIT}자를 넘길 수 없습니다.`,
     ),
-  deadline: z
-    .string()
-    .trim()
-    .iso.datetime(`올바른 날짜와 시간 형식이 아닙니다.`),
-  maxParticipants: z
-    .number()
+  deadline: z.iso.datetime(`올바른 날짜와 시간 형식이 아닙니다.`),
+  maxParticipants: z.coerce
     .int(`참가자 수는 정수로 입력해주세요.`)
     .min(
       PARTICIPANT_MIN_LIMIT,
