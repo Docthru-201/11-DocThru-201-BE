@@ -126,18 +126,6 @@ export const createContainer = () => {
     }),
 
     controller: asClass(Controller, { lifetime: Lifetime.SINGLETON }),
-
-    profileRepository: asClass(ProfileRepository, {
-      lifetime: Lifetime.SINGLETON,
-    }),
-
-    profilesService: asClass(ProfilesService, {
-      lifetime: Lifetime.SINGLETON,
-    }),
-
-    profilesController: asClass(ProfilesController, {
-      lifetime: Lifetime.SINGLETON,
-    }),
   });
 
   return container.cradle;
