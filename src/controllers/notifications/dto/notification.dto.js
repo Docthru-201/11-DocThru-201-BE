@@ -4,7 +4,7 @@ import { z } from 'zod';
 const ULID_REGEX = /^[0-9A-HJKMNP-TV-Z]{26}$/i;
 
 export const notificationIdParamSchema = z.object({
-  id: z.ulid(),
+  id: z.string(),
 });
 export const createNotificationSchema = z.object({
   userId: z.string().trim().nonempty('알림을 수신할 ID가 필요합니다.'),
