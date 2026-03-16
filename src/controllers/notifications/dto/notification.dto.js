@@ -1,6 +1,8 @@
 import { NotificationType } from '#generated/prisma/enums.js';
 import { z } from 'zod';
 
+const ULID_REGEX = /^[0-9A-HJKMNP-TV-Z]{26}$/i;
+
 export const notificationIdParamSchema = z.object({
   id: z.string(),
 });
@@ -8,8 +10,12 @@ export const createNotificationSchema = z.object({
   userId: z.string().trim().nonempty('알림을 수신할 ID가 필요합니다.'),
   message: z.string().trim().nonempty('알림 내용이 필요합니다.'),
   targetType: z.enum(NotificationType),
-  targetId: z.string().optional(),
-  targetUrl: z.string().optional(),
+  targetId: z
+    .string()
+    .trim()
+    .regex(ULID_REGEX, '유효한 ID 형식이 아닙니다.')
+    .optional(),
+  targetUrl: z.url('올바른 URL 형식으로 입력해 주세요'),
 });
 
 export const getMyNotificationsQuerySchema = z.object({
