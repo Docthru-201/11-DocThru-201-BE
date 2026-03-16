@@ -22,6 +22,10 @@ export class ChallengesController extends BaseController {
 
     this.router.get('/', (req, res) => this.findAll(req, res));
 
+    this.router.get('/:id', validate('params', idParamSchema), (req, res) =>
+      this.findById(req, res),
+    );
+
     this.router.post(
       '/',
       needsLogin,
@@ -62,7 +66,7 @@ export class ChallengesController extends BaseController {
     const challengeData = req.body;
     const userId = req.user.id;
 
-    const newChallenge = await this.#challengesService.createChallengeSchema({
+    const newChallenge = await this.#challengesService.createChallenge({
       ...challengeData,
       authorId: userId,
     });
@@ -74,7 +78,7 @@ export class ChallengesController extends BaseController {
     const updataData = req.body;
     const userId = req.user.id;
 
-    const updateChallenge = await this.#challengesService.editChallenge(
+    const updateChallenge = await this.#challengesService.updateChallenge(
       id,
       userId,
       updataData,
@@ -86,7 +90,7 @@ export class ChallengesController extends BaseController {
     const { id } = req.params;
     const userId = req.user.id;
 
-    await this.#challengesService.removeChallenge(id, userId);
+    await this.#challengesService.deleteChallenge(id, userId);
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 
@@ -94,7 +98,7 @@ export class ChallengesController extends BaseController {
     const userId = req.user.id;
 
     const myChallenges =
-      await this.#challengesService.getChallengesByUser(userId);
+      await this.#challengesService.getChallengesByUser(userId); //challenge.service.js에 없는데, 일단 넣어둠
     res.status(HTTP_STATUS.OK).json(myChallenges);
   }
 }
