@@ -1,8 +1,6 @@
 import { Category, ChallengeStatus, Type } from '#generated/prisma/enums.js';
 import { z } from 'zod';
 
-const ULID_REGEX = /^[0-9A-HJKMNP-TV-Z]{26}$/i;
-
 // 길이/범위 상수
 const DESCRIPTION_MIN_LENGTH = 10;
 const DESCRIPTION_MAX_LIMIT = 500;
@@ -21,7 +19,7 @@ export const listChallengesQuerySchema = z.object({
 });
 
 export const challengeIdParamSchema = z.object({
-  id: z.string().trim().regex(ULID_REGEX, '유효한 ID 형식이 아닙니다.'),
+  id: z.ulid({ message: `유효한 id 형식(ULID)이 아닙니다.` }),
 });
 
 export const createChallengeSchema = z.object({
@@ -44,9 +42,8 @@ export const createChallengeSchema = z.object({
       DESCRIPTION_MAX_LIMIT,
       `설명은 ${DESCRIPTION_MAX_LIMIT}자 이하여야 합니다.`,
     ),
-  deadline: z.coerce.date({ required_error: '마감일을 정해주세요.' }),
+  deadline: z.iso.datetime({ required_error: '마감일을 정해주세요.' }),
   maxParticipants: z.coerce
-    .number()
     .int()
     .min(PARTICIPANT_MIN_LIMIT, '참가자는 1명 이상 이어야 합니다.'),
 });
@@ -76,11 +73,10 @@ export const updateChallengeSchema = z
         `설명은 ${DESCRIPTION_MAX_LIMIT}자 이하여야 합니다.`,
       )
       .optional(),
-    deadline: z.coerce
-      .date({ required_error: '마감일을 정해주세요.' })
+    deadline: z.iso
+      .datetime({ required_error: '마감일을 정해주세요.' })
       .optional(),
     maxParticipants: z.coerce
-      .number()
       .int()
       .min(PARTICIPANT_MIN_LIMIT, '참가자는 1명 이상 이어야 합니다.')
       .optional(),
