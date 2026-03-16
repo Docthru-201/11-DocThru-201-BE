@@ -1,4 +1,4 @@
-import { PRISMA_ERROR, ERROR_MESSAGE, HTTP_STATUS } from '#constants/errors.js';
+import { PRISMA_ERROR, ERROR_MESSAGE, HTTP_STATUS } from '#constants';
 export class ChallengesService {
   #challengeRepository;
   #notificationsService;
