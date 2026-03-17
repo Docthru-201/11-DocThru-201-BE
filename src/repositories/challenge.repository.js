@@ -87,6 +87,11 @@ export class ChallengeRepository {
     });
   }
 
+  // 챌린지 생성
+  async create(data) {
+    return this.#prisma.challenge.create({ data });
+  }
+
   // 챌린지 정보 업데이트 (상태 변경, 내용 수정 통합)
   async updateChallengeStatus(challengeId, updateData) {
     return await this.#prisma.challenge.update({
