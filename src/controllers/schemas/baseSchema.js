@@ -56,3 +56,38 @@ export const imageUrlSchema = z
   .trim()
   .url({ message: '올바른 이미지 URL 형식이 아닙니다.' })
   .optional();
+
+// ULID 베이스
+export const ulidSchema = z
+  .string()
+  .trim()
+  .regex(/^[0-9A-HJKMNP-TV-Z]{26}$/, {
+    message: '유효한 ID 형식(ULID)이 아닙니다.',
+  })
+  .meta({ id: 'ulid', title: 'ULID' });
+export const contentSchema = (maxLen, message) =>
+  z
+    .string()
+    .trim()
+    .min(1, { message: message || '내용을 입력해주세요.' }) // nonempty와 동일 기능
+    .max(maxLen, { message: `${maxLen}자 이하로 작성해주세요.` })
+    .meta({
+      constraints: { min: 1, max: maxLen },
+      description: message,
+    });
+
+// 3. JSON 검증 로직 (Tiptap 등)
+export const jsonStringSchema = z
+  .string()
+  .refine(
+    (v) => {
+      try {
+        JSON.parse(v);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: '유효한 JSON 형식이 아닙니다.' },
+  )
+  .meta({ format: 'json' });
