@@ -1,6 +1,8 @@
 export class UserRepository {
+  #prisma;
+
   constructor({ prisma }) {
-    this.prisma = prisma;
+    this.#prisma = prisma;
   }
 
   async findUserById(userId) {
