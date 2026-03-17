@@ -1,4 +1,4 @@
-import { PRISMA_ERROR, ERROR_MESSAGE, HTTP_STATUS } from '#constants';
+import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
 import { getCursorParams, parseCursorResult } from '#utils';
 
 export class ChallengesService {
@@ -13,61 +13,47 @@ export class ChallengesService {
   async listChallenges(query) {
     const { cursor, limit, status, category, type, keyword } = query;
 
-    const where = {};
-
-    if (status) {
-      where.status = status;
-    }
-
-    if (category) {
-      where.category = category;
-    }
-
-    if (type) {
-      where.type = type;
-    }
-
-    if (keyword && String(keyword).trim() !== '') {
-      where.OR = [
-        {
-          title: {
-            contains: String(keyword).trim(),
-            mode: 'insensitive',
+    const where = {
+      ...(status && { status }),
+      ...(category && { category }),
+      ...(type && { type }),
+      ...(keyword && {
+        OR: [
+          {
+            title: {
+              contains: keyword,
+              mode: 'insensitive',
+            },
           },
-        },
-        {
-          description: {
-            contains: String(keyword).trim(),
-            mode: 'insensitive',
+          {
+            description: {
+              contains: keyword,
+              mode: 'insensitive',
+            },
           },
-        },
-      ];
-    }
+        ],
+      }),
+    };
 
     const orderBy = { id: 'asc' };
 
-    const {
-      cursor: prismaCursor,
-      skip,
-      take,
-      limit: resolvedLimit,
-    } = getCursorParams({
+    const paginationParams = getCursorParams({
       cursor,
       limit,
       cursorKey: 'id',
     });
 
     const rawItems = await this.#challengeRepository.findManyWithCursor({
-      cursor: prismaCursor,
-      skip,
-      take,
+      cursor: paginationParams.cursor,
+      skip: paginationParams.skip,
+      take: paginationParams.take,
       where,
       orderBy,
     });
 
     const { items, nextCursor, hasNext } = parseCursorResult({
       items: rawItems,
-      limit: resolvedLimit,
+      limit: paginationParams.limit,
       cursorKey: 'id',
     });
 

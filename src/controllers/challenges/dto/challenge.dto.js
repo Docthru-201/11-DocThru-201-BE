@@ -5,6 +5,8 @@ const DESCRIPTION_MIN_LENGTH = 10;
 const DESCRIPTION_MAX_LIMIT = 500;
 const TITLE_MAX_LENGTH = 100;
 const REASON_MAX_LIMIT = 255;
+const PAGE_SIZE_DEFAULT = 20;
+const PAGE_SIZE_MAX = 100;
 
 export const ulidSchema = z.ulid({
   message: `유효한 id 형식(ULID)이 아닙니다.`,
@@ -15,19 +17,23 @@ export const listChallengesQuerySchema = z.object({
   cursor: z
     .ulid()
     .optional()
-    .describe('다음 페이지를 위한 커서(ULID). 없으면 첫 페이지 조회'),
+    .describe('다음 페이지를 위한 커서(없으면 첫 페이지 조회)'),
   limit: z.coerce
     .number()
     .int()
-    .min(1)
-    .max(100)
-    .optional()
-    .default(20)
+    .min(1, { error: 'limit은 1 이상이어야 합니다.' })
+    .max(PAGE_SIZE_MAX, { error: `limit은 ${PAGE_SIZE_MAX}이하여야 합니다.` })
+    .default(PAGE_SIZE_DEFAULT)
     .describe('한 번에 조회할 최대 개수'),
   type: z.enum(Type).optional().describe('챌린지 타입 필터'),
   category: z.enum(Category).optional().describe('카테고리 필터'),
   status: z.enum(ChallengeStatus).optional().describe('상태 필터'),
-  keyword: z.string().optional().describe('제목/설명 검색 키워드'),
+  keyword: z
+    .string()
+    .trim()
+    .min(1, { error: 'keyword는 비어 있을 수 없습니다.' })
+    .optional()
+    .describe('제목/설명 검색 키워드'),
 });
 
 export const challengeIdParamSchema = z.object({

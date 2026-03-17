@@ -5,7 +5,7 @@ export class ChallengeRepository {
     this.#prisma = prisma;
   }
 
-  // 커서 기반 목록 조회 (무한 스크롤용)
+  // 커서 기반 목록 조회 (무한 스크롤링)
   async findManyWithCursor({ cursor, skip, take, where, orderBy }) {
     const args = {
       where,
