@@ -26,6 +26,7 @@ export const nicknameSchema = z
 // 비밀번호
 export const passwordSchema = z
   .string()
+  .nonempty({ message: '비밀번호를 입력해주세요.' })
   .min(AUTH_LIMITS.PASSWORD.MIN_LENGTH, {
     message: `비밀번호는 최소 ${AUTH_LIMITS.PASSWORD.MIN_LENGTH}자 이상이어야 합니다.`,
   })
