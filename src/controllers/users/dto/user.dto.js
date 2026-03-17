@@ -1,10 +1,14 @@
 // updateUserSchema.js
 import { z } from 'zod';
-import { nicknameSchema, imageUrlSchema } from '../../schemas/baseSchema.js';
+import {
+  nicknameSchema,
+  imageUrlSchema,
+  ulidSchema,
+} from '../../schemas/baseSchema.js';
 
 // userId path param
 export const userIdParamSchema = z.object({
-  userId: z.string().uuid({ message: '올바른 userId 형식이 아닙니다.' }),
+  userId: ulidSchema,
 });
 
 export const updateUserSchema = z
