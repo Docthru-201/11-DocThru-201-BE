@@ -1,6 +1,7 @@
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 100;
 
+// 쿼리 정규화
 function normalizePage(value) {
   return Math.max(1, Number(value) || 1);
 }
@@ -31,7 +32,6 @@ export function getOffsetParams({
   };
 }
 
-// 전체 개수 기반 응답 메타 정보 계산
 export function getOffsetMeta({ totalCount, page, pageSize }) {
   const total = Math.max(0, Number(totalCount) || 0);
   const currentPage = normalizePage(page);

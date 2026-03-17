@@ -1,6 +1,7 @@
 const DEFAULT_CURSOR_LIMIT = 20;
 const MAX_CURSOR_LIMIT = 100;
 
+// 쿼리 정규화
 function normalizeLimit(value, maxLimit = MAX_CURSOR_LIMIT) {
   const safeMaxLimit = Math.max(1, Number(maxLimit) || MAX_CURSOR_LIMIT);
 
