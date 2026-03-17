@@ -27,7 +27,7 @@ paths:
       tags: [Admin]
       summary: 챌린지 관리 목록 조회 (승인 대기 챌린지 등)
       security:
-        - bearerAuth: []
+        - accessTokenCookie: []
       parameters:
         - $ref: '#/components/parameters/CursorQuery'
         - $ref: '#/components/parameters/LimitQuery'
@@ -51,8 +51,6 @@ paths:
     get:
       tags: [Admin]
       summary: 특정 챌린지 신청 목록 조회
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ChallengeIdParam'
         - $ref: '#/components/parameters/CursorQuery'
@@ -75,8 +73,6 @@ paths:
     patch:
       tags: [Admin]
       summary: 신청 승인/거절 (Application 상태 변경)
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ApplicationIdParam'
       requestBody:
@@ -105,8 +101,6 @@ paths:
     get:
       tags: [Applications]
       summary: 특정 참가 신청 상세 조회
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ApplicationIdParam'
       responses:
@@ -169,8 +163,6 @@ paths:
     post:
       tags: [Auth]
       summary: 현재 기기 로그아웃
-      security:
-        - bearerAuth: []
       responses:
         '200':
           description: 로그아웃 성공
@@ -185,8 +177,6 @@ paths:
     post:
       tags: [Auth]
       summary: 모든 기기 로그아웃
-      security:
-        - bearerAuth: []
       responses:
         '200':
           description: 모든 기기 로그아웃 성공
@@ -257,8 +247,6 @@ paths:
     get:
       tags: [Users]
       summary: 내 기본 정보 조회
-      security:
-        - bearerAuth: []
       responses:
         '200':
           description: 내 정보 조회 성공
@@ -272,8 +260,6 @@ paths:
     patch:
       tags: [Users]
       summary: 내 기본 정보 수정
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -297,8 +283,6 @@ paths:
     delete:
       tags: [Users]
       summary: 회원 탈퇴
-      security:
-        - bearerAuth: []
       responses:
         '200':
           description: 회원 탈퇴 성공
@@ -333,8 +317,6 @@ paths:
     get:
       tags: [Profile]
       summary: 내 확장 정보 조회
-      security:
-        - bearerAuth: []
       responses:
         '200':
           description: 내 프로필 조회 성공
@@ -350,8 +332,6 @@ paths:
     patch:
       tags: [Profile]
       summary: 내 확장 정보 수정
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -411,11 +391,6 @@ paths:
           name: keyword
           schema:
             type: string
-        - in: query
-          name: sort
-          schema:
-            type: string
-            example: latest
       responses:
         '200':
           description: 챌린지 목록 조회 성공
@@ -429,8 +404,6 @@ paths:
     post:
       tags: [Challenges]
       summary: 새 챌린지 생성
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -453,8 +426,6 @@ paths:
     get:
       tags: [Challenges]
       summary: 내가 신청한 챌린지 목록 조회
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/CursorQuery'
         - $ref: '#/components/parameters/LimitQuery'
@@ -493,8 +464,6 @@ paths:
     patch:
       tags: [Challenges]
       summary: 특정 챌린지 정보 수정
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ChallengeIdParam'
       requestBody:
@@ -524,8 +493,6 @@ paths:
     delete:
       tags: [Challenges]
       summary: 특정 챌린지 삭제
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ChallengeIdParam'
       responses:
@@ -546,8 +513,6 @@ paths:
     get:
       tags: [Challenges]
       summary: 내가 만든 챌린지 목록 조회
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/CursorQuery'
         - $ref: '#/components/parameters/LimitQuery'
@@ -569,8 +534,6 @@ paths:
     get:
       tags: [Challenges]
       summary: 내가 신청한 특정 챌린지 상세 조회
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ChallengeIdParam'
       responses:
@@ -590,8 +553,6 @@ paths:
     patch:
       tags: [Challenges]
       summary: 챌린지 신청 취소 (삭제 대신 상태 변경)
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ChallengeIdParam'
       requestBody:
@@ -636,8 +597,6 @@ paths:
     post:
       tags: [Applications]
       summary: 챌린지 신청
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ChallengeIdParam'
       requestBody:
@@ -689,8 +648,6 @@ paths:
     post:
       tags: [Works]
       summary: 작업물 등록
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -732,8 +689,6 @@ paths:
     patch:
       tags: [Works]
       summary: 작업물 수정
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/WorkIdParam'
       requestBody:
@@ -1048,10 +1003,11 @@ paths:
 
 components:
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    accessTokenCookie:
+      type: apiKey
+      in: cookie
+      name: accessToken
+      description: 로그인 시 발급되는 Access Token 쿠키
 
   parameters:
     ProviderParam:
@@ -1116,6 +1072,7 @@ components:
       required: false
       schema:
         type: string
+        description: 다음 페이지 조회를 위한 커서(ULID)
 
     LimitQuery:
       in: query
@@ -1124,8 +1081,8 @@ components:
       schema:
         type: integer
         minimum: 1
-        maximum: 50
-        default: 10
+        maximum: 100
+        default: 20
 
   responses:
     BadRequest:
@@ -1134,6 +1091,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: 잘못된 요청입니다.
+            code: BAD_REQUEST
+            details: null
 
     Unauthorized:
       description: 인증 실패
@@ -1141,6 +1102,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: 인증이 필요합니다.
+            code: UNAUTHORIZED
+            details: null
 
     Forbidden:
       description: 권한 없음
@@ -1148,6 +1113,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: 접근 권한이 없습니다.
+            code: FORBIDDEN
+            details: null
 
     NotFound:
       description: 리소스를 찾을 수 없음
@@ -1155,6 +1124,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: 리소스를 찾을 수 없습니다.
+            code: RESOURCE_NOT_FOUND
+            details: null
 
     Conflict:
       description: 충돌 발생
@@ -1162,6 +1135,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: 이미 존재하는 리소스입니다.
+            code: RESOURCE_CONFLICT
+            details: null
 
   schemas:
     Role:
@@ -1233,13 +1210,14 @@ components:
       properties:
         message:
           type: string
-          example: 잘못된 요청입니다.
+          description: 에러 메시지
         code:
           type: string
-          example: BAD_REQUEST
+          description: 에러 코드
         details:
           type: object
           nullable: true
+          description: 필드별 에러 상세 정보 (검증 실패 등)
 
     Pagination:
       type: object
