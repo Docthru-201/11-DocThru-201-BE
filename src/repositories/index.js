@@ -6,3 +6,4 @@ export * from './work.repository.js';
 export * from './comment.repository.js';
 export * from './like.repository.js';
 export * from './notification.repository.js';
+export * from './auth.repository.js';

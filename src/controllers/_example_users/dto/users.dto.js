@@ -1,27 +1,21 @@
 import { z } from 'zod';
 
-// ID 파라미터 검증 스키마
-export const idParamSchema = z.object({
-  id: z.coerce.number().int().positive({
-    message: 'ID는 양수여야 합니다.',
-  }),
-});
-
-// 사용자 생성 스키마
-export const createUserSchema = z.object({
-  email: z.email('유효한 이메일 형식이 아닙니다.'),
-  password: z
-    .string({ error: '비밀번호는 필수입니다.' })
-    .min(6, '비밀번호는 6자 이상이어야 합니다.'),
-  name: z.string().min(2, '이름은 2자 이상이어야 합니다.').optional(),
-});
-
-// 사용자 수정 스키마
 export const updateUserSchema = z
   .object({
-    email: z.email('유효한 이메일 형식이 아닙니다.').optional(),
-    name: z.string().min(2, '이름은 2자 이상이어야 합니다.').optional(),
+    nickname: z
+      .string()
+      .trim()
+      .min(2, { message: '닉네임은 최소 2자 이상입니다.' })
+      .max(8, { message: '닉네임은 8자 이하입니다.' })
+      .regex(/^[가-힣a-zA-Z0-9]+$/, {
+        message: '닉네임은 한글, 영문, 숫자만 사용할 수 있습니다.',
+      })
+      .optional(),
+
+    image: z
+      .string()
+      .trim()
+      .url({ message: '올바른 이미지 URL 형식이 아닙니다.' }) // 이미지업로드 방식이 url일때를 가정
+      .optional(),
   })
-  .refine((data) => data.email !== undefined || data.name !== undefined, {
-    message: '수정할 필드가 하나 이상 필요합니다.',
-  });
+  .strict();
