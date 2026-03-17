@@ -1,14 +1,9 @@
 import { z } from 'zod';
-
-// --------------------
-// ULID Schema (Prisma ID 기준)
-// --------------------
-export const ulidSchema = z
-  .string()
-  .regex(/^[0-9A-HJKMNP-TV-Z]{26}$/, {
-    message: '유효한 ID 형식(ULID)이 아닙니다.',
-  })
-  .meta({ id: 'ulid', title: 'ULID' });
+import {
+  ulidSchema,
+  contentSchema,
+  jsonStringSchema,
+} from '../schemas/baseSchema.js';
 
 // --------------------
 // Path Param
@@ -27,22 +22,10 @@ export const workIdParamSchema = z
 export const createWorkSchema = z
   .object({
     challengeId: ulidSchema,
-    content: z
-      .string()
-      .nonempty({ message: '작업물 내용을 입력해주세요.' })
-      .max(5000, { message: '작업물 내용은 5000자 이하로 입력해주세요.' })
-      // Tiptap JSON 문자열 검증
-      .refine(
-        (v) => {
-          try {
-            JSON.parse(v);
-            return true;
-          } catch {
-            return false;
-          }
-        },
-        { message: 'content는 유효한 JSON 문자열이어야 합니다.' },
-      ),
+    // contentSchema와 jsonStringSchema를 결합하여 중복 로직 제거
+    content: contentSchema(5000, '작업물 내용을 입력해주세요.').and(
+      jsonStringSchema,
+    ),
   })
   .strict()
   .meta({ description: '작업물 생성 DTO' });

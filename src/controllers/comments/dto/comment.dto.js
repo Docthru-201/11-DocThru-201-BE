@@ -1,15 +1,29 @@
 import { z } from 'zod';
+import { ulidSchema, contentSchema } from '../schemas/baseSchema.js';
 
 // --------------------
 // Path Param
 // --------------------
-export const workIdParamSchema = z.object({
-  workId: z.string().uuid({ message: '올바른 workId 형식이 아닙니다.' }),
-});
 
-export const commentIdParamSchema = z.object({
-  id: z.string().uuid({ message: '올바른 commentId 형식이 아닙니다.' }),
-});
+// 게시물 workId 검증
+export const workIdParamSchema = z
+  .object({
+    workId: ulidSchema,
+  })
+  .meta({
+    id: 'params.workId',
+    description: '경로 파라미터: 게시물 workId (ULID)',
+  });
+
+// 댓글 commentId 검증
+export const commentIdParamSchema = z
+  .object({
+    commentId: ulidSchema,
+  })
+  .meta({
+    id: 'params.commentId',
+    description: '경로 파라미터: 댓글 commentId (ULID)',
+  });
 
 // --------------------
 // Body
@@ -18,20 +32,16 @@ export const commentIdParamSchema = z.object({
 // 댓글/대댓글 작성 /works/:workId/comments (POST)
 export const createCommentSchema = z
   .object({
-    content: z
-      .string()
-      .nonempty({ message: '댓글 내용을 입력해주세요.' })
-      .max(1000, { message: '댓글 내용은 1000자 이하로 입력해주세요.' }),
-    parentId: z.string().uuid().optional().nullable(),
+    content: contentSchema(1000, '댓글 내용을 작성해주세요.'),
+    parentId: ulidSchema.optional().nullable(), // 대댓글용 부모 댓글 ID
   })
-  .strict();
+  .strict()
+  .meta({ description: '댓글 작성 DTO' });
 
-// 댓글 수정 /comments/:id (PATCH)
+// 댓글 수정 /comments/:commentId (PATCH)
 export const updateCommentSchema = z
   .object({
-    content: z
-      .string()
-      .nonempty({ message: '댓글 내용을 입력해주세요.' })
-      .max(1000, { message: '댓글 내용은 1000자 이하로 입력해주세요.' }),
+    content: contentSchema(1000, '댓글 내용을 작성해주세요.'),
   })
-  .strict();
+  .strict()
+  .meta({ description: '댓글 수정 DTO' });
