@@ -1,4 +1,5 @@
 import { PRISMA_ERROR, ERROR_MESSAGE, HTTP_STATUS } from '#constants';
+import { getCursorParams, parseCursorResult } from '#utils';
 
 export class ChallengesService {
   #challengeRepository;
@@ -10,7 +11,76 @@ export class ChallengesService {
   }
 
   async listChallenges(query) {
-    return await this.#challengeRepository.findMany(query);
+    const { cursor, limit, status, category, type, keyword } = query;
+
+    const where = {};
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (category) {
+      where.category = category;
+    }
+
+    if (type) {
+      where.type = type;
+    }
+
+    if (keyword && String(keyword).trim() !== '') {
+      where.OR = [
+        {
+          title: {
+            contains: String(keyword).trim(),
+            mode: 'insensitive',
+          },
+        },
+        {
+          description: {
+            contains: String(keyword).trim(),
+            mode: 'insensitive',
+          },
+        },
+      ];
+    }
+
+    const orderBy = { id: 'asc' };
+
+    const {
+      cursor: prismaCursor,
+      skip,
+      take,
+      limit: resolvedLimit,
+    } = getCursorParams({
+      cursor,
+      limit,
+      cursorKey: 'id',
+    });
+
+    const rawItems = await this.#challengeRepository.findManyWithCursor({
+      cursor: prismaCursor,
+      skip,
+      take,
+      where,
+      orderBy,
+    });
+
+    const { items, nextCursor, hasNext } = parseCursorResult({
+      items: rawItems,
+      requestedLimit: resolvedLimit,
+      cursorKey: 'id',
+    });
+
+    return {
+      message: '챌린지 목록 조회 성공',
+      data: {
+        items,
+        pagination: {
+          nextCursor,
+          hasNext,
+        },
+      },
+    };
   }
 
   async getChallengeDetail(id) {
