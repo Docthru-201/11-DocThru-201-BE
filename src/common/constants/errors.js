@@ -13,6 +13,11 @@ export const ERROR_MESSAGE = {
   FAILED_TO_CREATE_USER: '사용자 생성에 실패했습니다.',
   FAILED_TO_UPDATE_USER: '사용자 수정에 실패했습니다.',
   FAILED_TO_DELETE_USER: '사용자 삭제에 실패했습니다.',
+  NICKNAME_ALREADY_EXISTS: 'Nickname already exists',
+  INVALID_LOGIN: 'Invalid login credentials',
+
+  // Profile 관련
+  PROFILE_NOT_FOUND: 'Profile not found',
 
   NO_AUTH_TOKEN: '인증 토큰이 없습니다.',
   INVALID_TOKEN: '유효하지 않거나 만료된 토큰입니다.',

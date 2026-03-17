@@ -98,7 +98,7 @@ model Profile {
 model RefreshToken {
     id String @id @default(ulid())
 
-    userId String
+    userId String  @unique
     token  String  @unique
     device String?
 
