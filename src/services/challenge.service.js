@@ -67,7 +67,7 @@ export class ChallengesService {
 
     const { items, nextCursor, hasNext } = parseCursorResult({
       items: rawItems,
-      requestedLimit: resolvedLimit,
+      limit: resolvedLimit,
       cursorKey: 'id',
     });
 
