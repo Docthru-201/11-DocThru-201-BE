@@ -1,3 +1,5 @@
+import { ERROR_MESSAGE } from '#constants';
+
 export class ChallengesService {
   #challengeRepository;
 
@@ -12,7 +14,7 @@ export class ChallengesService {
   async getChallengeDetail(id) {
     const challenge = await this.#challengeRepository.findById(id);
     if (!challenge) {
-      throw new Error(`There's no challenge at all.`);
+      throw new Error(ERROR_MESSAGE.CHALLENGE_NOT_FOUND);
     }
     return challenge;
   }
@@ -25,10 +27,10 @@ export class ChallengesService {
     const challenge = await this.#challengeRepository.findById(id);
 
     if (!challenge) {
-      throw new Error(`There's no challenge at all.`);
+      throw new Error(ERROR_MESSAGE.CHALLENGE_NOT_FOUND);
     }
     if (challenge.authorId !== userId) {
-      throw new Error(`There's no authority to update at all.`);
+      throw new Error(ERROR_MESSAGE.NO_AUTHORITY_TO_UPDATE);
     }
     return await this.#challengeRepository.update(id, updateData);
   }
@@ -37,10 +39,10 @@ export class ChallengesService {
     const challenge = await this.#challengeRepository.findById(id);
 
     if (!challenge) {
-      throw new Error(`There's no challenge at all.`);
+      throw new Error(ERROR_MESSAGE.CHALLENGE_NOT_FOUND);
     }
     if (challenge.authorId !== userId) {
-      throw new Error(`There's no authority to delete at all.`);
+      throw new Error(ERROR_MESSAGE.N0_AUTHORITY_TO_DELETE);
     }
 
     await this.#challengeRepository.delete(id);

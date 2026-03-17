@@ -34,4 +34,9 @@ export const ERROR_MESSAGE = {
   BAD_REQUEST: 'Bad request',
   RESOURCE_CONFLICT: 'Resource already exists',
   INTERNAL_SERVER_ERROR: 'Internal server error',
+
+  //challenge 관련
+  CHALLENGE_NOT_FOUND: '존재하지 않는 챌린지입니다.',
+  NO_AUTHORITY_TO_UPDATE: '수정 권한이 없습니다.',
+  N0_AUTHORITY_TO_DELETE: '삭제 권한이 없습니다.',
 };

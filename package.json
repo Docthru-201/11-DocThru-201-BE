@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./src/main.js",
   "imports": {
+    "#generated/prisma": "./generated/prisma/index.js",
     "#generated/*": "./generated/*",
     "#config": "./src/config/config.js",
     "#db/*": "./src/db/*",
