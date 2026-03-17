@@ -11,9 +11,9 @@ export class NotificationsService {
     return await this.#notificationRepository.create({
       userId,
       type,
-      message,
       targetId,
       targetUrl,
+      // message,
     });
   }
 

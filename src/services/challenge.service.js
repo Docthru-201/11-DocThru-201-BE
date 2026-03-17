@@ -35,14 +35,15 @@ export class ChallengesService {
       options.where.status = sort.toUpperCase();
     }
 
-    if (sort === 'createdAt_asc') {
-      options.orderBy = { createdAt: 'asc' };
-    } else if (sort === 'createdAt_desc') {
-      options.orderBy = { createdAt: 'desc' };
-    } else if (sort === 'deadline_asc') {
-      options.orderBy = { deadline: 'asc' };
-    } else if (sort === 'deadline_desc') {
-      options.orderBy = { deadline: 'desc' };
+    const sortOptions = {
+      createdAt_asc: { createdAt: 'asc' },
+      createdAt_desc: { createdAt: 'desc' },
+      deadline_asc: { deadline: 'asc' },
+      deadline_desc: { deadline: 'desc' },
+    };
+
+    if (sortOptions[sort]) {
+      options.orderBy = sortOptions[sort];
     }
 
     if (keyword) {
@@ -61,53 +62,42 @@ export class ChallengesService {
 
   // Admin 챌린지 신청승인/신청거절
   async updateChallengeStatus(challengeId, data, userId) {
-    try {
-      const challenge =
-        await this.#challengeRepository.findChallengeById(challengeId);
-      if (challenge.isClosed) {
-        const error = new Error('완료된 챌린지는 수정 및 삭제가 불가능합니다.');
-        error.statusCode = HTTP_STATUS.FORBIDDEN;
-        throw error;
-      }
+    const challenge =
+      await this.#challengeRepository.findChallengeById(challengeId);
 
-      const updatedChallenge =
-        await this.#challengeRepository.updateChallengeStatus(
-          challengeId,
-          data,
-        );
-
-      // 알림 전송
-      if (challenge.authorId !== userId) {
-        const { status, declineReason, title, id } = updatedChallenge;
-        // message String // TODO: 논의중인 사안
-        const message = ['REJECTED', 'DELETED'].includes(status)
-          ? this.#notificationsService.notificationMessages.adminReviewResult(
-              title,
-              status,
-              declineReason,
-            )
-          : this.#notificationsService.notificationMessages.challengeProgressUpdate(
-              title,
-              status,
-            );
-
-        await this.#notificationsService.createNotification({
-          userId: challenge.authorId,
-          type: 'CHALLENGE_APPROVAL_RESULT',
-          targetId: id,
-          targetUrl: `/challenges/${id}`,
-          // message,
-        });
-      }
-
-      return updatedChallenge;
-    } catch (e) {
-      if (e.code === PRISMA_ERROR.RECORD_NOT_FOUND) {
-        const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND);
-        error.statusCode = HTTP_STATUS.NOT_FOUND;
-        throw error;
-      }
-      throw e;
+    if (challenge.isClosed) {
+      const error = new Error('완료된 챌린지는 수정 및 삭제가 불가능합니다.');
+      error.statusCode = HTTP_STATUS.FORBIDDEN;
+      throw error;
     }
+
+    const updatedChallenge =
+      await this.#challengeRepository.updateChallengeStatus(challengeId, data);
+
+    // 알림 전송
+    if (challenge.authorId !== userId) {
+      const { status, declineReason, title, id } = updatedChallenge;
+      // message String // TODO: 논의중인 사안
+      const message = ['REJECTED', 'DELETED'].includes(status)
+        ? this.#notificationsService.notificationMessages.adminReviewResult(
+            title,
+            status,
+            declineReason,
+          )
+        : this.#notificationsService.notificationMessages.challengeProgressUpdate(
+            title,
+            status,
+          );
+
+      await this.#notificationsService.createNotification({
+        userId: challenge.authorId,
+        type: 'CHALLENGE_APPROVAL_RESULT',
+        targetId: id,
+        targetUrl: `/challenges/${id}`,
+        // message,
+      });
+    }
+
+    return updatedChallenge;
   }
 }
