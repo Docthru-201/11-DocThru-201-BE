@@ -10,15 +10,24 @@ export const ulidSchema = z.ulid({
   message: `유효한 id 형식(ULID)이 아닙니다.`,
 });
 
-// GET /challenges
-// 페이지네이션 쿼리 확정해서 수정 필요
+// 커서 기반 페이지네이션
 export const listChallengesQuerySchema = z.object({
-  page: z.string().optional(),
-  limit: z.string().optional(),
-  type: z.enum(Type).optional(),
-  category: z.enum(Category).optional(),
-  status: z.enum(ChallengeStatus).optional(),
-  isClosed: z.string().optional(),
+  cursor: z
+    .ulid()
+    .optional()
+    .describe('다음 페이지를 위한 커서(ULID). 없으면 첫 페이지 조회'),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .default(20)
+    .describe('한 번에 조회할 최대 개수'),
+  type: z.enum(Type).optional().describe('챌린지 타입 필터'),
+  category: z.enum(Category).optional().describe('카테고리 필터'),
+  status: z.enum(ChallengeStatus).optional().describe('상태 필터'),
+  keyword: z.string().optional().describe('제목/설명 검색 키워드'),
 });
 
 export const challengeIdParamSchema = z.object({

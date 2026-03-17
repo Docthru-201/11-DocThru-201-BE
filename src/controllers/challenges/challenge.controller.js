@@ -16,10 +16,7 @@ export class ChallengesController extends BaseController {
   }
 
   routes() {
-    this.router.get('/me', needsLogin, (req, res) =>
-      this.getMyChallenges(req, res),
-    );
-
+    // 전체 목록 조회 (커서 기반 페이지네이션)
     this.router.get('/', (req, res) => this.findAll(req, res));
 
     this.router.get(
@@ -50,17 +47,12 @@ export class ChallengesController extends BaseController {
       (req, res) => this.delete(req, res),
     );
 
+    this.router.get('/me', needsLogin, (req, res) =>
+      this.getMyChallenges(req, res),
+    );
+
     return this.router;
   }
-
-  // GET	/challenges	전체 챌린지 목록 조회(필터링, 페이징 적용 가능)
-  // GET	/challenges/:id	특정 챌린지 상세 조회(ULID사용)
-  // POST	/challenges	새로운 챌린지 생성
-  // PATCH	/challenges/:id	특정 챌린지 정보 수정(제목, 설명, 상태 등 부분 수정)
-  // DELETE	/challenges/:id	특정 챌린지 삭제
-  // GET	/challenges/me	내가 만든 챌린지 조회
-
-  // res <- controller req <-> service <-> repository <-> DB
 
   async findAll(req, res) {
     const challenges = await this.#challengesService.listChallenges(req.query);
@@ -109,7 +101,7 @@ export class ChallengesController extends BaseController {
     const userId = req.user.id;
 
     const myChallenges =
-      await this.#challengesService.getChallengesByUser(userId); //challenge.service.js에 없는데, 일단 넣어둠
+      await this.#challengesService.getChallengesByUser(userId);
     res.status(HTTP_STATUS.OK).json(myChallenges);
   }
 }
