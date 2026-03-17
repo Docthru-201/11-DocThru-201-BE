@@ -1,12 +1,7 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { validate, needsLogin } from '#middlewares';
-import { updateUserSchema } from './dto/user.dto.js';
-import { z } from 'zod';
-
-const idParamSchema = z.object({
-  id: z.string().uuid(),
-});
+import { updateUserSchema, userIdParamSchema } from './dto/user.dto.js';
 
 export class UsersController extends BaseController {
   #usersService;
@@ -29,7 +24,7 @@ export class UsersController extends BaseController {
     this.router.delete('/me', needsLogin, (req, res) =>
       this.deleteMe(req, res),
     );
-    this.router.get('/:id', validate('params', idParamSchema), (req, res) =>
+    this.router.get('/:id', validate('params', userIdParamSchema), (req, res) =>
       this.getUserById(req, res),
     );
     this.router.use('/', this.#profilesController.routes());

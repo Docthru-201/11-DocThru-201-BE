@@ -1,61 +1,82 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { validate, needsLogin } from '#middlewares';
-import { updateUserSchema } from './dto/users.dto.js';
-import { z } from 'zod';
-
-const idParamSchema = z.object({
-  id: z.string().uuid(),
-});
+import {
+  createUserSchema,
+  idParamSchema,
+  updateUserSchema,
+} from './dto/users.dto.js';
 
 export class UsersController extends BaseController {
   #usersService;
-  #profilesController;
 
-  constructor({ usersService, profilesController }) {
+  constructor({ usersService }) {
     super();
     this.#usersService = usersService;
-    this.#profilesController = profilesController;
   }
 
   routes() {
-    this.router.get('/me', needsLogin, (req, res) => this.getMe(req, res));
-    this.router.patch(
-      '/me',
-      needsLogin,
-      validate('body', updateUserSchema),
-      (req, res) => this.updateMe(req, res),
-    );
-    this.router.delete('/me', needsLogin, (req, res) =>
-      this.deleteMe(req, res),
-    );
+    this.router.get('/', (req, res) => this.findAll(req, res));
     this.router.get('/:id', validate('params', idParamSchema), (req, res) =>
-      this.getUserById(req, res),
+      this.findById(req, res),
     );
-    this.router.use('/', this.#profilesController.routes());
+    this.router.post('/', validate('body', createUserSchema), (req, res) =>
+      this.create(req, res),
+    );
+    this.router.patch(
+      '/:id',
+      needsLogin,
+      validate('params', idParamSchema),
+      validate('body', updateUserSchema),
+      (req, res) => this.update(req, res),
+    );
+    this.router.delete(
+      '/:id',
+      needsLogin,
+      validate('params', idParamSchema),
+      (req, res) => this.delete(req, res),
+    );
     return this.router;
   }
 
-  async getMe(req, res) {
-    const user = await this.#usersService.getUserById(req.user.id);
+  async findAll(req, res) {
+    const users = await this.#usersService.listUsers();
+    res.status(HTTP_STATUS.OK).json(users);
+  }
+
+  async findById(req, res) {
+    const { id } = req.params;
+    const user = await this.#usersService.getUserDetail(id);
     res.status(HTTP_STATUS.OK).json(user);
   }
 
-  async updateMe(req, res) {
-    const updatedUser = await this.#usersService.updateUser(
+  async create(req, res) {
+    const { email, password, name } = req.body;
+    const newUser = await this.#usersService.registerUser({
+      email,
+      password,
+      name,
+    });
+    res.status(HTTP_STATUS.CREATED).json(newUser);
+  }
+
+  async update(req, res) {
+    const { id } = req.params;
+    const { email, name } = req.body;
+    const updatedUser = await this.#usersService.changeProfile(
+      id,
       req.user.id,
-      req.body,
+      {
+        email,
+        name,
+      },
     );
     res.status(HTTP_STATUS.OK).json(updatedUser);
   }
 
-  async deleteMe(req, res) {
-    await this.#usersService.deleteUser(req.user.id);
+  async delete(req, res) {
+    const { id } = req.params;
+    await this.#usersService.deleteAccount(id, req.user.id);
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
-  }
-
-  async getUserById(req, res) {
-    const user = await this.#usersService.getPublicProfile(req.params.id);
-    res.status(HTTP_STATUS.OK).json(user);
   }
 }
