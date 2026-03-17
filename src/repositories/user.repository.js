@@ -5,15 +5,43 @@ export class UserRepository {
     this.#prisma = prisma;
   }
 
+  async findUserById(userId) {
+    return await this.#prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+  }
+
   findMany() {}
 
   findById() {}
+  findAllUsers() {
+    return this.prisma.user.findMany({
+      select: { id: true, nickname: true, image: true },
+    });
+  }
 
-  findByEmail() {}
+  // findUserById(id) {
+  //   return this.prisma.user.findUnique({ where: { id } });
+  // }
 
-  create() {}
+  findUserByNickname(nickname) {
+    return this.prisma.user.findUnique({
+      where: { nickname },
+    });
+  }
 
-  update() {}
+  updateUser(id, data) {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
 
-  delete() {}
+  deleteUser(id) {
+    return this.prisma.user.delete({
+      where: { id },
+    });
+  }
 }

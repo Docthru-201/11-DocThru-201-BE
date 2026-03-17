@@ -9,6 +9,7 @@ import { prisma } from '#db/prisma.js';
 import {
   UserRepository,
   ProfileRepository,
+  AuthRepository,
   ChallengeRepository,
   ParticipantRepository,
   WorkRepository,
@@ -51,6 +52,7 @@ export const createContainer = () => {
 
   container.register({
     prisma: asValue(prisma),
+    authRepository: asClass(AuthRepository, { lifetime: Lifetime.SINGLETON }),
     userRepository: asClass(UserRepository, { lifetime: Lifetime.SINGLETON }),
     profileRepository: asClass(ProfileRepository, {
       lifetime: Lifetime.SINGLETON,
@@ -74,7 +76,8 @@ export const createContainer = () => {
     }),
     tokenProvider: asClass(TokenProvider, { lifetime: Lifetime.SINGLETON }),
     cookieProvider: asClass(CookieProvider, { lifetime: Lifetime.SINGLETON }),
-
+    jwtSecret: asValue(process.env.JWT_SECRET),
+    // 2. Services
     authService: asClass(AuthService, { lifetime: Lifetime.SINGLETON }),
     usersService: asClass(UsersService, { lifetime: Lifetime.SINGLETON }),
     profilesService: asClass(ProfilesService, { lifetime: Lifetime.SINGLETON }),

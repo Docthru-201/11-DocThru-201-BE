@@ -9,7 +9,16 @@ export class NotificationRepository {
 
   findById() {}
 
-  create() {}
+  async create(data) {
+    return await this.#prisma.notification.create({
+      data: {
+        userId: data.userId,
+        type: data.type,
+        targetId: data.targetId,
+        targetUrl: data.targetUrl,
+      },
+    });
+  }
 
   update() {}
 
