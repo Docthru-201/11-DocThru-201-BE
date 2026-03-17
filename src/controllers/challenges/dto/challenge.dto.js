@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Category, ChallengeStatus, Type } from '#generated/prisma/enums.js';
+import { Category, ChallengeStatus, Type } from '#generated/prisma/enums.ts';
 
 const DESCRIPTION_MIN_LENGTH = 10;
 const DESCRIPTION_MAX_LIMIT = 500;

@@ -5,7 +5,25 @@ export class ProfileRepository {
     this.#prisma = prisma;
   }
 
-  findByUserId() {}
+  findByUserId(userId) {
+    return this.#prisma.profile.findUnique({
+      where: { userId },
+    });
+  }
 
-  upsertByUserId() {}
+  create(userId, data) {
+    return this.#prisma.profile.create({
+      data: {
+        userId,
+        ...data,
+      },
+    });
+  }
+
+  update(userId, data) {
+    return this.#prisma.profile.update({
+      where: { userId },
+      data,
+    });
+  }
 }
