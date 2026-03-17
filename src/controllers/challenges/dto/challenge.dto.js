@@ -45,7 +45,7 @@ export const createChallengeSchema = z.object({
       `설명은 ${DESCRIPTION_MAX_LIMIT}자 이하여야 합니다.`,
     ),
   deadline: z.iso.datetime({ required_error: '마감일을 정해주세요.' }),
-  maxParticipants: z.coerce.int().min(1, '참가자는 1명 이상 이어야 합니다.'),
+  maxParticipants: z.number().int().min(1, '참가자는 1명 이상 이어야 합니다.'),
 });
 
 export const updateChallengeSchema = z.object({
@@ -69,7 +69,8 @@ export const updateChallengeSchema = z.object({
       `설명은 ${DESCRIPTION_MAX_LIMIT}자를 넘길 수 없습니다.`,
     ),
   deadline: z.iso.datetime(`올바른 날짜와 시간 형식이 아닙니다.`),
-  maxParticipants: z.coerce
+  maxParticipants: z
+    .number()
     .int(`참가자 수는 정수로 입력해주세요.`)
     .min(1, `참가자는 최소 1명 이상이어야 합니다.`),
   status: z.enum(ChallengeStatus),

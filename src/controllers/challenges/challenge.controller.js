@@ -3,7 +3,7 @@ import { HTTP_STATUS } from '#constants';
 import { validate, needsLogin } from '#middlewares';
 import {
   createChallengeSchema,
-  idParamSchema,
+  challengeIdParamSchema,
   updateChallengeSchema,
 } from './dto/challenge.dto.js';
 
@@ -22,8 +22,10 @@ export class ChallengesController extends BaseController {
 
     this.router.get('/', (req, res) => this.findAll(req, res));
 
-    this.router.get('/:id', validate('params', idParamSchema), (req, res) =>
-      this.findById(req, res),
+    this.router.get(
+      '/:id',
+      validate('params', challengeIdParamSchema),
+      (req, res) => this.findById(req, res),
     );
 
     this.router.post(
@@ -36,7 +38,7 @@ export class ChallengesController extends BaseController {
     this.router.patch(
       '/:id',
       needsLogin,
-      validate('params', idParamSchema),
+      validate('params', challengeIdParamSchema),
       validate('body', updateChallengeSchema),
       (req, res) => this.update(req, res),
     );
@@ -44,7 +46,7 @@ export class ChallengesController extends BaseController {
     this.router.delete(
       '/:id',
       needsLogin,
-      validate('params', idParamSchema),
+      validate('params', challengeIdParamSchema),
       (req, res) => this.delete(req, res),
     );
 
