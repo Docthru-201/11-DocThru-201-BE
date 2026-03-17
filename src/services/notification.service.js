@@ -1,3 +1,6 @@
+import { ERROR_MESSAGE } from '#constants';
+import { NotFoundException } from '#exceptions';
+
 export class NotificationsService {
   #notificationRepository;
 
@@ -13,7 +16,7 @@ export class NotificationsService {
       type,
       targetId,
       targetUrl,
-      // message,
+      message,
     });
   }
 
@@ -30,9 +33,48 @@ export class NotificationsService {
     },
   };
 
-  async listMyNotifications(userId) {}
+  async listMyNotifications({ userId, page, limit }) {
+    const pageNum = Number(page) || 1;
+    const perPage = Number(limit) || 10;
+    const skip = (pageNum - 1) * perPage;
+    const take = perPage;
 
-  async deleteMyNotification(notificationId, userId) {}
+    const notifications = await this.#notificationRepository.findManyByUserId(
+      userId,
+      {
+        skip,
+        take,
+      },
+    );
+    return notifications;
+  }
 
-  async markAsRead(notificationId, userId) {}
+  async deleteMyNotification({ userId, notificationId }) {
+    const notification = await this.#notificationRepository.findById({
+      id: notificationId,
+      userId,
+    });
+
+    if (!notification || notification.userId !== userId) {
+      throw new NotFoundException(ERROR_MESSAGE.NOTIFICATION_NOT_FOUND);
+    }
+
+    return await this.#notificationRepository.softDelete({
+      id: notificationId,
+    });
+  }
+
+  async markAsRead(notificationId, userId) {
+    const notification = await this.#notificationRepository.findByIdAndUser({
+      id: notificationId,
+      userId,
+    });
+    if (!notification) {
+      throw new NotFoundException(ERROR_MESSAGE.NOTIFICATION_NOT_FOUND);
+    }
+
+    return await this.#notificationRepository.update(notificationId, {
+      isRead: true,
+    });
+  }
 }
