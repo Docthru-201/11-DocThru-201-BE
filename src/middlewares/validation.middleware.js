@@ -3,12 +3,6 @@ import { flattenError } from 'zod';
 import { ERROR_MESSAGE } from '#constants';
 import { BadRequestException } from '#exceptions';
 
-/**
- * 범용 검증 미들웨어
- * @param {string} target - 검증할 대상 ('body', 'params', 'query')
- * @param {ZodSchema} schema - Zod 스키마
- */
-
 export const validate = (target, schema) => {
   if (!['body', 'query', 'params'].includes(target)) {
     throw new Error(
