@@ -64,11 +64,10 @@ export class AdminController extends BaseController {
   }
 
   async updateChallengeStatus(req, res, next) {
-
     const challengeId = req.params.challengeId;
     const { userId } = req.user;
     const data = req.body;
-   
+
     const result = await this.#challengesService.updateChallengeStatus(
       challengeId,
       data,

@@ -18,7 +18,7 @@ export class ChallengeRepository {
         include: {
           participants: true,
           author: {
-            select: { nickname: true, email: true } 
+            select: { nickname: true, email: true },
           },
         },
       }),
@@ -77,17 +77,16 @@ export class ChallengeRepository {
         id: true,
         authorId: true,
         title: true,
-        status: true, 
+        status: true,
       },
     });
   }
 
   // 챌린지 정보 업데이트 (상태 변경, 내용 수정 통합)
   async updateChallengeStatus(challengeId, updateData) {
-  return await this.#prisma.challenge.update({
-    where: { id: challengeId },
-    data: updateData,
-  });
-};
-
+    return await this.#prisma.challenge.update({
+      where: { id: challengeId },
+      data: updateData,
+    });
+  }
 }

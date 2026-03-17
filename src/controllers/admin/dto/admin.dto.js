@@ -25,7 +25,10 @@ export const getAllChallengesScheme = z.object({
     )
     .optional(),
   keyword: z.string().trim().optional(),
-  userId: z.string().regex(ULID_REGEX, '유효하지 않은 사용자 ID 형식입니다.').optional(),
+  userId: z
+    .string()
+    .regex(ULID_REGEX, '유효하지 않은 사용자 ID 형식입니다.')
+    .optional(),
 });
 
 // 승인/거절 처리 (PATCH /admin/challenges/:challengesId)
@@ -33,7 +36,7 @@ export const updateChallengeStatusScheme = {
   params: z.object({
     challengeId: z
       .string()
-      .min(1,'챌린지 ID는 필수 입력 사항입니다.')
+      .min(1, '챌린지 ID는 필수 입력 사항입니다.')
       .regex(ULID_REGEX, '유효하지 않은 챌린지 ID 형식입니다.'),
   }),
 
