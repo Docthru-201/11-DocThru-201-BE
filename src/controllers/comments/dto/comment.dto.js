@@ -18,14 +18,20 @@ export const commentIdParamSchema = z.object({
 // 댓글/대댓글 작성 /works/:workId/comments (POST)
 export const createCommentSchema = z
   .object({
-    content: z.string().min(1, { message: '댓글 내용을 입력해주세요.' }),
-    parentId: z.string().uuid().optional(), // 대댓글이면 parentId 포함
+    content: z
+      .string()
+      .nonempty({ message: '댓글 내용을 입력해주세요.' })
+      .max(1000, { message: '댓글 내용은 1000자 이하로 입력해주세요.' }),
+    parentId: z.string().uuid().optional().nullable(),
   })
   .strict();
 
 // 댓글 수정 /comments/:id (PATCH)
 export const updateCommentSchema = z
   .object({
-    content: z.string().min(1, { message: '댓글 내용을 입력해주세요.' }),
+    content: z
+      .string()
+      .nonempty({ message: '댓글 내용을 입력해주세요.' })
+      .max(1000, { message: '댓글 내용은 1000자 이하로 입력해주세요.' }),
   })
   .strict();

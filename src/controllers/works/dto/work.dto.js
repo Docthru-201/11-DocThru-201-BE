@@ -15,7 +15,10 @@ export const workIdParamSchema = z.object({
 export const createWorkSchema = z
   .object({
     challengeId: z.string().uuid({ message: 'challengeId가 필요합니다.' }),
-    content: z.string().min(1, { message: '작업물 내용을 입력해주세요.' }),
+    content: z
+      .string()
+      .nonempty({ message: '작업물 내용을 입력해주세요.' })
+      .max(5000, { message: '작업물 내용은 5000자 이하로 입력해주세요.' }),
   })
   .strict();
 
@@ -24,7 +27,8 @@ export const updateWorkSchema = z
   .object({
     content: z
       .string()
-      .min(1, { message: '작업물 내용을 입력해주세요.' })
+      .nonempty({ message: '작업물 내용을 입력해주세요.' })
+      .max(5000, { message: '작업물 내용은 5000자 이하로 입력해주세요.' })
       .optional(),
   })
   .strict();
