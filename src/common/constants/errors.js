@@ -28,10 +28,10 @@ export const ERROR_MESSAGE = {
   UNAUTHORIZED: '인증이 필요합니다.',
 
   // 일반 에러 (Exception 기본값으로 사용)
-  RESOURCE_NOT_FOUND: 'Resource not found',
-  BAD_REQUEST: 'Bad request',
-  RESOURCE_CONFLICT: 'Resource already exists',
-  INTERNAL_SERVER_ERROR: 'Internal server error',
+  RESOURCE_NOT_FOUND: '리소스를 찾을 수 없습니다.',
+  BAD_REQUEST: '잘못된 요청입니다.',
+  RESOURCE_CONFLICT: '이미 존재하는 리소스입니다.',
+  INTERNAL_SERVER_ERROR: '서버 내부 오류가 발생했습니다.',
 
   //challenge 관련
   CHALLENGE_NOT_FOUND: '존재하지 않는 챌린지입니다.',
@@ -39,9 +39,4 @@ export const ERROR_MESSAGE = {
   N0_AUTHORITY_TO_DELETE: '삭제 권한이 없습니다.',
   INVALID_INPUT: '잘못된 입력값입니다.',
   VALIDATION_FAILED: '입력값 검증에 실패했습니다.',
-
-  RESOURCE_NOT_FOUND: '리소스를 찾을 수 없습니다.',
-  BAD_REQUEST: '잘못된 요청입니다.',
-  RESOURCE_CONFLICT: '이미 존재하는 리소스입니다.',
-  INTERNAL_SERVER_ERROR: '서버 내부 오류가 발생했습니다.',
 };
