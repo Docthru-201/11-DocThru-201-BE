@@ -3,7 +3,7 @@ import {
   ulidSchema,
   contentSchema,
   jsonStringSchema,
-} from '../schemas/baseSchema.js';
+} from '../../schemas/baseSchema.js';
 
 // --------------------
 // Path Param
