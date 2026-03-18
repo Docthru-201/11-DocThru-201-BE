@@ -178,10 +178,7 @@ export class ChallengesService {
       challenge.authorId !== userId
     ) {
       const { status, declineReason, title, id } = updatedChallenge;
-<<<<<<< HEAD
-=======
 
->>>>>>> develop
       const message = ['REJECTED', 'DELETED'].includes(status)
         ? this.#notificationsService.notificationMessages?.adminReviewResult?.(
             title,

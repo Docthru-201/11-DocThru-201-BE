@@ -18,9 +18,7 @@ export class ChallengesController extends BaseController {
   }
 
   routes() {
-<<<<<<< HEAD
     this.router.use("/:challengeId/works", this.#worksController.routes());
-=======
     // 전체 목록 조회 (커서 기반 페이지네이션)
     this.router.get('/', (req, res) => this.findAll(req, res));
 
@@ -56,7 +54,6 @@ export class ChallengesController extends BaseController {
       this.getMyChallenges(req, res),
     );
 
->>>>>>> develop
     return this.router;
   }
 
@@ -111,7 +108,4 @@ export class ChallengesController extends BaseController {
     res.status(HTTP_STATUS.OK).json(myChallenges);
   }
 }
-<<<<<<< HEAD
 
-=======
->>>>>>> develop
