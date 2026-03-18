@@ -5,7 +5,7 @@ import {
   createWorkSchema,
   updateWorkSchema,
   workIdParamSchema,
-} from './dto/works.dto.js'; // 경로에 맞춰 수정해주세요
+} from './dto/work.dto.js'; // 경로에 맞춰 수정해주세요
 
 export class WorksController extends BaseController {
   #worksService;
