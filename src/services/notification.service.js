@@ -8,12 +8,18 @@ export class NotificationsService {
     this.#notificationRepository = notificationRepository;
   }
 
-  async createNotification({ userId, type, message, targetId, targetUrl }) {
+  async createNotification({
+    userId,
+    targetType,
+    message,
+    targetId,
+    targetUrl,
+  }) {
     if (!message) return null;
 
     return await this.#notificationRepository.create({
       userId,
-      type,
+      type: targetType,
       targetId,
       targetUrl,
       message,
@@ -41,40 +47,37 @@ export class NotificationsService {
 
     const notifications = await this.#notificationRepository.findManyByUserId(
       userId,
-      {
-        skip,
-        take,
-      },
+      { skip, take },
     );
+
     return notifications;
   }
 
   async deleteMyNotification({ userId, notificationId }) {
-    const notification = await this.#notificationRepository.findById({
-      id: notificationId,
-      userId,
-    });
+    const notification =
+      await this.#notificationRepository.findById(notificationId);
 
     if (!notification || notification.userId !== userId) {
       throw new NotFoundException(ERROR_MESSAGE.NOTIFICATION_NOT_FOUND);
     }
 
-    return await this.#notificationRepository.softDelete({
-      id: notificationId,
+    // soft delete
+    return await this.#notificationRepository.update(notificationId, {
+      deletedAt: new Date(),
     });
   }
 
-  async markAsRead(notificationId, userId) {
-    const notification = await this.#notificationRepository.findByIdAndUser({
-      id: notificationId,
-      userId,
-    });
-    if (!notification) {
+  async markAsRead({ notificationId, userId, isRead }) {
+    const notification =
+      await this.#notificationRepository.findById(notificationId);
+
+    if (!notification || notification.userId !== userId) {
       throw new NotFoundException(ERROR_MESSAGE.NOTIFICATION_NOT_FOUND);
     }
 
     return await this.#notificationRepository.update(notificationId, {
-      isRead: true,
+      isRead: isRead ?? true,
+      readAt: new Date(),
     });
   }
 }
