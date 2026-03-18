@@ -3,22 +3,22 @@ export const DAY_IN_MS = 24 * 60 * 60 * 1000;
 // 시드 생성 개수
 export const SEED_PASSWORD = 'Test1234!'; // 시드용 공통 비밀번호 (개발 환경 전용)
 
-export const USERS_COUNT = 10;
+export const USERS_COUNT = 40;
 export const NICKNAME_MAX_LENGTH = 20;
 
-export const CHALLENGES_COUNT = 13;
+export const CHALLENGES_COUNT = 100;
 export const CHALLENGE_DEADLINE = 30;
-export const CHALLENGE_MIN_PARTICIPANTS = 3;
-export const CHALLENGE_MAX_PARTICIPANTS = 10;
+export const CHALLENGE_MIN_PARTICIPANTS = 5;
+export const CHALLENGE_MAX_PARTICIPANTS = 15;
 
-export const APPLICANTS_MIN = 2;
-export const APPLICANTS_MAX = 8;
+export const APPLICANTS_MIN = 5;
+export const APPLICANTS_MAX = 20;
 
-export const COMMENTERS_TAKE = 3;
-export const LIKERS_TAKE = 5;
+export const COMMENTERS_TAKE = 5;
+export const LIKERS_TAKE = 10;
 
-export const NOTIFICATIONS_PER_USER_MIN = 1;
-export const NOTIFICATIONS_PER_USER_MAX = 5;
+export const NOTIFICATIONS_PER_USER_MIN = 3;
+export const NOTIFICATIONS_PER_USER_MAX = 10;
 
 export const NOTIFICATION_RECENT_DAYS = 14;
 

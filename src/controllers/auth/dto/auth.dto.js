@@ -26,7 +26,6 @@ export const signupSchema = z
 export const loginSchema = z
   .object({
     email: emailSchema,
-
     password: z.string().min(1, { message: '비밀번호를 입력해주세요.' }),
   })
   .strict();

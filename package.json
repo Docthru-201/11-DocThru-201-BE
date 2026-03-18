@@ -12,6 +12,8 @@
     "#docs/*": "./src/docs/*",
     "#repositories": "./src/repositories/index.js",
     "#constants": "./src/common/constants/index.js",
+    "#utils": "./src/common/utils/index.js",
+    "#utils/*": "./src/common/utils/*",
     "#exceptions": "./src/common/exceptions/index.js",
     "#controllers": "./src/controllers/index.js",
     "#controllers/*": "./src/controllers/*",
