@@ -2,6 +2,7 @@ import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { needsLogin, validate } from '#middlewares';
 import { participantParamsSchema } from './dto/participant.dto.js';
+import express from 'express';
 
 export class ParticipantsController extends BaseController {
   #participantsService;
@@ -9,6 +10,7 @@ export class ParticipantsController extends BaseController {
   constructor({ participantsService }) {
     super();
     this.#participantsService = participantsService;
+    this.router = express.Router({ mergeParams: true });
   }
 
   routes() {
