@@ -10,6 +10,7 @@ import {
   createCommentSchema,
   updateCommentSchema,
 } from './dto/comment.dto.js';
+import express from 'express';
 
 export class CommentsController extends BaseController {
   #commentsService; // 클래스 private 필드
@@ -17,12 +18,13 @@ export class CommentsController extends BaseController {
   constructor({ commentsService }) {
     super();
     this.#commentsService = commentsService; // 정확히 일치
+    this.router = express.Router({ mergeParams: true });
   }
 
   routes() {
     // 1️⃣ 댓글/대댓글 작성
     this.router.post(
-      '/works/:workId/comments',
+      '/:workId/comments',
       needsLogin,
       validate('params', workIdParamSchema),
       validate('body', createCommentSchema),
@@ -31,14 +33,14 @@ export class CommentsController extends BaseController {
 
     // 2️⃣ 특정 작업물 댓글 목록 조회
     this.router.get(
-      '/works/:workId/comments',
+      '/:workId/comments',
       validate('params', workIdParamSchema),
       (req, res) => this.getCommentsByWork(req, res),
     );
 
     // 3️⃣ 댓글/대댓글 수정
     this.router.patch(
-      '/comments/:commentId',
+      '/:id',
       needsLogin,
       validate('params', commentIdParamSchema),
       validate('body', updateCommentSchema),
@@ -47,7 +49,7 @@ export class CommentsController extends BaseController {
 
     // 4️⃣ 댓글/대댓글 삭제
     this.router.delete(
-      '/comments/:commentId',
+      '/:id',
       needsLogin,
       validate('params', commentIdParamSchema),
       (req, res) => this.deleteComment(req, res),
@@ -82,11 +84,11 @@ export class CommentsController extends BaseController {
 
   async updateComment(req, res) {
     const userId = req.user.id;
-    const { commentId } = req.params;
+    const { id } = req.params;
     const commentData = req.body;
 
     const updatedComment = await this.#commentsService.updateComment(
-      commentId,
+      id,
       userId,
       commentData,
     );
@@ -96,9 +98,9 @@ export class CommentsController extends BaseController {
 
   async deleteComment(req, res) {
     const userId = req.user.id;
-    const { commentId } = req.params;
+    const { id } = req.params;
 
-    await this.#commentsService.deleteComment(commentId, userId);
+    await this.#commentsService.deleteComment(id, userId);
 
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }

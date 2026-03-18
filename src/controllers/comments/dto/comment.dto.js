@@ -18,7 +18,7 @@ export const workIdParamSchema = z
 // 댓글 commentId 검증
 export const commentIdParamSchema = z
   .object({
-    commentId: ulidSchema,
+    id: ulidSchema,
   })
   .meta({
     id: 'params.commentId',

@@ -53,14 +53,12 @@ export class Controller extends BaseController {
     this.router.use('/auth', this.#authController.routes());
     this.router.use('/users', this.#usersController.routes());
     this.router.use('/users', this.#profilesController.routes());
-    this.router.use(
-      '/challenges/:challengeId/applications',
-      this.#participantsController.routes(),
-    );
+    this.router.use('/challenges', this.#participantsController.routes());
     this.router.use('/challenges', this.#challengesController.routes());
     this.router.use('/works', this.#worksController.routes());
     this.router.use('/works', this.#commentsController.routes());
     this.router.use('/works', this.#likesController.routes());
+    this.router.use('/comments', this.#commentsController.routes());
     this.router.use('/notifications', this.#notificationsController.routes());
     this.router.use('/admin', this.#adminController.routes());
 

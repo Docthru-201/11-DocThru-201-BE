@@ -16,7 +16,7 @@ export class ParticipantsController extends BaseController {
   routes() {
     // POST /challenges/:challengeId/participants
     this.router.post(
-      '/',
+      '/:challengeId/applications',
       needsLogin,
       validate('params', participantParamsSchema), // URL 파라미터 검증
       (req, res) => this.create(req, res),
