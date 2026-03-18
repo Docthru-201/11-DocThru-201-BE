@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ulidSchema, contentSchema } from '../schemas/baseSchema.js';
+import { ulidSchema, contentSchema } from '../../schemas/baseSchema.js';
 
 // --------------------
 // Path Param
