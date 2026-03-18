@@ -38,18 +38,18 @@ export class CommentRepository {
     });
   }
 
-  // 댓글/대댓글 수정
-  async update(id, data) {
+  // 댓글 내용 수정
+  async update(commentId, data) {
     return this.#prisma.comment.update({
-      where: { id },
+      where: { id: commentId },
       data,
     });
   }
 
-  // 댓글/대댓글 삭제
-  async delete(id) {
+  // 댓글 삭제 (부모 삭제 시 대댓글은 남고 parentId가 null로 처리됨)
+  async delete(commentId) {
     return this.#prisma.comment.delete({
-      where: { id },
+      where: { id: commentId },
     });
   }
 
