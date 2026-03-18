@@ -83,6 +83,7 @@ export class ChallengeRepository {
         authorId: true,
         title: true,
         status: true,
+        isClosed: true,
       },
     });
   }
