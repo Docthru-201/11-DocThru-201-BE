@@ -67,7 +67,8 @@ class Seeder {
 
     for (let i = 0; i < this.#numUsersToCreate; i += 1) {
       const email = faker.internet.email();
-      const nickname = faker.person.firstName();
+      const baseNickname = faker.person.firstName();
+      const nickname = `${baseNickname}_${i + 1}`;
 
       const user = await this.#prisma.user.create({
         data: {
