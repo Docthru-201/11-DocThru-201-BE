@@ -1,3 +1,6 @@
 import { z } from 'zod';
 
-export const challengeIdParamSchema = z.object({});
+// URL 파라미터 (:challengeId) 검증용
+export const participantParamsSchema = z.object({
+  challengeId: z.string().ulid(),
+});
