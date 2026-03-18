@@ -13,7 +13,7 @@ export class LikeRepository {
   }
 
   // 특정 유저가 특정 작업물에 좋아요를 눌렀는지 확인 (단건 조회)
-  async findByWorkIdAndUserId(workId, userId) {
+  async findLike(workId, userId) {
     return this.#prisma.like.findUnique({
       where: {
         // Prisma의 복합 유니크 키 접근 방식: workId_userId
@@ -36,7 +36,7 @@ export class LikeRepository {
   }
 
   // 좋아요 삭제 (복합 키를 이용한 정밀 삭제)
-  async deleteByWorkIdAndUserId(workId, userId) {
+  async delete(workId, userId) {
     return this.#prisma.like.delete({
       where: {
         workId_userId: {

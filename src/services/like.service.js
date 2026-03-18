@@ -17,7 +17,7 @@ export class LikesService {
 
   // 2. 내 좋아요 클릭 여부 (GET /works/:workId/likes/me)
   async getMyLikeStatus(userId, workId) {
-    const like = await this.#likeRepository.findLike(userId, workId);
+    const like = await this.#likeRepository.findLike(workId, userId);
 
     // 존재하면 true, 없으면 false 반환
     return !!like;
@@ -44,12 +44,12 @@ export class LikesService {
   // 4. 좋아요 취소 (DELETE /works/:workId/likes)
   async unlike(userId, workId) {
     // 취소할 좋아요가 존재하는지 확인
-    const existingLike = await this.#likeRepository.findLike(userId, workId);
+    const existingLike = await this.#likeRepository.findLike(workId, userId);
     if (!existingLike) {
       throw new Error('취소할 좋아요 기록이 없습니다.');
     }
 
     // @unique([workId, userId]) 기반으로 삭제 수행
-    return this.#likeRepository.delete(userId, workId);
+    return this.#likeRepository.delete(workId, userId);
   }
 }
