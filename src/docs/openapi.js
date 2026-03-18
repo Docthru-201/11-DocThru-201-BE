@@ -2,6 +2,11 @@ import { z } from 'zod';
 import { createDocument } from 'zod-openapi';
 import { signupSchema, loginSchema } from '#controllers/auth/dto/auth.dto.js';
 import { updateUserSchema } from '#controllers/users/dto/user.dto.js';
+import {
+  listChallengesQuerySchema,
+  createChallengeSchema,
+} from '#controllers/challenges/dto/challenge.dto.js';
+import { ERROR_MESSAGE } from '#constants';
 
 const idParamSchema = z.object({
   id: z.string().describe('사용자 ID'),
@@ -52,6 +57,32 @@ const userIdPathSchema = idParamSchema.meta({
   id: 'UserIdPath',
 });
 
+const challengeSummarySchema = createChallengeSchema
+  .extend({
+    id: z.string().describe('챌린지 ID (ULID)'),
+    authorId: z.string().describe('작성자 ID'),
+    createdAt: z.string().describe('생성 시각 (ISO8601)'),
+    updatedAt: z.string().describe('수정 시각 (ISO8601)'),
+  })
+  .partial({
+    declineReason: true,
+  })
+  .meta({
+    id: 'ChallengeSummary',
+    description: '챌린지 목록용 요약 정보',
+  });
+
+const challengeListResponseSchema = z
+  .object({
+    challenges: z.array(challengeSummarySchema),
+    nextCursor: z.string().nullable().describe('다음 페이지 조회용 커서'),
+    hasNext: z.boolean().describe('다음 페이지 존재 여부'),
+  })
+  .meta({
+    id: 'ChallengeListResponse',
+    description: '커서 기반 챌린지 목록 응답',
+  });
+
 export const openApiDocument = createDocument({
   openapi: '3.1.0',
   info: {
@@ -72,6 +103,10 @@ export const openApiDocument = createDocument({
     {
       name: 'Users',
       description: '사용자 관리 API',
+    },
+    {
+      name: 'Challenges',
+      description: '챌린지 조회/생성 API',
     },
   ],
   components: {
@@ -127,6 +162,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  ValidationError: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.VALIDATION_FAILED,
+                    },
+                  },
+                },
               },
             },
           },
@@ -135,6 +178,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  EmailConflict: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.EMAIL_ALREADY_EXISTS,
+                    },
+                  },
+                },
               },
             },
           },
@@ -167,6 +218,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  ValidationError: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.VALIDATION_FAILED,
+                    },
+                  },
+                },
               },
             },
           },
@@ -175,6 +234,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  Unauthorized: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.INVALID_LOGIN,
+                    },
+                  },
+                },
               },
             },
           },
@@ -211,6 +278,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  Unauthorized: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.UNAUTHORIZED,
+                    },
+                  },
+                },
               },
             },
           },
@@ -254,6 +329,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  NotFound: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.USER_NOT_FOUND,
+                    },
+                  },
+                },
               },
             },
           },
@@ -288,6 +371,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  ValidationError: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.VALIDATION_FAILED,
+                    },
+                  },
+                },
               },
             },
           },
@@ -296,6 +387,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  Unauthorized: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.UNAUTHORIZED,
+                    },
+                  },
+                },
               },
             },
           },
@@ -304,6 +403,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  Forbidden: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.FORBIDDEN,
+                    },
+                  },
+                },
               },
             },
           },
@@ -312,6 +419,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  NotFound: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.USER_NOT_FOUND,
+                    },
+                  },
+                },
               },
             },
           },
@@ -333,6 +448,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  Unauthorized: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.UNAUTHORIZED,
+                    },
+                  },
+                },
               },
             },
           },
@@ -341,6 +464,14 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  Forbidden: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.FORBIDDEN,
+                    },
+                  },
+                },
               },
             },
           },
@@ -349,6 +480,49 @@ export const openApiDocument = createDocument({
             content: {
               'application/json': {
                 schema: errorResponseSchema,
+                examples: {
+                  NotFound: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.USER_NOT_FOUND,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/challenges': {
+      get: {
+        tags: ['Challenges'],
+        summary: '챌린지 목록 조회 (커서 기반 페이지네이션)',
+        requestParams: {
+          query: listChallengesQuerySchema,
+        },
+        responses: {
+          200: {
+            description: '챌린지 목록 조회 성공',
+            content: {
+              'application/json': {
+                schema: challengeListResponseSchema,
+              },
+            },
+          },
+          400: {
+            description: '입력값 검증 실패',
+            content: {
+              'application/json': {
+                schema: errorResponseSchema,
+                examples: {
+                  ValidationError: {
+                    value: {
+                      success: false,
+                      message: ERROR_MESSAGE.VALIDATION_FAILED,
+                    },
+                  },
+                },
               },
             },
           },
