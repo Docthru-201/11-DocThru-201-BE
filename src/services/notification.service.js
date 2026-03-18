@@ -5,7 +5,7 @@ export class NotificationsService {
     this.#notificationRepository = notificationRepository;
   }
 
-  async createNotification({ userId, type, message, targetId, targetUrl }) {
+  async createNotification({ userId, type, targetId, targetUrl, message }) {
     if (!message) return null;
 
     return await this.#notificationRepository.create({
@@ -13,7 +13,7 @@ export class NotificationsService {
       type,
       targetId,
       targetUrl,
-      // message,
+      message,
     });
   }
 

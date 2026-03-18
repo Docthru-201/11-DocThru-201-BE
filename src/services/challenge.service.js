@@ -77,7 +77,6 @@ export class ChallengesService {
     // 알림 전송
     if (challenge.authorId !== userId) {
       const { status, declineReason, title, id } = updatedChallenge;
-      // message String // TODO: 논의중인 사안
       const message = ['REJECTED', 'DELETED'].includes(status)
         ? this.#notificationsService.notificationMessages.adminReviewResult(
             title,
@@ -94,7 +93,7 @@ export class ChallengesService {
         type: 'CHALLENGE_APPROVAL_RESULT',
         targetId: id,
         targetUrl: `/challenges/${id}`,
-        // message,
+        message: message,
       });
     }
 

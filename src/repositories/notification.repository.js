@@ -16,6 +16,7 @@ export class NotificationRepository {
         type: data.type,
         targetId: data.targetId,
         targetUrl: data.targetUrl,
+        message: data.message,
       },
     });
   }

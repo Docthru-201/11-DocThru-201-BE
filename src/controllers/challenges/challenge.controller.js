@@ -2,13 +2,16 @@ import { BaseController } from '#controllers/base.controller.js';
 
 export class ChallengesController extends BaseController {
   #challengesService;
+  #worksController;
 
-  constructor({ challengesService }) {
+  constructor({ challengesService, worksController}) {
     super();
     this.#challengesService = challengesService;
+    this.#worksController = worksController;
   }
 
   routes() {
+    this.router.use("/:challengeId/works", this.#worksController.routes());
     return this.router;
   }
 
@@ -34,4 +37,3 @@ export class ChallengesController extends BaseController {
   async getMyChallenges(req, res) {}
 }
 
-//

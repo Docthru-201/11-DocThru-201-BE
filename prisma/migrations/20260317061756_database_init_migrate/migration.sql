@@ -73,6 +73,7 @@ CREATE TABLE "SocialAccount" (
 -- CreateTable
 CREATE TABLE "Challenge" (
     "id" TEXT NOT NULL,
+    "serialNumber" SERIAL NOT NULL,
     "authorId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "originalUrl" TEXT NOT NULL,
@@ -141,6 +142,7 @@ CREATE TABLE "Notification" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "type" "NotificationType" NOT NULL,
+    "message" TEXT,
     "targetId" TEXT,
     "targetUrl" TEXT,
     "isRead" BOOLEAN NOT NULL DEFAULT false,
@@ -160,6 +162,9 @@ CREATE UNIQUE INDEX "User_nickname_key" ON "User"("nickname");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RefreshToken_userId_key" ON "RefreshToken"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "RefreshToken_token_key" ON "RefreshToken"("token");
