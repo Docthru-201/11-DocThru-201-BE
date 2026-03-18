@@ -5,6 +5,11 @@ export class ChallengeRepository {
     this.#prisma = prisma;
   }
 
+  //   async findMany(query) {
+  //   //나중에 pagination 조건넣기
+  //   return await this.#prisma.challenge.findMany();
+  // }
+
   // 챌린지 관리 : 관리자 페이지와 일반 사용자 페이지에서 모두 사용 가능합니다.
   async findAllChallenges(options) {
     const { skip, take, where, orderBy } = options;
@@ -82,11 +87,28 @@ export class ChallengeRepository {
     });
   }
 
+  // 챌린지 생성
+  async create(data) {
+    return this.#prisma.challenge.create({ data });
+  }
+
   // 챌린지 정보 업데이트 (상태 변경, 내용 수정 통합)
   async updateChallengeStatus(challengeId, updateData) {
     return await this.#prisma.challenge.update({
       where: { id: challengeId },
       data: updateData,
+    });
+  }
+
+  async delete(id) {
+    return await this.#prisma.challenge.delete({
+      where: { id: id },
+    });
+  }
+
+  async findByUserId(userId) {
+    return await this.#prisma.challenge.findMany({
+      where: { authorId: userId },
     });
   }
 }
