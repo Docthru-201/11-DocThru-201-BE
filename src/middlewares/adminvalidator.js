@@ -5,7 +5,7 @@ import { ForbiddenException } from '#exceptions';
 // 관리자 검증 함수
 const userRepository = new UserRepository({ prisma });
 
-export async function adminValidator(req, res, next) {
+export async function tempadminValidator(req, res, next) {
   // const { userId } = req.user;
   console.log('임시userId:01KKXB2DAMEP2E0EWG1JYCRZEZ');
   const userId = '01KKXB2DAMEP2E0EWG1JYCRZEZ';
