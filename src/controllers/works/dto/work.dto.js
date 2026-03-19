@@ -3,7 +3,7 @@ import {
   ulidSchema,
   contentSchema,
   jsonStringSchema,
-} from '../schemas/baseSchema.js';
+} from '../../schemas/baseSchema.js';
 
 // --------------------
 // Path Param
@@ -23,8 +23,8 @@ export const createWorkSchema = z
   .object({
     challengeId: ulidSchema,
     // contentSchema와 jsonStringSchema를 결합하여 중복 로직 제거
-    content: contentSchema(5000, '작업물 내용을 입력해주세요.').and(
-      jsonStringSchema,
+    content: jsonStringSchema.and(
+      contentSchema(5000, '작업물 내용을 입력해주세요.'),
     ),
   })
   .strict()
