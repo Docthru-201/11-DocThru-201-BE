@@ -21,6 +21,13 @@ export class AuthController extends BaseController {
     this.router.post('/login', validate('body', loginSchema), (req, res) =>
       this.login(req, res),
     );
+    this.router.get('/:provider/login', (req, res) =>
+      this.oauthLogin(req, res),
+    );
+
+    this.router.get('/:provider/callback', (req, res) =>
+      this.oauthCallback(req, res),
+    );
 
     this.router.post('/logout', needsLogin, (req, res) =>
       this.logout(req, res),
@@ -85,5 +92,24 @@ export class AuthController extends BaseController {
       accessToken,
       refreshToken: newRefreshToken,
     });
+  }
+
+  async oauthLogin(req, res) {
+    const { provider } = req.params;
+
+    const redirectUrl = this.#authService.getOAuthLoginUrl(provider);
+
+    return res.redirect(redirectUrl);
+  }
+  async oauthCallback(req, res) {
+    const { provider } = req.params;
+    const { code } = req.query;
+
+    const { user, accessToken, refreshToken } =
+      await this.#authService.oauthLogin(provider, code);
+
+    this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
+
+    return res.redirect('http://localhost:3000'); // 프론트 홈으로 이동
   }
 }
