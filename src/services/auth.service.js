@@ -115,4 +115,42 @@ export class AuthService {
       refreshToken: newRefreshToken,
     };
   }
+  getOAuthLoginUrl(provider) {
+    if (provider === 'google') {
+      const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+      const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+
+      return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=email profile`;
+    }
+  }
+  async oauthLogin(provider, code) {
+    if (provider === 'google') {
+      const googleUser = await this.#authRepository.getGoogleUser(code);
+
+      const { email, name } = googleUser;
+
+      let user = await this.#authRepository.findUserByEmail(email);
+
+      if (!user) {
+        user = await this.#authRepository.createUser({
+          email,
+          nickname: name,
+          password: null,
+        });
+      }
+
+      const accessToken = this.#tokenProvider.generateAccessToken(user);
+      const refreshToken = this.#tokenProvider.generateRefreshToken(user);
+
+      await this.#authRepository.saveRefreshToken(user.id, refreshToken);
+
+      const { password: _pw, ...userWithoutPassword } = user;
+
+      return {
+        user: userWithoutPassword,
+        accessToken,
+        refreshToken,
+      };
+    }
+  }
 }
