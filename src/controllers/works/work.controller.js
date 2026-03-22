@@ -18,18 +18,16 @@ export class WorksController extends BaseController {
   }
 
   async getAllWorks(req, res) {
-    console.log('get works:');
     const userId = req.user?.userId;
     const { challengeId } = req.params;
     const { page = 1, pageSize = 5 } = req.query;
-
     const works = await this.#worksService.getAllWorks(
       userId,
       challengeId,
-      page,
-      pageSize,
+      Number(page),
+      Number(pageSize),
     );
-
+    
     res.status(HTTP_STATUS.OK).json({
       data: works,
       pagination: {

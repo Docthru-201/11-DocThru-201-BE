@@ -11,20 +11,21 @@ export class ChallengesController extends BaseController {
   #challengesService;
   #worksController;
 
-  constructor({ challengesService, worksController}) {
+  constructor({ challengesService, worksController }) {
     super();
     this.#challengesService = challengesService;
     this.#worksController = worksController;
   }
 
   routes() {
-    this.router.use("/:challengeId/works", this.#worksController.routes());
+    this.router.use('/:challengeId/works', this.#worksController.routes());
     // 전체 목록 조회 (커서 기반 페이지네이션)
     this.router.get('/', (req, res) => this.findAll(req, res));
 
     this.router.get(
-      '/:id',
-      validate('params', challengeIdParamSchema),
+      '/:challengeId', 
+      // validate 임시 block --test : swlee
+      // validate('params', challengeIdParamSchema),
       (req, res) => this.findById(req, res),
     );
 
@@ -61,10 +62,11 @@ export class ChallengesController extends BaseController {
     const challenges = await this.#challengesService.listChallenges(req.query);
     res.status(HTTP_STATUS.OK).json(challenges);
   }
-
+  // Parameter통일 필요(id -> challengeId로 swlee)
   async findById(req, res) {
-    const { id } = req.params;
-    const challenge = await this.#challengesService.getChallengeDetail(id);
+    const { challengeId } = req.params;
+    const challenge =
+      await this.#challengesService.getChallengeDetail(challengeId);
     res.status(HTTP_STATUS.OK).json(challenge);
   }
 
@@ -108,4 +110,3 @@ export class ChallengesController extends BaseController {
     res.status(HTTP_STATUS.OK).json(myChallenges);
   }
 }
-

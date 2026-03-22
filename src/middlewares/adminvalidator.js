@@ -7,8 +7,8 @@ const userRepository = new UserRepository({ prisma });
 
 export async function tempadminValidator(req, res, next) {
   // const { userId } = req.user;
-  console.log('임시userId:01KKXB2DAMEP2E0EWG1JYCRZEZ');
-  const userId = '01KKXB2DAMEP2E0EWG1JYCRZEZ';
+  console.log('임시userId(adminvalidator.js):01KM8JWERCM7X65PGFGTSQDEFC');
+  const userId = '01KM8JWERCM7X65PGFGTSQDEFC';
   if (!userId) {
     return res.status(401).json({ message: '사용자 ID가 필요합니다.' });
   }

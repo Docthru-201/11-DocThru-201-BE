@@ -89,16 +89,29 @@ export class ChallengeRepository {
 
   // 단순 챌린지 정보 조회 (권한 확인용 등)
   async findChallengeById(challengeId) {
-    return await this.#prisma.challenge.findUnique({
-      where: { id: challengeId },
-      select: {
-        id: true,
-        authorId: true,
-        title: true,
-        status: true,
-      },
-    });
-  }
+  return await this.#prisma.challenge.findUnique({
+    where: { id: challengeId },
+    include: {
+      author: true, 
+      participants: true,
+    },
+  });
+}
+  // 공통 사용을 위해서 위의 것으로 대체하였음 : swlee
+  // async findChallengeById(challengeId) {
+  //   return await this.#prisma.challenge.findUnique({
+  //     where: { id: challengeId },
+  //     select: {
+  //       id: true,
+  //       authorId: true,
+  //       title: true,
+  //       status: true,
+  //     },
+  //   });
+  // }
+
+
+
 
   async create(data) {
     return this.#prisma.challenge.create({ data });

@@ -69,8 +69,8 @@ export class ChallengesService {
     };
   }
 
-  async getChallengeDetail(id) {
-    const challenge = await this.#findChallengeOrThrow(id);
+  async getChallengeDetail(challengeId) {
+    const challenge = await this.#findChallengeOrThrow(challengeId);
     return challenge;
   }
 
@@ -204,13 +204,14 @@ export class ChallengesService {
 
   async #findChallengeOrThrow(challengeId) {
     const challenge =
-      (await this.#challengeRepository.findById?.(challengeId)) ??
+      // 1개라도 Repository가 정의되지 않으면 undefined 에러로 주석-swlee
+      // (await this.#challengeRepository.findById?.(challengeId)) ??
       (await this.#challengeRepository.findChallengeById?.(challengeId));
 
     if (!challenge) {
       throw new Error(ERROR_MESSAGE.CHALLENGE_NOT_FOUND);
     }
-
+    console.log("서비스 결과(#findChallengeOrThrow) =======>:",challenge)
     return challenge;
   }
 }
