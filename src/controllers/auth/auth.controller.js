@@ -39,6 +39,8 @@ export class AuthController extends BaseController {
 
     this.router.post('/refresh', (req, res) => this.refresh(req, res));
 
+    this.router.get('/me', needsLogin, (req, res) => this.me(req, res));
+
     return this.router;
   }
 
@@ -111,5 +113,10 @@ export class AuthController extends BaseController {
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
 
     return res.redirect('http://localhost:3000'); // 프론트 홈으로 이동
+  }
+
+  async me(req, res) {
+    const user = await this.#authService.me(req.user.id); // ✅ DB에서 유저 정보 조회
+    res.status(HTTP_STATUS.OK).json(user);
   }
 }
