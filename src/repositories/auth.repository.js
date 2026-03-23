@@ -16,6 +16,11 @@ export class AuthRepository {
       where: { nickname },
     });
   }
+  findUserById(id) {
+    return this.#prisma.user.findUnique({
+      where: { id },
+    });
+  }
 
   createUser(data) {
     return this.#prisma.user.create({

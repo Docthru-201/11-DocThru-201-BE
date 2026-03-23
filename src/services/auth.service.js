@@ -153,4 +153,9 @@ export class AuthService {
       };
     }
   }
+  async me(userId) {
+    const user = await this.#authRepository.findUserById(userId);
+    const { password: _pw, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
 }
