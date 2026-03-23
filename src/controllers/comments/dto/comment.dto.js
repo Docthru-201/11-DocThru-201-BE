@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ulidSchema, contentSchema } from '../schemas/baseSchema.js';
+import { ulidSchema, contentSchema } from '../../schemas/baseSchema.js';
 
 // --------------------
 // Path Param
@@ -18,7 +18,7 @@ export const workIdParamSchema = z
 // 댓글 commentId 검증
 export const commentIdParamSchema = z
   .object({
-    commentId: ulidSchema,
+    id: ulidSchema,
   })
   .meta({
     id: 'params.commentId',

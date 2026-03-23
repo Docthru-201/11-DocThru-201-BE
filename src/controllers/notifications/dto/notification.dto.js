@@ -1,4 +1,4 @@
-import { NotificationType } from '#generated/prisma/enums.js';
+import { NotificationType } from '#generated/prisma/enums.ts';
 import { z } from 'zod';
 
 export const notificationIdParamSchema = z.object({

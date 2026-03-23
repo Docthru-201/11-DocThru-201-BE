@@ -1,3 +1,6 @@
+import { ERROR_MESSAGE } from '#constants';
+import { NotFoundException } from '#exceptions';
+
 export class NotificationsService {
   #notificationRepository;
 
@@ -5,15 +8,21 @@ export class NotificationsService {
     this.#notificationRepository = notificationRepository;
   }
 
-  async createNotification({ userId, type, message, targetId, targetUrl }) {
+  async createNotification({
+    userId,
+    targetType,
+    message,
+    targetId,
+    targetUrl,
+  }) {
     if (!message) return null;
 
     return await this.#notificationRepository.create({
       userId,
-      type,
+      type: targetType,
       targetId,
       targetUrl,
-      // message,
+      message,
     });
   }
 
@@ -30,9 +39,45 @@ export class NotificationsService {
     },
   };
 
-  async listMyNotifications(userId) {}
+  async listMyNotifications({ userId, page, limit }) {
+    const pageNum = Number(page) || 1;
+    const perPage = Number(limit) || 10;
+    const skip = (pageNum - 1) * perPage;
+    const take = perPage;
 
-  async deleteMyNotification(notificationId, userId) {}
+    const notifications = await this.#notificationRepository.findManyByUserId(
+      userId,
+      { skip, take },
+    );
 
-  async markAsRead(notificationId, userId) {}
+    return notifications;
+  }
+
+  async deleteMyNotification({ userId, notificationId }) {
+    const notification =
+      await this.#notificationRepository.findById(notificationId);
+
+    if (!notification || notification.userId !== userId) {
+      throw new NotFoundException(ERROR_MESSAGE.NOTIFICATION_NOT_FOUND);
+    }
+
+    // soft delete
+    return await this.#notificationRepository.update(notificationId, {
+      deletedAt: new Date(),
+    });
+  }
+
+  async markAsRead({ notificationId, userId, isRead }) {
+    const notification =
+      await this.#notificationRepository.findById(notificationId);
+
+    if (!notification || notification.userId !== userId) {
+      throw new NotFoundException(ERROR_MESSAGE.NOTIFICATION_NOT_FOUND);
+    }
+
+    return await this.#notificationRepository.update(notificationId, {
+      isRead: isRead ?? true,
+      readAt: new Date(),
+    });
+  }
 }
