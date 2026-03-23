@@ -1,5 +1,5 @@
 import { BaseController } from '#controllers/base.controller.js';
-import { HTTP_STATUS } from '#constants';
+import { ERROR_MESSAGE, SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
 import { Router } from 'express';
 import { adminValidator } from '#middlewares';
 export class WorksController extends BaseController {
@@ -12,8 +12,13 @@ export class WorksController extends BaseController {
   }
 
   routes() {
-    this.router.get('/', adminValidator, (req, res, next) => this.getAllWorks(req, res, next));
-
+    this.router.get('/', adminValidator, (req, res, next) =>
+      this.getAllWorks(req, res, next),
+    );
+    // 임시로 adminValidator -> verifyAccessToken 확인필요
+    this.router.post('/', adminValidator, (req, res, next) =>
+      this.createWork(req, res, next),
+    );
     return this.router;
   }
 
@@ -27,7 +32,7 @@ export class WorksController extends BaseController {
       Number(page),
       Number(pageSize),
     );
-    
+
     res.status(HTTP_STATUS.OK).json({
       data: works,
       pagination: {
@@ -36,6 +41,22 @@ export class WorksController extends BaseController {
       },
     });
   }
+
+  createWork = async (req, res) => {
+    const { challengeId } = req.params;
+    const userId = req.user?.userId;
+
+    const newWork = await this.#worksService.createWork(
+      Number(challengeId),
+      userId,
+    );
+
+    return res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      message: SUCCESS_MESSAGE.WORK_CREATED,
+      data: newWork,
+    });
+  };
 
   async create(req, res) {}
 

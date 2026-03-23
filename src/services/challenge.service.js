@@ -163,8 +163,9 @@ export class ChallengesService {
     const challenge = await this.#findChallengeOrThrow(challengeId);
 
     if (challenge.isClosed) {
-      const error = new Error('완료된 챌린지는 수정 및 삭제가 불가능합니다.');
+      const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
       error.statusCode = HTTP_STATUS.FORBIDDEN;
+
       throw error;
     }
 
@@ -206,12 +207,15 @@ export class ChallengesService {
     const challenge =
       // 1개라도 Repository가 정의되지 않으면 undefined 에러로 주석-swlee
       // (await this.#challengeRepository.findById?.(challengeId)) ??
-      (await this.#challengeRepository.findChallengeById?.(challengeId));
+      await this.#challengeRepository.findChallengeById?.(challengeId);
 
     if (!challenge) {
-      throw new Error(ERROR_MESSAGE.CHALLENGE_NOT_FOUND);
+      const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND); // "존재하지 않는 챌린지"
+      error.statusCode = HTTP_STATUS.NOT_FOUND; //404
+      throw error;
     }
-    console.log("서비스 결과(#findChallengeOrThrow) =======>:",challenge)
+
+    console.log('서비스 결과(#findChallengeOrThrow) =======>:', challenge);
     return challenge;
   }
 }
