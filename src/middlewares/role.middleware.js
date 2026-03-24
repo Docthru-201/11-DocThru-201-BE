@@ -1,13 +1,5 @@
-// role.middleware.js — 테스트용: 실제 JWT 없이 관리자 플로우만 확인할 때 사용
-
-const TEST_ADMIN_USER_ID = '01KMHEPW6E308X4KWXJ5JVM66W';
-
+/** 관리자 전용 라우트: auth 미들웨어 이후 req.user.role === 'ADMIN' 인지 검사 */
 export function adminValidator(req, res, next) {
-  req.user = {
-    id: TEST_ADMIN_USER_ID,
-    userId: TEST_ADMIN_USER_ID,
-    role: 'ADMIN',
-  };
   const role = req.user?.role;
 
   if (!role) {

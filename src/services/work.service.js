@@ -81,6 +81,15 @@ export class WorksService {
       challengeId,
       userId,
     );
+    if (challenge.isClosed || challenge.status === 'CLOSED') {
+      throw new BadRequestException('마감된 챌린지입니다.');
+    }
+
+    const participant =
+      await this.#participantRepository.findByUserAndChallenge(
+        userId,
+        challengeId,
+      );
 
     if (hasWork) {
       const error = new Error(ERROR_MESSAGE.ALREADY_SUBMITTED_WORK);
@@ -106,6 +115,12 @@ export class WorksService {
       console.error(
         `[Notification Error] User: ${authorId} - ${notiError.message}`,
       );
+    const existingWork = await this.#workRepository.findWorkByParticipant(
+      participant.id,
+    );
+
+    if (existingWork) {
+      throw new BadRequestException('이미 작업물을 제출했습니다.');
     }
   }
 
