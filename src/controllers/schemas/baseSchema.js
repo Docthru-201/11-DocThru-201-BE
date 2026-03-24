@@ -1,7 +1,25 @@
 import { z } from 'zod';
 import { AUTH_LIMITS, REGEX } from '../../common/constants/auth.js';
 
-// 이메일
+export const ulidSchema = z.ulid({
+  message: '유효한 ID 형식(ULID)이 아닙니다.',
+});
+
+export const idParamSchema = z
+  .object({
+    id: ulidSchema,
+  })
+  .meta({ description: '경로 파라미터: 리소스 ID (ULID)' });
+
+export const workIdParamSchema = z
+  .object({
+    workId: ulidSchema,
+  })
+  .meta({
+    id: 'params.workId',
+    description: '경로 파라미터: 게시물 workId (ULID)',
+  });
+
 export const emailSchema = z
   .string()
   .trim()
@@ -9,7 +27,6 @@ export const emailSchema = z
   .min(1, { message: '이메일을 입력해주세요.' })
   .email({ message: '올바른 이메일 형식이 아닙니다.' });
 
-// 닉네임
 export const nicknameSchema = z
   .string()
   .trim()
@@ -23,7 +40,6 @@ export const nicknameSchema = z
     message: '닉네임은 한글, 영문, 숫자만 사용할 수 있습니다.',
   });
 
-// 비밀번호
 export const passwordSchema = z
   .string()
   .nonempty({ message: '비밀번호를 입력해주세요.' })
@@ -41,7 +57,6 @@ export const passwordSchema = z
     message: '비밀번호에 특수문자를 포함해주세요.',
   });
 
-// 자기소개
 export const introductionSchema = z
   .string()
   .trim()
@@ -50,21 +65,12 @@ export const introductionSchema = z
   })
   .optional();
 
-// 이미지 URL
 export const imageUrlSchema = z
   .string()
   .trim()
   .url({ message: '올바른 이미지 URL 형식이 아닙니다.' })
   .optional();
 
-// ULID 베이스
-export const ulidSchema = z
-  .string()
-  .trim()
-  .regex(/^[0-9A-HJKMNP-TV-Z]{26}$/, {
-    message: '유효한 ID 형식(ULID)이 아닙니다.',
-  })
-  .meta({ id: 'ulid', title: 'ULID' });
 export const contentSchema = (maxLen, message) =>
   z
     .string()
@@ -76,7 +82,6 @@ export const contentSchema = (maxLen, message) =>
       description: message,
     });
 
-// 3. JSON 검증 로직 (Tiptap 등)
 export const jsonStringSchema = z
   .string()
   .refine(

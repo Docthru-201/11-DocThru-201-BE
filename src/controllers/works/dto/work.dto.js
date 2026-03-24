@@ -1,18 +1,18 @@
 import { z } from 'zod';
+import { WORK_LIMITS } from '#constants';
 import {
   ulidSchema,
   contentSchema,
   jsonStringSchema,
+  idParamSchema,
 } from '../../schemas/baseSchema.js';
 
+const { CONTENT_MAX_LENGTH } = WORK_LIMITS;
+
 // --------------------
-// Path Param
+// Path Param (`/:id` — 작업물 ID)
 // --------------------
-export const workIdParamSchema = z
-  .object({
-    id: ulidSchema,
-  })
-  .meta({ description: '경로 파라미터: workId (ULID)' });
+export const workIdParamSchema = idParamSchema;
 
 // --------------------
 // Body
@@ -24,7 +24,7 @@ export const createWorkSchema = z
     challengeId: ulidSchema,
     // contentSchema와 jsonStringSchema를 결합하여 중복 로직 제거
     content: jsonStringSchema.and(
-      contentSchema(5000, '작업물 내용을 입력해주세요.'),
+      contentSchema(CONTENT_MAX_LENGTH, '작업물 내용을 입력해주세요.'),
     ),
   })
   .strict()

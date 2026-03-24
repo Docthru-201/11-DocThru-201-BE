@@ -8,9 +8,7 @@ import {
 export const signupSchema = z
   .object({
     email: emailSchema,
-
     nickname: nicknameSchema,
-
     password: passwordSchema,
   })
   .strict();

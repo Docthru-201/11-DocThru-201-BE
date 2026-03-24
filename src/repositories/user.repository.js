@@ -13,18 +13,11 @@ export class UserRepository {
     });
   }
 
-  findMany() {}
-
-  findById() {}
   findAllUsers() {
     return this.prisma.user.findMany({
       select: { id: true, nickname: true, image: true },
     });
   }
-
-  // findUserById(id) {
-  //   return this.prisma.user.findUnique({ where: { id } });
-  // }
 
   findUserByNickname(nickname) {
     return this.prisma.user.findUnique({
