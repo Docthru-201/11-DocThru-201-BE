@@ -16,7 +16,6 @@ export class ChallengesController extends BaseController {
   }
 
   routes() {
-    // 전체 목록 조회 (커서 기반 페이지네이션)
     this.router.get('/', (req, res) => this.findAll(req, res));
 
     this.router.get(

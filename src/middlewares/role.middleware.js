@@ -1,9 +1,3 @@
-// role.middleware.js
-
-/**
- * Admin 권한 검증 미들웨어
- * AuthMiddleware에서 req.user.role이 세팅되어 있다고 가정
- */
 export function adminValidator(req, res, next) {
   const role = req.user?.role;
 

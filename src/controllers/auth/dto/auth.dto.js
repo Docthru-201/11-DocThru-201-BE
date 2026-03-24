@@ -22,13 +22,11 @@ export const loginSchema = z
   })
   .strict();
 
-// OAuth callback query param
 export const oauthCallbackQuerySchema = z.object({
   code: z.string().min(1, { message: 'code가 필요합니다.' }),
   state: z.string().min(1, { message: 'state가 필요합니다.' }),
 });
 
-// OAuth provider param
 export const oauthProviderParamSchema = z.object({
   provider: z.enum(['google'], {
     message: '지원하지 않는 OAuth Provider입니다.',

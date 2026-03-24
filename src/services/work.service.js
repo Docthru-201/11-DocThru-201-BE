@@ -27,7 +27,6 @@ export class WorksService {
       throw new BadRequestException('마감된 챌린지입니다.');
     }
 
-    // 참여 여부 확인
     const participant =
       await this.#participantRepository.findByUserAndChallenge(
         userId,
@@ -38,7 +37,6 @@ export class WorksService {
       throw new ForbiddenException('챌린지에 참여하지 않은 사용자입니다.');
     }
 
-    // 중복 제출 확인 (1인 1제출 제한)
     const existingWork = await this.#workRepository.findWorkByParticipant(
       participant.id,
     );
