@@ -55,19 +55,20 @@ export class WorkRepository {
   }
 
   // work 생성 및 참여자 추가
-  async createWork(challengeId, participantId) {
+  async createWork(challengeId, userId) {
     const result = await this.#prisma.$transaction(async (tx) => {
       const work = await tx.work.create({
         data: {
           challengeId,
-          participantId,
+          userId,
+          content:"",
         },
       });
 
       await tx.participant.create({
         data: {
           challengeId,
-          userId: participantId,
+          userId: userId,
         },
       });
 
@@ -77,9 +78,9 @@ export class WorkRepository {
   }
   
 // 특정 챌린지에서 특정 작업물 조회
-async hasSubmittedWork(challengeId, authorId) {
+async hasSubmittedWork(challengeId, userId) {
   const work = await this.#prisma.work.findFirst({
-    where: { challengeId, authorId },
+    where: { challengeId, userId },
   });
   return work;
 };
