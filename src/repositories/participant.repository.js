@@ -5,11 +5,49 @@ export class ParticipantRepository {
     this.#prisma = prisma;
   }
 
-  findManyByChallengeId() {}
+  // 특정 챌린지의 참여자 목록 조회
+  async findManyByChallengeId(challengeId) {
+    return this.#prisma.participant.findMany({
+      where: { challengeId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 
-  findById() {}
+  // participant 단건 조회 (PK 기준)
+  async findById(id) {
+    return this.#prisma.participant.findUnique({
+      where: { id },
+    });
+  }
 
-  create() {}
+  // 유저 + 챌린지 기준 참여 여부 확인
+  async findByUserAndChallenge(userId, challengeId) {
+    return this.#prisma.participant.findUnique({
+      where: {
+        challengeId_userId: {
+          challengeId,
+          userId,
+        },
+      },
+    });
+  }
 
-  update() {}
+  async create(data) {
+    return this.#prisma.participant.create({
+      data,
+    });
+  }
+
+  async update(id, data) {
+    return this.#prisma.participant.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async delete(id) {
+    return this.#prisma.participant.delete({
+      where: { id },
+    });
+  }
 }

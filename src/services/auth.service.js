@@ -1,5 +1,9 @@
 import { ERROR_MESSAGE } from '#constants';
-import { ConflictException, UnauthorizedException } from '#exceptions';
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '#exceptions';
 
 export class AuthService {
   #authRepository;
@@ -100,7 +104,7 @@ export class AuthService {
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_TOKEN);
     }
 
-    const user = { id: payload.userId };
+    const user = await this.#authRepository.findUserById(payload.userId);
 
     const newAccessToken = this.#tokenProvider.generateAccessToken(user);
     const newRefreshToken = this.#tokenProvider.generateRefreshToken(user);
@@ -109,10 +113,61 @@ export class AuthService {
       payload.userId,
       newRefreshToken,
     );
-
     return {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
+      user,
+      tokens: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      },
     };
+  }
+  getOAuthLoginUrl(provider) {
+    if (provider === 'google') {
+      const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+      const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+      const state = crypto.randomUUID();
+
+      return {
+        url: `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=email profile&state=${state}`,
+        state,
+      };
+    }
+    throw new BadRequestException(`지원하지 않는 provider입니다: ${provider}`);
+  }
+  async oauthLogin(provider, code) {
+    if (provider === 'google') {
+      const googleUser = await this.#authRepository.getGoogleUser(code);
+      const { email, name } = googleUser;
+
+      let user = await this.#authRepository.findUserByEmail(email);
+      if (!user) {
+        user = await this.#authRepository.createUser({
+          email,
+          nickname: name,
+          password: null,
+        });
+      }
+
+      const accessToken = this.#tokenProvider.generateAccessToken(user);
+      const refreshToken = this.#tokenProvider.generateRefreshToken(user);
+      await this.#authRepository.saveRefreshToken(user.id, refreshToken);
+
+      const { password: _pw, ...userWithoutPassword } = user;
+      return {
+        user: userWithoutPassword,
+        accessToken,
+        refreshToken,
+      };
+    }
+
+    throw new BadRequestException(`지원하지 않는 provider입니다: ${provider}`);
+  }
+  async me(userId) {
+    const user = await this.#authRepository.findUserById(userId);
+    if (!user) {
+      throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND);
+    }
+    const { password: _pw, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 }

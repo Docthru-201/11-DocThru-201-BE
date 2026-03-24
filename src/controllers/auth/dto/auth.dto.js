@@ -8,20 +8,10 @@ import {
 export const signupSchema = z
   .object({
     email: emailSchema,
-
     nickname: nicknameSchema,
-
     password: passwordSchema,
-    confirmPassword: z
-      .string()
-      .min(1, { message: '비밀번호 확인을 입력해주세요.' }),
   })
-  .strict()
-
-  .refine((data) => data.password === data.confirmPassword, {
-    message: '비밀번호가 일치하지 않습니다.',
-    path: ['confirmPassword'],
-  });
+  .strict();
 
 export const loginSchema = z
   .object({
@@ -32,13 +22,13 @@ export const loginSchema = z
 
 // OAuth callback query param
 export const oauthCallbackQuerySchema = z.object({
-  code: z.string().nonempty({ message: 'code가 필요합니다.' }),
-  state: z.string().nonempty({ message: 'state가 필요합니다.' }),
+  code: z.string().min(1, { message: 'code가 필요합니다.' }),
+  state: z.string().min(1, { message: 'state가 필요합니다.' }),
 });
 
 // OAuth provider param
 export const oauthProviderParamSchema = z.object({
-  provider: z.enum(['google', 'kakao', 'naver'], {
+  provider: z.enum(['google'], {
     message: '지원하지 않는 OAuth Provider입니다.',
   }),
 });

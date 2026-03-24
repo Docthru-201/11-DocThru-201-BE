@@ -61,11 +61,21 @@ export class WorksController extends BaseController {
 
   async create(req, res) {}
 
-  async findById(req, res) {}
+      res.status(HTTP_STATUS.OK).json(work);
+    } catch (error) {
+      next(error);
+    }
+  }
 
-  async update(req, res) {}
+  async deleteWork(req, res, next) {
+    try {
+      await this.#worksService.deleteWork(req.params.id, req.user.id);
 
-  async delete(req, res) {}
+      res.status(HTTP_STATUS.NO_CONTENT).send();
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default WorksController;

@@ -118,9 +118,38 @@ export class WorksService {
     }
   }
 
-  async getWorkDetail() {}
+    if (!work) {
+      throw new NotFoundException('작업물을 찾을 수 없습니다.');
+    }
 
-  async updateWork() {}
+    return work;
+  }
 
-  async deleteWork() {}
+  async updateWork(workId, userId, data) {
+    const work = await this.#workRepository.findById(workId);
+
+    if (!work) {
+      throw new NotFoundException('작업물이 없습니다.');
+    }
+
+    if (work.userId !== userId) {
+      throw new ForbiddenException('수정 권한이 없습니다.');
+    }
+
+    return this.#workRepository.update(workId, data);
+  }
+
+  async deleteWork(workId, userId) {
+    const work = await this.#workRepository.findById(workId);
+
+    if (!work) {
+      throw new NotFoundException('작업물이 없습니다.');
+    }
+
+    if (work.userId !== userId) {
+      throw new ForbiddenException('삭제 권한이 없습니다.');
+    }
+
+    return this.#workRepository.delete(workId);
+  }
 }

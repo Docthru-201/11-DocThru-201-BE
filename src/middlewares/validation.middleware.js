@@ -13,7 +13,14 @@ export const validate = (target, schema) => {
     try {
       const result = schema.safeParse(req[target]);
 
+      // 실패했을 때만 issues를 출력
       if (!result.success) {
+        console.error(`❌ [Validation Error] Target: ${target}`);
+        console.error(
+          'Detailed Issues:',
+          JSON.stringify(result.error.issues, null, 2),
+        );
+
         const { fieldErrors } = flattenError(result.error);
 
         if (isProduction) {

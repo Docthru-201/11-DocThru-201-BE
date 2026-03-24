@@ -23,10 +23,6 @@ export class UserRepository {
     });
   }
 
-  // findUserById(id) {
-  //   return this.prisma.user.findUnique({ where: { id } });
-  // }
-
   findUserByNickname(nickname) {
     return this.prisma.user.findUnique({
       where: { nickname },
