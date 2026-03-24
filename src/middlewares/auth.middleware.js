@@ -31,8 +31,7 @@ export class AuthMiddleware {
         return next();
       }
 
-      const { user, tokens } =
-        await this.#authService.refreshTokens(refreshToken);
+      const { user, tokens } = await this.#authService.refresh(refreshToken);
 
       this.#cookieProvider.setAuthCookies(res, tokens);
       req.user = { id: user.id };

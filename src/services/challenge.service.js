@@ -78,26 +78,15 @@ export class ChallengesService {
     return await this.#challengeRepository.create(data);
   }
 
-  async updateChallenge(id, userId, updateData) {
+  async updateChallenge(id, updateData) {
+    // userId 파라미터 제거
     const challenge = await this.#findChallengeOrThrow(id);
-
-    if (challenge.authorId !== userId) {
-      throw new Error(ERROR_MESSAGE.NO_AUTHORITY_TO_UPDATE);
-    }
-
     return await this.#challengeRepository.update(id, updateData);
   }
 
-  async deleteChallenge(id, userId) {
-    const challenge = await this.#findChallengeOrThrow(id);
-
-    if (challenge.authorId !== userId) {
-      throw new Error(
-        ERROR_MESSAGE.NO_AUTHORITY_TO_DELETE ??
-          ERROR_MESSAGE.N0_AUTHORITY_TO_DELETE,
-      );
-    }
-
+  async deleteChallenge(id) {
+    // userId 파라미터 제거
+    await this.#findChallengeOrThrow(id);
     await this.#challengeRepository.delete(id);
   }
 
