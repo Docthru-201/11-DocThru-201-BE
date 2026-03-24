@@ -1,3 +1,5 @@
+import { REFRESH_TOKEN_EXPIRES_DAYS } from '../common/constants/auth.js';
+
 export class AuthRepository {
   #prisma;
 
@@ -30,7 +32,7 @@ export class AuthRepository {
 
   saveRefreshToken(userId, token) {
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7일 후 만료 예시
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRES_DAYS); // 7일 후 만료 예시
 
     return this.#prisma.refreshToken.upsert({
       where: { userId },
@@ -46,7 +48,7 @@ export class AuthRepository {
   }
 
   deleteRefreshToken(userId) {
-    return this.#prisma.refreshToken.delete({
+    return this.#prisma.refreshToken.deleteMany({
       where: { userId },
     });
   }
@@ -81,6 +83,9 @@ export class AuthRepository {
         },
       },
     );
+    if (!userResponse.ok) {
+      throw new Error('구글 유저 정보 조회 실패');
+    }
 
     const userData = await userResponse.json();
 

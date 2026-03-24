@@ -1,5 +1,9 @@
 import { ERROR_MESSAGE } from '#constants';
-import { ConflictException, UnauthorizedException } from '#exceptions';
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '#exceptions';
 
 export class AuthService {
   #authRepository;
@@ -109,19 +113,26 @@ export class AuthService {
       payload.userId,
       newRefreshToken,
     );
-
     return {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
+      user,
+      tokens: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      },
     };
   }
   getOAuthLoginUrl(provider) {
     if (provider === 'google') {
       const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
       const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+      const state = crypto.randomUUID();
 
-      return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=email profile`;
+      return {
+        url: `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=email profile&state=${state}`,
+        state,
+      };
     }
+    throw new BadRequestException(`지원하지 않는 provider입니다: ${provider}`);
   }
   async oauthLogin(provider, code) {
     if (provider === 'google') {
@@ -155,6 +166,9 @@ export class AuthService {
   }
   async me(userId) {
     const user = await this.#authRepository.findUserById(userId);
+    if (!user) {
+      throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND);
+    }
     const { password: _pw, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }

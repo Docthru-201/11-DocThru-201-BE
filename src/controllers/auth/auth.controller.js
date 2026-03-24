@@ -1,7 +1,13 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { validate, needsLogin } from '#middlewares';
-import { signupSchema, loginSchema } from './dto/auth.dto.js';
+import {
+  signupSchema,
+  loginSchema,
+  oauthCallbackQuerySchema,
+} from './dto/auth.dto.js';
+import { OAUTH_STATE_EXPIRES_MS } from '../../common/constants/auth.js';
+import { BadRequestException } from '#exceptions';
 
 export class AuthController extends BaseController {
   #authService;
@@ -25,8 +31,10 @@ export class AuthController extends BaseController {
       this.oauthLogin(req, res),
     );
 
-    this.router.get('/:provider/callback', (req, res) =>
-      this.oauthCallback(req, res),
+    this.router.get(
+      '/:provider/callback',
+      validate('query', oauthCallbackQuerySchema), // ✅ 추가
+      (req, res) => this.oauthCallback(req, res),
     );
 
     this.router.post('/logout', needsLogin, (req, res) =>
@@ -89,23 +97,30 @@ export class AuthController extends BaseController {
       refreshToken: newRefreshToken,
     });
 
-    // ✅ HTTP 200 OK + JSON 바디로 새 토큰 반환
-    res.status(HTTP_STATUS.OK).json({
-      accessToken,
-      refreshToken: newRefreshToken,
-    });
+    res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 
   async oauthLogin(req, res) {
     const { provider } = req.params;
 
-    const redirectUrl = this.#authService.getOAuthLoginUrl(provider);
+    const { url, state } = this.#authService.getOAuthLoginUrl(provider);
 
-    return res.redirect(redirectUrl);
+    res.cookie('oauth_state', state, {
+      httpOnly: true,
+      maxAge: OAUTH_STATE_EXPIRES_MS,
+    });
+
+    return res.redirect(url);
   }
   async oauthCallback(req, res) {
     const { provider } = req.params;
-    const { code } = req.query;
+    const { code, state } = req.query;
+
+    const savedState = req.cookies.oauth_state;
+    if (!savedState || savedState !== state) {
+      throw new BadRequestException('유효하지 않은 요청입니다.');
+    }
+    res.clearCookie('oauth_state');
 
     const { user, accessToken, refreshToken } =
       await this.#authService.oauthLogin(provider, code);
