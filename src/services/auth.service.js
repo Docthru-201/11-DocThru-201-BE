@@ -104,7 +104,7 @@ export class AuthService {
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_TOKEN);
     }
 
-    const user = { id: payload.userId };
+    const user = await this.#authRepository.findUserById(payload.userId);
 
     const newAccessToken = this.#tokenProvider.generateAccessToken(user);
     const newRefreshToken = this.#tokenProvider.generateRefreshToken(user);
@@ -137,11 +137,9 @@ export class AuthService {
   async oauthLogin(provider, code) {
     if (provider === 'google') {
       const googleUser = await this.#authRepository.getGoogleUser(code);
-
       const { email, name } = googleUser;
 
       let user = await this.#authRepository.findUserByEmail(email);
-
       if (!user) {
         user = await this.#authRepository.createUser({
           email,
@@ -152,17 +150,17 @@ export class AuthService {
 
       const accessToken = this.#tokenProvider.generateAccessToken(user);
       const refreshToken = this.#tokenProvider.generateRefreshToken(user);
-
       await this.#authRepository.saveRefreshToken(user.id, refreshToken);
 
       const { password: _pw, ...userWithoutPassword } = user;
-
       return {
         user: userWithoutPassword,
         accessToken,
         refreshToken,
       };
     }
+
+    throw new BadRequestException(`지원하지 않는 provider입니다: ${provider}`);
   }
   async me(userId) {
     const user = await this.#authRepository.findUserById(userId);

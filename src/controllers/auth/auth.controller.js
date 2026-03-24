@@ -49,6 +49,8 @@ export class AuthController extends BaseController {
 
     this.router.get('/me', needsLogin, (req, res) => this.me(req, res));
 
+    this.router.get('/me', needsLogin, (req, res) => this.me(req, res));
+
     return this.router;
   }
 
@@ -122,8 +124,11 @@ export class AuthController extends BaseController {
     }
     res.clearCookie('oauth_state');
 
-    const { user, accessToken, refreshToken } =
-      await this.#authService.oauthLogin(provider, code);
+    const {
+      user: _user,
+      accessToken,
+      refreshToken,
+    } = await this.#authService.oauthLogin(provider, code);
 
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
 
