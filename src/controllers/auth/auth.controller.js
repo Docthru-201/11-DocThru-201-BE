@@ -33,7 +33,7 @@ export class AuthController extends BaseController {
 
     this.router.get(
       '/:provider/callback',
-      validate('query', oauthCallbackQuerySchema), // ✅ 추가
+      validate('query', oauthCallbackQuerySchema),
       (req, res) => this.oauthCallback(req, res),
     );
 
@@ -86,14 +86,11 @@ export class AuthController extends BaseController {
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
   async refresh(req, res) {
-    // 요청에서 기존 refreshToken 가져오기
     const refreshToken = this.#cookieProvider.getRefreshToken(req);
 
-    // authService를 통해 새로운 토큰 발급
     const { accessToken, refreshToken: newRefreshToken } =
       await this.#authService.refresh(refreshToken);
 
-    // 쿠키에도 토큰 세팅 (원하면)
     this.#cookieProvider.setAuthCookies(res, {
       accessToken,
       refreshToken: newRefreshToken,
@@ -139,7 +136,7 @@ export class AuthController extends BaseController {
   }
 
   async me(req, res) {
-    const user = await this.#authService.me(req.user.id); // ✅ DB에서 유저 정보 조회
+    const user = await this.#authService.me(req.user.id);
     res.status(HTTP_STATUS.OK).json(user);
   }
 }
