@@ -16,6 +16,15 @@ export class AuthService {
     this.#tokenProvider = tokenProvider;
   }
 
+  #toAuthUserResponse(user) {
+    if (!user) return user;
+    const { password: _pw, socials, ...rest } = user;
+    return {
+      ...rest,
+      hasGoogleAccount: Array.isArray(socials) && socials.length > 0,
+    };
+  }
+
   async signup(data) {
     const { email, nickname, password } = data;
 
@@ -43,7 +52,7 @@ export class AuthService {
 
     // 4. 비밀번호 제거 후 반환
     const { password: _pw, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return this.#toAuthUserResponse({ ...userWithoutPassword, socials: [] });
   }
 
   async login(data) {
@@ -72,7 +81,7 @@ export class AuthService {
 
     const { password: _pw, ...userWithoutPassword } = user;
     return {
-      user: userWithoutPassword,
+      user: this.#toAuthUserResponse(userWithoutPassword),
       accessToken,
       refreshToken,
     };
@@ -123,12 +132,22 @@ export class AuthService {
   }
   getOAuthLoginUrl(provider) {
     if (provider === 'google') {
-      const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-      const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+      const CLIENT_ID = process.env.GOOGLE_CLIENT_ID?.trim();
+      const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI?.trim();
+      if (!CLIENT_ID) {
+        throw new BadRequestException(
+          'Google OAuth: GOOGLE_CLIENT_ID가 비어 있습니다. .env에 클라이언트 ID를 넣고 서버를 재시작하세요.',
+        );
+      }
+      if (!REDIRECT_URI) {
+        throw new BadRequestException(
+          'Google OAuth: GOOGLE_REDIRECT_URI가 비어 있습니다. Google Cloud 콘솔에 등록한 리디렉션 URI와 동일한 값을 .env에 설정하세요.',
+        );
+      }
       const state = crypto.randomUUID();
 
       return {
-        url: `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=email profile&state=${state}`,
+        url: `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent('email profile')}&state=${state}`,
         state,
       };
     }
@@ -137,7 +156,13 @@ export class AuthService {
   async oauthLogin(provider, code) {
     if (provider === 'google') {
       const googleUser = await this.#authRepository.getGoogleUser(code);
-      const { email, name } = googleUser;
+      const { email, name, id: googleProviderId } = googleUser;
+
+      if (!googleProviderId) {
+        throw new BadRequestException(
+          'Google 계정에서 제공자 식별자를 받지 못했습니다.',
+        );
+      }
 
       let user = await this.#authRepository.findUserByEmail(email);
       if (!user) {
@@ -148,13 +173,21 @@ export class AuthService {
         });
       }
 
-      const accessToken = this.#tokenProvider.generateAccessToken(user);
-      const refreshToken = this.#tokenProvider.generateRefreshToken(user);
-      await this.#authRepository.saveRefreshToken(user.id, refreshToken);
+      await this.#authRepository.upsertGoogleSocial(user.id, googleProviderId);
+      const userWithSocials = await this.#authRepository.findUserById(user.id);
 
-      const { password: _pw, ...userWithoutPassword } = user;
+      const accessToken =
+        this.#tokenProvider.generateAccessToken(userWithSocials);
+      const refreshToken =
+        this.#tokenProvider.generateRefreshToken(userWithSocials);
+      await this.#authRepository.saveRefreshToken(
+        userWithSocials.id,
+        refreshToken,
+      );
+
+      const { password: _pw, ...userWithoutPassword } = userWithSocials;
       return {
-        user: userWithoutPassword,
+        user: this.#toAuthUserResponse(userWithoutPassword),
         accessToken,
         refreshToken,
       };
@@ -168,6 +201,6 @@ export class AuthService {
       throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND);
     }
     const { password: _pw, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return this.#toAuthUserResponse(userWithoutPassword);
   }
 }

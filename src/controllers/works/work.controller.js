@@ -16,9 +16,7 @@ export class WorksController extends BaseController {
       this.getAllWorks(req, res, next),
     );
     // 임시로 adminValidator -> verifyAccessToken 확인필요
-    this.router.post('/', (req, res, next) =>
-      this.createWork(req, res, next),
-    );
+    this.router.post('/', (req, res, next) => this.createWork(req, res, next));
     return this.router;
   }
 
@@ -42,30 +40,19 @@ export class WorksController extends BaseController {
     });
   }
 
-  createWork = async (req, res) => {
-    const { challengeId } = req.params;
-    // const userId = req.user?.userId;
-      const userId = '01KMD847HH2DD4M96C8R1TQABX';
- console.log("work controller, create work 진입(userId강제부여):challengeId======>",userId,challengeId)
-    const newWork = await this.#worksService.createWork(
-      challengeId,
-      userId,
-    );
-   
-    return res.status(HTTP_STATUS.CREATED).json({
-      success: true,
-      message: SUCCESS_MESSAGE.WORK_CREATED,
-      data: newWork,
-    });
-  };
-
-  async create(req, res) {}
-
-      res.status(HTTP_STATUS.OK).json(work);
+  createWork = async (req, res, next) => {
+    try {
+      const { challengeId } = req.params;
+      const participantId = req.user?.userId; // 인증 붙이면 이걸로
+      const newWork = await this.#worksService.createWork(
+        challengeId,
+        participantId,
+      );
+      return res.status(HTTP_STATUS.CREATED).json(newWork);
     } catch (error) {
       next(error);
     }
-  }
+  };
 
   async deleteWork(req, res, next) {
     try {

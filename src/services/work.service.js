@@ -1,4 +1,6 @@
 import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
+import { ForbiddenException, NotFoundException } from '#exceptions';
+
 export class WorksService {
   #workRepository;
   #likeRepository;
@@ -57,7 +59,11 @@ export class WorksService {
 
   // 새로운 작업물을 생성하고 챌린지 참여자로 등록
   async createWork(challengeId, participantId) {
-    console.log("work service도착:====> challengeId,참가자",challengeId, participantId);
+    console.log(
+      'work service도착:====> challengeId,참가자',
+      challengeId,
+      participantId,
+    );
     if (!challengeId || !participantId) {
       const error = new Error(ERROR_MESSAGE.REQUIRED_FIELDS_MISSING);
       error.statusCode = HTTP_STATUS.BAD_REQUEST;
@@ -103,8 +109,8 @@ export class WorksService {
       );
     }
   }
-  
- //이미 등록된 작업물 확인
+
+  //이미 등록된 작업물 확인
   async isWorkDuplicate(challengeId, authorId) {
     const hasWork = await this.#workRepository.hasSubmittedWork(
       challengeId,
@@ -116,13 +122,12 @@ export class WorksService {
       error.statusCode = HTTP_STATUS.CONFLICT;
       throw error;
     }
-  }
 
-    if (!work) {
+    if (!hasWork) {
       throw new NotFoundException('작업물을 찾을 수 없습니다.');
     }
 
-    return work;
+    return hasWork;
   }
 
   async updateWork(workId, userId, data) {

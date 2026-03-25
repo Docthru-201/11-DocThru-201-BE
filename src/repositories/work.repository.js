@@ -65,7 +65,7 @@ export class WorkRepository {
         data: {
           challengeId,
           userId,
-          content:"",
+          content: '',
         },
       });
 
@@ -80,14 +80,14 @@ export class WorkRepository {
     });
     return result;
   }
-  
-// 특정 챌린지에서 특정 작업물 조회
-async hasSubmittedWork(challengeId, userId) {
-  const work = await this.#prisma.work.findFirst({
-    where: { challengeId, userId },
-  });
-  return work;
-};
+
+  // 특정 챌린지에서 특정 작업물 조회
+  async hasSubmittedWork(challengeId, userId) {
+    const work = await this.#prisma.work.findFirst({
+      where: { challengeId, userId },
+    });
+    return work;
+  }
 
   // 이미 제출한 작업물이 있는지 확인 (참여자 1명당 작업물 1개 제한)
   async findWorkByParticipant(participantId) {
