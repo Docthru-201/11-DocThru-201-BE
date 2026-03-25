@@ -34,6 +34,9 @@ export class NotificationsService {
 
     newWork: (challengeTitle) =>
       `'${challengeTitle}' 챌린지에 작업물이 추가되었어요`,
+
+    challengeEnd: (challengeTitle) => `'${challengeTitle}'(이)가 마감되었어요`,
+
   };
 
   async listMyNotifications({ userId, page, limit }) {

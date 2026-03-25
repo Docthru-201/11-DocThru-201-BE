@@ -142,4 +142,23 @@ export class ChallengeRepository {
       where: { authorId: userId },
     });
   }
+
+  async findEndedChallenges(currentTime) {
+    return await this.#prisma.challenge.findMany({
+      where: {
+        isClosed: false,
+        deadline: { lte: currentTime },
+      },
+      include: {
+        participants: true,
+      },
+    });
+  }
+
+  async closeChallenge(challengeId) {
+    return await this.#prisma.challenge.update({
+      where: { id: challengeId },
+      data: { isClosed: true },
+    });
+  }
 }
