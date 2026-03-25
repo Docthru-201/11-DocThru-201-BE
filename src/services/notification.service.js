@@ -13,7 +13,7 @@ export class NotificationsService {
 
     return await this.#notificationRepository.create({
       userId,
-      type: targetType,
+      type,
       targetId,
       targetUrl,
       message,
@@ -31,9 +31,9 @@ export class NotificationsService {
     challengeProgressUpdate: (title, status) => {
       return `[${title}] 챌린지의 진행 상태가 '${status}'로 업데이트되었습니다.`;
     },
-    
+
     newWork: (challengeTitle) =>
-    `'${challengeTitle}' 챌린지에 작업물이 추가되었어요`,
+      `'${challengeTitle}' 챌린지에 작업물이 추가되었어요`,
   };
 
   async listMyNotifications({ userId, page, limit }) {
