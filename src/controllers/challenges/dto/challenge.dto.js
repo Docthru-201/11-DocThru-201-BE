@@ -59,7 +59,10 @@ export const createChallengeSchema = z.object({
       `설명은 ${DESCRIPTION_MAX_LENGTH}자 이하여야 합니다.`,
     ),
   deadline: z.iso.datetime({ required_error: '마감일을 정해주세요.' }),
-  maxParticipants: z.number().int().min(1, '참가자는 1명 이상 이어야 합니다.'),
+  maxParticipants: z.coerce
+    .number()
+    .int()
+    .min(1, '참가자는 1명 이상 이어야 합니다.'),
 });
 
 export const updateChallengeSchema = z.object({

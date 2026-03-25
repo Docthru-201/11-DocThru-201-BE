@@ -22,8 +22,13 @@ export class ChallengesController extends BaseController {
     // 전체 목록 조회 (커서 기반 페이지네이션)
     this.router.get('/', (req, res) => this.findAll(req, res));
 
+    // `/:challengeId` 보다 먼저 등록 (그렇지 않으면 "me"가 id로 매칭됨)
+    this.router.get('/me', needsLogin, (req, res) =>
+      this.getMyChallenges(req, res),
+    );
+
     this.router.get(
-      '/:challengeId', 
+      '/:challengeId',
       // validate 임시 block --test : swlee
       // validate('params', challengeIdParamSchema),
       (req, res) => this.findById(req, res),
@@ -51,10 +56,6 @@ export class ChallengesController extends BaseController {
       needsAdmin,
       validate('params', challengeIdParamSchema),
       (req, res) => this.delete(req, res),
-    );
-
-    this.router.get('/me', needsLogin, (req, res) =>
-      this.getMyChallenges(req, res),
     );
 
     return this.router;
