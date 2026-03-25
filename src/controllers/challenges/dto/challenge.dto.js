@@ -99,3 +99,7 @@ export const updateChallengeSchema = z.object({
       `거절 사유가 너무 깁니다. ${DECLINE_REASON_MAX_LENGTH}자를 넘기지 마세요.`,
     ),
 });
+
+export const myChallengesQuerySchema = z.object({
+  tab: z.enum(['participating', 'done', 'applied']).default('participating'),
+});

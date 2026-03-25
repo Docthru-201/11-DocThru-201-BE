@@ -13,8 +13,8 @@ export const ERROR_MESSAGE = {
   FAILED_TO_CREATE_USER: '사용자 생성에 실패했습니다.',
   FAILED_TO_UPDATE_USER: '사용자 수정에 실패했습니다.',
   FAILED_TO_DELETE_USER: '사용자 삭제에 실패했습니다.',
-  NICKNAME_ALREADY_EXISTS: 'Nickname already exists',
-  INVALID_LOGIN: 'Invalid login credentials',
+  NICKNAME_ALREADY_EXISTS: '이미 사용하고 있는 닉네임입니다.',
+  INVALID_LOGIN: '유효하지 않은 로그인 정보입니다.',
 
   // Profile 관련
   PROFILE_NOT_FOUND: 'Profile not found',

@@ -159,6 +159,37 @@ export class ChallengeRepository {
     return await this.#prisma.challenge.update({
       where: { id: challengeId },
       data: { isClosed: true },
+  async findByAuthorIdForMyList(userId) {
+    return await this.#prisma.challenge.findMany({
+      where: { authorId: userId, deletedAt: null },
+      include: {
+        author: {
+          select: { id: true, nickname: true, image: true },
+        },
+        _count: {
+          select: { participants: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** 나의 챌린지(참가) — Participant 기준 */
+  async findByParticipantUserIdForMyList(userId) {
+    return await this.#prisma.challenge.findMany({
+      where: {
+        deletedAt: null,
+        participants: { some: { userId } },
+      },
+      include: {
+        author: {
+          select: { id: true, nickname: true, image: true },
+        },
+        _count: {
+          select: { participants: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }
