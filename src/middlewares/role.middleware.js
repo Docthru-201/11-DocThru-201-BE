@@ -7,7 +7,7 @@
 export function adminValidator(req, res, next) {
   // 아래 테스트 목적 임시코드
   req.user = { 
-    userId: '01KMD847HH2DD4M96C8R1TQABX',      // 테스트용 ID
+    userId: '01KMHEPW6E308X4KWXJ5JVM66W',      // 테스트용 ID
     role: 'ADMIN'    
   };
   console.log(
