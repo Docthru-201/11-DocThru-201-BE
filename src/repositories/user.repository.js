@@ -13,7 +13,6 @@ export class UserRepository {
     });
   }
 
-
   findMany() {}
 
   findById() {}
