@@ -30,7 +30,7 @@ export class LikesService {
     if (!work) throw new Error('작업물을 찾을 수 없습니다.');
 
     // 중복 좋아요 체크
-    const existingLike = await this.#likeRepository.findLike(userId, workId);
+    const existingLike = await this.#likeRepository.findLike(workId, userId);
     if (existingLike) {
       throw new Error('이미 좋아요를 누른 작업물입니다.');
     }

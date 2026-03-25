@@ -35,15 +35,16 @@ export class LikeRepository {
     });
   }
 
-  // 좋아요 삭제 (복합 키를 이용한 정밀 삭제)
-  async delete(workId, userId) {
-    return this.#prisma.like.delete({
+  deleteByWorkIdAndUserId() {}
+
+  // findByWorkIdAndUserId와 같은것인지 확인 swlee
+  async findManyLiked({ userId, workIds }) {
+    return await this.#prisma.like.findMany({
       where: {
-        workId_userId: {
-          workId,
-          userId,
-        },
+        userId: userId,
+        workId: { in: workIds },
       },
+      select: { workId: true },
     });
   }
 }

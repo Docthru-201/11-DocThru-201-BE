@@ -1,12 +1,18 @@
 // TODO: 어드민 전용 검증 스키마
 import { z } from 'zod';
 import { ChallengeStatus } from '#generated/prisma/enums.ts';
-const ULID_REGEX = /^[0-7][0-9A-HJKMNP-TV-Z]{25}$/;
+import { ADMIN_LIMITS, MAX_PAGE_SIZE, PAGINATION } from '#constants';
+import { ulidSchema } from '../../schemas/baseSchema.js';
 
 // 1. 신청 내역 리스트 조회 (GET /admin/challenges)
 export const getAllChallengesScheme = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(10),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(MAX_PAGE_SIZE)
+    .default(PAGINATION.OFFSET_DEFAULT_PAGE_SIZE),
 
   sort: z
     .string()
@@ -25,25 +31,22 @@ export const getAllChallengesScheme = z.object({
     )
     .optional(),
   keyword: z.string().trim().optional(),
-  userId: z
-    .string()
-    .regex(ULID_REGEX, '유효하지 않은 사용자 ID 형식입니다.')
-    .optional(),
+  userId: ulidSchema.optional(),
 });
 
 // 승인/거절 처리 (PATCH /admin/challenges/:challengesId)
 export const updateChallengeStatusScheme = {
   params: z.object({
-    challengeId: z
-      .string()
-      .min(1, '챌린지 ID는 필수 입력 사항입니다.')
-      .regex(ULID_REGEX, '유효하지 않은 챌린지 ID 형식입니다.'),
+    challengeId: ulidSchema,
   }),
 
   body: z
     .object({
       status: z.nativeEnum(ChallengeStatus),
-      declineReason: z.string().max(200).optional(),
+      declineReason: z
+        .string()
+        .max(ADMIN_LIMITS.DECLINE_REASON_MAX_LENGTH)
+        .optional(),
     })
     .refine(
       (data) => {

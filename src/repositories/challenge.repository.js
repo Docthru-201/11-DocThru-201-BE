@@ -6,13 +6,16 @@ export class ChallengeRepository {
   }
 
   // 커서 기반 목록 조회 (무한 스크롤링)
-  async findManyWithCursor({ cursor, skip, take, where, orderBy }) {
+  async findManyWithCursor({ cursor, skip, take, where, orderBy, include }) {
     const args = {
       where,
       take,
       orderBy: orderBy ?? { createdAt: 'desc' },
     };
 
+    if (include) {
+      args.include = include;
+    }
     if (cursor && typeof cursor === 'object') {
       args.cursor = cursor;
     }
@@ -91,16 +94,24 @@ export class ChallengeRepository {
   async findChallengeById(challengeId) {
     return await this.#prisma.challenge.findUnique({
       where: { id: challengeId },
-      select: {
-        id: true,
-        authorId: true,
-        title: true,
-        status: true,
-        isClosed: true,
+      include: {
+        author: true,
+        participants: true,
       },
     });
   }
-
+  // 공통 사용을 위해서 위의 것으로 대체하였음 : swlee
+  // async findChallengeById(challengeId) {
+  //   return await this.#prisma.challenge.findUnique({
+  //     where: { id: challengeId },
+  //     select: {
+  //       id: true,
+  //       authorId: true,
+  //       title: true,
+  //       status: true,
+  //     },
+  //   });
+  // }
   async create(data) {
     return this.#prisma.challenge.create({ data });
   }

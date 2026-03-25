@@ -5,10 +5,10 @@ import { ForbiddenException } from '#exceptions';
 // 관리자 검증 함수
 const userRepository = new UserRepository({ prisma });
 
-export async function adminValidator(req, res, next) {
+export async function tempadminValidator(req, res, next) {
   // const { userId } = req.user;
-  console.log('임시userId:01KKGAP404XG67S71QNTDEA27D');
-  const userId = '01KKS351GWZ7G620NTJ6F2DKR7';
+  console.log('임시userId(adminvalidator.js):01KM8JWERCM7X65PGFGTSQDEFC');
+  const userId = '01KMD847HH2DD4M96C8R1TQABX';
   if (!userId) {
     return res.status(401).json({ message: '사용자 ID가 필요합니다.' });
   }

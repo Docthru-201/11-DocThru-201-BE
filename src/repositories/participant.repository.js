@@ -20,7 +20,7 @@ export class ParticipantRepository {
     });
   }
 
-  // 🔥 핵심: 유저 + 챌린지 기준 참여 여부 확인
+  // 유저 + 챌린지 기준 참여 여부 확인
   async findByUserAndChallenge(userId, challengeId) {
     return this.#prisma.participant.findUnique({
       where: {

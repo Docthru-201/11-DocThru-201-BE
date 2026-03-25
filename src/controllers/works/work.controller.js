@@ -1,94 +1,58 @@
 import { BaseController } from '#controllers/base.controller.js';
-import { HTTP_STATUS } from '#constants';
-import { validate, needsLogin } from '#middlewares';
-import {
-  createWorkSchema,
-  updateWorkSchema,
-  workIdParamSchema,
-} from './dto/work.dto.js'; // 경로에 맞춰 수정해주세요
-
+import { ERROR_MESSAGE, SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
+import { Router } from 'express';
+import { adminValidator } from '#middlewares';
 export class WorksController extends BaseController {
   #worksService;
 
   constructor({ worksService }) {
     super();
+    this.router = Router({ mergeParams: true });
     this.#worksService = worksService;
   }
 
   routes() {
-    // 1. 작업물 생성
-    this.router.post(
-      '/',
-      needsLogin,
-      validate('body', createWorkSchema),
-      (req, res, next) => this.createWork(req, res, next),
+    this.router.get('/', adminValidator, (req, res, next) =>
+      this.getAllWorks(req, res, next),
     );
-
-    // 2. 작업물 상세 조회
-    this.router.get(
-      '/:id',
-      validate('params', workIdParamSchema),
-      (req, res, next) => this.getWorkDetail(req, res, next),
-    );
-
-    // 3. 작업물 수정
-    this.router.patch(
-      '/:id',
-      needsLogin,
-      validate('params', workIdParamSchema),
-      validate('body', updateWorkSchema),
-      (req, res, next) => this.updateWork(req, res, next),
-    );
-
-    // 4. 작업물 삭제
-    this.router.delete(
-      '/:id',
-      needsLogin,
-      validate('params', workIdParamSchema),
-      (req, res, next) => this.deleteWork(req, res, next),
-    );
-
+    // 임시로 adminValidator -> verifyAccessToken 확인필요
+    this.router.post('/', (req, res, next) => this.createWork(req, res, next));
     return this.router;
   }
 
-  async createWork(req, res, next) {
+  async getAllWorks(req, res) {
+    const userId = req.user?.userId;
+    const { challengeId } = req.params;
+    const { page = 1, pageSize = 5 } = req.query;
+    const works = await this.#worksService.getAllWorks(
+      userId,
+      challengeId,
+      Number(page),
+      Number(pageSize),
+    );
+
+    res.status(HTTP_STATUS.OK).json({
+      data: works,
+      pagination: {
+        page: page,
+        pageSize: pageSize,
+      },
+    });
+  }
+
+  createWork = async (req, res, next) => {
     try {
-      const { challengeId, ...data } = req.body;
-      const work = await this.#worksService.createWork(
-        req.user.id,
+      const { challengeId } = req.params;
+      const participantId = req.user?.userId; // 인증 붙이면 이걸로
+      const newWork = await this.#worksService.createWork(
         challengeId,
-        data,
+        participantId,
       );
-
-      res.status(HTTP_STATUS.CREATED).json(work);
+      return res.status(HTTP_STATUS.CREATED).json(newWork);
     } catch (error) {
       next(error);
     }
-  }
-
-  async getWorkDetail(req, res, next) {
-    try {
-      const work = await this.#worksService.getWorkDetail(req.params.id);
-
-      res.status(HTTP_STATUS.OK).json(work);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async updateWork(req, res, next) {
-    try {
-      const work = await this.#worksService.updateWork(
-        req.params.id,
-        req.user.id,
-        req.body,
-      );
-
-      res.status(HTTP_STATUS.OK).json(work);
-    } catch (error) {
-      next(error);
-    }
-  }
+  };
 
   async deleteWork(req, res, next) {
     try {
@@ -100,3 +64,5 @@ export class WorksController extends BaseController {
     }
   }
 }
+
+export default WorksController;

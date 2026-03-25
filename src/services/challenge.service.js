@@ -13,8 +13,10 @@ export class ChallengesService {
   async listChallenges(query) {
     const { cursor, limit, status, category, type, keyword } = query;
 
+    // 공개 목록: 기본은 승인된 챌린지만. 쿼리에 status가 있으면 해당 값으로 필터.
     const where = {
-      ...(status && { status }),
+      deletedAt: null,
+      ...(status ? { status } : { status: 'APPROVED' }),
       ...(category && { category }),
       ...(type && { type }),
       ...(keyword && {
@@ -43,16 +45,28 @@ export class ChallengesService {
       cursorKey: 'id',
     });
 
+    const listInclude = {
+      author: {
+        select: { id: true, nickname: true, image: true },
+      },
+      _count: {
+        select: { participants: true },
+      },
+    };
+
     const rawItems = await this.#challengeRepository.findManyWithCursor({
       cursor: paginationParams.cursor,
       skip: paginationParams.skip,
       take: paginationParams.take,
       where,
       orderBy,
+      include: listInclude,
     });
 
+    const mapped = rawItems.map((row) => this.#mapChallengeListItem(row));
+
     const { items, nextCursor, hasNext } = parseCursorResult({
-      items: rawItems,
+      items: mapped,
       limit: paginationParams.limit,
       cursorKey: 'id',
     });
@@ -69,8 +83,25 @@ export class ChallengesService {
     };
   }
 
-  async getChallengeDetail(id) {
-    const challenge = await this.#findChallengeOrThrow(id);
+  #mapChallengeListItem(row) {
+    const { _count, ...rest } = row;
+    const deadline = rest.deadline;
+    const deadlineDate =
+      deadline instanceof Date ? deadline : new Date(deadline);
+    const participantCount = _count?.participants ?? 0;
+
+    return {
+      ...rest,
+      currentParticipants: participantCount,
+      deadline: deadlineDate.toISOString().slice(0, 10),
+      isDeadlinePassed: deadlineDate < new Date(),
+      isRecruitmentFull: participantCount >= rest.maxParticipants,
+      isParticipating: false,
+    };
+  }
+
+  async getChallengeDetail(challengeId) {
+    const challenge = await this.#findChallengeOrThrow(challengeId);
     return challenge;
   }
 
@@ -78,26 +109,15 @@ export class ChallengesService {
     return await this.#challengeRepository.create(data);
   }
 
-  async updateChallenge(id, userId, updateData) {
+  async updateChallenge(id, updateData) {
+    // userId 파라미터 제거
     const challenge = await this.#findChallengeOrThrow(id);
-
-    if (challenge.authorId !== userId) {
-      throw new Error(ERROR_MESSAGE.NO_AUTHORITY_TO_UPDATE);
-    }
-
     return await this.#challengeRepository.update(id, updateData);
   }
 
-  async deleteChallenge(id, userId) {
-    const challenge = await this.#findChallengeOrThrow(id);
-
-    if (challenge.authorId !== userId) {
-      throw new Error(
-        ERROR_MESSAGE.NO_AUTHORITY_TO_DELETE ??
-          ERROR_MESSAGE.N0_AUTHORITY_TO_DELETE,
-      );
-    }
-
+  async deleteChallenge(id) {
+    // userId 파라미터 제거
+    await this.#findChallengeOrThrow(id);
     await this.#challengeRepository.delete(id);
   }
 
@@ -163,8 +183,9 @@ export class ChallengesService {
     const challenge = await this.#findChallengeOrThrow(challengeId);
 
     if (challenge.isClosed) {
-      const error = new Error('완료된 챌린지는 수정 및 삭제가 불가능합니다.');
+      const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
       error.statusCode = HTTP_STATUS.FORBIDDEN;
+
       throw error;
     }
 
@@ -195,7 +216,7 @@ export class ChallengesService {
         type: 'CHALLENGE_APPROVAL_RESULT',
         targetId: id,
         targetUrl: `/challenges/${id}`,
-        // message,
+        message: message,
       });
     }
 
@@ -204,13 +225,17 @@ export class ChallengesService {
 
   async #findChallengeOrThrow(challengeId) {
     const challenge =
-      (await this.#challengeRepository.findById?.(challengeId)) ??
-      (await this.#challengeRepository.findChallengeById?.(challengeId));
+      // 1개라도 Repository가 정의되지 않으면 undefined 에러로 주석-swlee
+      // (await this.#challengeRepository.findById?.(challengeId)) ??
+      await this.#challengeRepository.findChallengeById?.(challengeId);
 
     if (!challenge) {
-      throw new Error(ERROR_MESSAGE.CHALLENGE_NOT_FOUND);
+      const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND); // "존재하지 않는 챌린지"
+      error.statusCode = HTTP_STATUS.NOT_FOUND; //404
+      throw error;
     }
 
+    console.log('서비스 결과(#findChallengeOrThrow) =======>:', challenge);
     return challenge;
   }
 }

@@ -1,17 +1,7 @@
 import { z } from 'zod';
-import { ulidSchema } from '../schemas/baseSchema.js';
+import { ulidSchema, workIdParamSchema } from '../../schemas/baseSchema.js';
 
-// --------------------
-// Path Param
-// --------------------
-export const workIdParamSchema = z
-  .object({
-    workId: ulidSchema, // baseSchema 적용
-  })
-  .meta({
-    id: 'params.workId',
-    description: '경로 파라미터: 대상 게시물의 workId (ULID)',
-  });
+export { workIdParamSchema };
 
 // --------------------
 // Response Schemas
