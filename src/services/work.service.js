@@ -1,4 +1,6 @@
 import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
+import { ForbiddenException, NotFoundException } from '#exceptions';
+
 export class WorksService {
   #workRepository;
   #likeRepository;
@@ -102,8 +104,8 @@ export class WorksService {
       );
     }
   }
-  
- //이미 등록된 작업물 확인
+
+  //이미 등록된 작업물 확인
   async isWorkDuplicate(challengeId, authorId) {
     const hasWork = await this.#workRepository.hasSubmittedWork(
       challengeId,
@@ -115,11 +117,39 @@ export class WorksService {
       error.statusCode = HTTP_STATUS.CONFLICT;
       throw error;
     }
+
+    if (!hasWork) {
+      throw new NotFoundException('작업물을 찾을 수 없습니다.');
+    }
+
+    return hasWork;
   }
 
-  async getWorkDetail() {}
+  async updateWork(workId, userId, data) {
+    const work = await this.#workRepository.findById(workId);
 
-  async updateWork() {}
+    if (!work) {
+      throw new NotFoundException('작업물이 없습니다.');
+    }
 
-  async deleteWork() {}
+    if (work.userId !== userId) {
+      throw new ForbiddenException('수정 권한이 없습니다.');
+    }
+
+    return this.#workRepository.update(workId, data);
+  }
+
+  async deleteWork(workId, userId) {
+    const work = await this.#workRepository.findById(workId);
+
+    if (!work) {
+      throw new NotFoundException('작업물이 없습니다.');
+    }
+
+    if (work.userId !== userId) {
+      throw new ForbiddenException('삭제 권한이 없습니다.');
+    }
+
+    return this.#workRepository.delete(workId);
+  }
 }

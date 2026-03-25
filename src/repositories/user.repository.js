@@ -13,7 +13,6 @@ export class UserRepository {
     });
   }
 
-
   findMany() {}
 
   findById() {}
@@ -22,10 +21,6 @@ export class UserRepository {
       select: { id: true, nickname: true, image: true },
     });
   }
-
-  // findUserById(id) {
-  //   return this.prisma.user.findUnique({ where: { id } });
-  // }
 
   findUserByNickname(nickname) {
     return this.prisma.user.findUnique({

@@ -13,8 +13,10 @@ export class ChallengesService {
   async listChallenges(query) {
     const { cursor, limit, status, category, type, keyword } = query;
 
+    // 공개 목록: 기본은 승인된 챌린지만. 쿼리에 status가 있으면 해당 값으로 필터.
     const where = {
-      ...(status && { status }),
+      deletedAt: null,
+      ...(status ? { status } : { status: 'APPROVED' }),
       ...(category && { category }),
       ...(type && { type }),
       ...(keyword && {
@@ -43,16 +45,28 @@ export class ChallengesService {
       cursorKey: 'id',
     });
 
+    const listInclude = {
+      author: {
+        select: { id: true, nickname: true, image: true },
+      },
+      _count: {
+        select: { participants: true },
+      },
+    };
+
     const rawItems = await this.#challengeRepository.findManyWithCursor({
       cursor: paginationParams.cursor,
       skip: paginationParams.skip,
       take: paginationParams.take,
       where,
       orderBy,
+      include: listInclude,
     });
 
+    const mapped = rawItems.map((row) => this.#mapChallengeListItem(row));
+
     const { items, nextCursor, hasNext } = parseCursorResult({
-      items: rawItems,
+      items: mapped,
       limit: paginationParams.limit,
       cursorKey: 'id',
     });
@@ -69,6 +83,23 @@ export class ChallengesService {
     };
   }
 
+  #mapChallengeListItem(row) {
+    const { _count, ...rest } = row;
+    const deadline = rest.deadline;
+    const deadlineDate =
+      deadline instanceof Date ? deadline : new Date(deadline);
+    const participantCount = _count?.participants ?? 0;
+
+    return {
+      ...rest,
+      currentParticipants: participantCount,
+      deadline: deadlineDate.toISOString().slice(0, 10),
+      isDeadlinePassed: deadlineDate < new Date(),
+      isRecruitmentFull: participantCount >= rest.maxParticipants,
+      isParticipating: false,
+    };
+  }
+
   async getChallengeDetail(challengeId) {
     const challenge = await this.#findChallengeOrThrow(challengeId);
     return challenge;
@@ -78,26 +109,15 @@ export class ChallengesService {
     return await this.#challengeRepository.create(data);
   }
 
-  async updateChallenge(id, userId, updateData) {
+  async updateChallenge(id, updateData) {
+    // userId 파라미터 제거
     const challenge = await this.#findChallengeOrThrow(id);
-
-    if (challenge.authorId !== userId) {
-      throw new Error(ERROR_MESSAGE.NO_AUTHORITY_TO_UPDATE);
-    }
-
     return await this.#challengeRepository.update(id, updateData);
   }
 
-  async deleteChallenge(id, userId) {
-    const challenge = await this.#findChallengeOrThrow(id);
-
-    if (challenge.authorId !== userId) {
-      throw new Error(
-        ERROR_MESSAGE.NO_AUTHORITY_TO_DELETE ??
-          ERROR_MESSAGE.N0_AUTHORITY_TO_DELETE,
-      );
-    }
-
+  async deleteChallenge(id) {
+    // userId 파라미터 제거
+    await this.#findChallengeOrThrow(id);
     await this.#challengeRepository.delete(id);
   }
 

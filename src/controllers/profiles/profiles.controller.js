@@ -1,12 +1,8 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { validate, needsLogin } from '#middlewares';
+import { userIdParamSchema } from '#controllers/users/dto/user.dto.js';
 import { updateProfileSchema } from './dto/profiles.dto.js';
-import { z } from 'zod';
-
-const userIdParamSchema = z.object({
-  userId: z.string(),
-});
 
 export class ProfilesController extends BaseController {
   #profilesService;

@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-    provider = "postgresql"
+    provider  = "postgresql"
 }
 
 enum Role {
@@ -125,8 +125,8 @@ model SocialAccount {
 }
 
 model Challenge {
-    id String @id @default(ulid())
-    serialNumber Int @default(autoincrement())
+    id           String @id @default(ulid())
+    serialNumber Int    @default(autoincrement())
 
     authorId String
 
@@ -226,8 +226,8 @@ model Like {
 model Notification {
     id String @id @default(ulid())
 
-    userId String
-    type   NotificationType
+    userId  String
+    type    NotificationType
     message String?
 
     targetId  String? // 알림과 관련된 대상 ID (댓글 ID, 챌린지 ID 등)

@@ -10,3 +10,5 @@ export const REGEX = {
   PASSWORD_NUMBER: /[0-9]/,
   PASSWORD_SPECIAL: /[!@#$%^&*(),.?":{}|<>]/,
 };
+export const REFRESH_TOKEN_EXPIRES_DAYS = 7;
+export const OAUTH_STATE_EXPIRES_MS = 1000 * 60 * 5; // 5분

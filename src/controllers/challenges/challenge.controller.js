@@ -1,6 +1,6 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
-import { validate, needsLogin } from '#middlewares';
+import { validate, needsLogin, needsAdmin } from '#middlewares';
 import {
   createChallengeSchema,
   challengeIdParamSchema,
@@ -22,8 +22,13 @@ export class ChallengesController extends BaseController {
     // 전체 목록 조회 (커서 기반 페이지네이션)
     this.router.get('/', (req, res) => this.findAll(req, res));
 
+    // `/:challengeId` 보다 먼저 등록 (그렇지 않으면 "me"가 id로 매칭됨)
+    this.router.get('/me', needsLogin, (req, res) =>
+      this.getMyChallenges(req, res),
+    );
+
     this.router.get(
-      '/:challengeId', 
+      '/:challengeId',
       // validate 임시 block --test : swlee
       // validate('params', challengeIdParamSchema),
       (req, res) => this.findById(req, res),
@@ -39,6 +44,7 @@ export class ChallengesController extends BaseController {
     this.router.patch(
       '/:id',
       needsLogin,
+      needsAdmin,
       validate('params', challengeIdParamSchema),
       validate('body', updateChallengeSchema),
       (req, res) => this.update(req, res),
@@ -47,12 +53,9 @@ export class ChallengesController extends BaseController {
     this.router.delete(
       '/:id',
       needsLogin,
+      needsAdmin,
       validate('params', challengeIdParamSchema),
       (req, res) => this.delete(req, res),
-    );
-
-    this.router.get('/me', needsLogin, (req, res) =>
-      this.getMyChallenges(req, res),
     );
 
     return this.router;
@@ -83,22 +86,18 @@ export class ChallengesController extends BaseController {
 
   async update(req, res) {
     const { id } = req.params;
-    const updataData = req.body;
-    const userId = req.user.id;
-
+    const updateData = req.body;
     const updateChallenge = await this.#challengesService.updateChallenge(
       id,
-      userId,
-      updataData,
+      updateData,
     );
     res.status(HTTP_STATUS.OK).json(updateChallenge);
   }
 
   async delete(req, res) {
     const { id } = req.params;
-    const userId = req.user.id;
 
-    await this.#challengesService.deleteChallenge(id, userId);
+    await this.#challengesService.deleteChallenge(id);
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 

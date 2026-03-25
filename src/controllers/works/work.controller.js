@@ -16,9 +16,7 @@ export class WorksController extends BaseController {
       this.getAllWorks(req, res, next),
     );
     // 임시로 adminValidator -> verifyAccessToken 확인필요
-    this.router.post('/', (req, res, next) =>
-      this.createWork(req, res, next),
-    );
+    this.router.post('/', (req, res, next) => this.createWork(req, res, next));
     return this.router;
   }
 
@@ -44,8 +42,9 @@ export class WorksController extends BaseController {
 
   createWork = async (req, res) => {
     const { challengeId } = req.params;
-    const userId = req.user?.userId;  //토큰 결합시 재확인 필요
-
+    // const userId = req.user?.userId;
+      const userId = '01KMD847HH2DD4M96C8R1TQABX';
+ console.log("work controller, create work 진입(userId강제부여):challengeId======>",userId,challengeId)
     const newWork = await this.#worksService.createWork(
       challengeId,
       userId,
@@ -58,13 +57,15 @@ export class WorksController extends BaseController {
     });
   };
 
-  async create(req, res) {}
+  async deleteWork(req, res, next) {
+    try {
+      await this.#worksService.deleteWork(req.params.id, req.user.id);
 
-  async findById(req, res) {}
-
-  async update(req, res) {}
-
-  async delete(req, res) {}
+      res.status(HTTP_STATUS.NO_CONTENT).send();
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default WorksController;

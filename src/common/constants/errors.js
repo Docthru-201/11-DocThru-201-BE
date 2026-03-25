@@ -54,6 +54,6 @@ export const SUCCESS_MESSAGE = {
   WORK_FETCHED: '작업물 조회가 완료되었습니다.',
 
   CHALLENGE_CREATED: '챌린지가 생성되었습니다.',
-  
-  REQUEST_PROCESSED: '요청이 성공적으로 처리되었습니다.'
+
+  REQUEST_PROCESSED: '요청이 성공적으로 처리되었습니다.',
 };

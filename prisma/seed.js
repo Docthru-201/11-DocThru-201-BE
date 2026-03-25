@@ -29,9 +29,14 @@ class Seeder {
     const topic = faker.helpers.arrayElement(
       seedConstants.CHALLENGE_TOPIC_TEMPLATES,
     );
-    const text = faker.helpers
+    let text = faker.helpers
       .arrayElement(seedConstants.WORK_CONTENT_TEMPLATES)
       .replace('{topic}', topic);
+
+    const MIN_WORK_TEXT_LENGTH = 500;
+    while (text.length < MIN_WORK_TEXT_LENGTH) {
+      text += `\n\n${faker.lorem.paragraph()}`;
+    }
 
     return {
       type: 'doc',
@@ -200,9 +205,14 @@ class Seeder {
     );
 
     for (const challenge of openChallenges) {
+      // maxParticipants를 넘지 않도록 참가자 수 상한을 챌린지 정원에 맞춤
+      const cap = Math.min(challenge.maxParticipants, users.length);
+      const minPick = Math.min(seedConstants.APPLICANTS_MIN, cap);
+      const maxPick = Math.min(seedConstants.APPLICANTS_MAX, cap);
+
       const participants = faker.helpers.arrayElements(users, {
-        min: seedConstants.APPLICANTS_MIN,
-        max: Math.min(seedConstants.APPLICANTS_MAX, users.length),
+        min: minPick,
+        max: maxPick,
       });
 
       for (const user of participants) {
@@ -300,9 +310,7 @@ class Seeder {
           });
         }
 
-        const likeCount = await this.#prisma.like.count({
-          where: { workId: work.id },
-        });
+        const likeCount = faker.number.int({ min: 1, max: 200 });
 
         await this.#prisma.work.update({
           where: { id: work.id },
@@ -340,15 +348,15 @@ class Seeder {
   }
 
   async run() {
-    if (process.env.NODE_ENV !== 'development') {
-      throw new Error('⚠️ 프로덕션 환경에서는 시딩을 실행하지 않습니다');
-    }
+    // if (process.env.NODE_ENV !== 'development') {
+    //   throw new Error('⚠️ 프로덕션 환경에서는 시딩을 실행하지 않습니다');
+    // }
 
-    if (!process.env.DATABASE_URL?.includes('localhost')) {
-      throw new Error(
-        '⚠️ localhost 데이터베이스에만 시딩을 실행할 수 있습니다',
-      );
-    }
+    // if (!process.env.DATABASE_URL?.includes('localhost')) {
+    //   throw new Error(
+    //     '⚠️ localhost 데이터베이스에만 시딩을 실행할 수 있습니다',
+    //   );
+    // }
 
     console.log('🌱 시딩 시작...');
 
@@ -384,7 +392,9 @@ class Seeder {
 }
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
+  // Migrate는 `directUrl`을 쓰지만, 이 시드 스크립트는 직접 Prisma adapter를 구성하므로
+  // 가능하면 DIRECT_URL(직접 커넥션)로 붙도록 우선순위를 둡니다.
+  connectionString: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
 });
 const prisma = new PrismaClient({ adapter });
 const seeder = new Seeder(

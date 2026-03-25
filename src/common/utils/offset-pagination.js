@@ -1,5 +1,6 @@
-const DEFAULT_PAGE_SIZE = 10;
-const MAX_PAGE_SIZE = 100;
+import { MAX_PAGE_SIZE, PAGINATION } from '#constants';
+
+const DEFAULT_PAGE_SIZE = PAGINATION.OFFSET_DEFAULT_PAGE_SIZE;
 
 // 쿼리 정규화
 function normalizePage(value) {

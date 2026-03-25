@@ -1,0 +1,5 @@
+-- NOTE:
+-- This migration is intentionally left blank because the two migration
+-- SQL files under `prisma/migrations` were duplicated during generation.
+-- Keeping both would cause enum/table re-creation errors like:
+--   type "Role" already exists
