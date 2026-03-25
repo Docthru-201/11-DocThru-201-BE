@@ -29,9 +29,14 @@ class Seeder {
     const topic = faker.helpers.arrayElement(
       seedConstants.CHALLENGE_TOPIC_TEMPLATES,
     );
-    const text = faker.helpers
+    let text = faker.helpers
       .arrayElement(seedConstants.WORK_CONTENT_TEMPLATES)
       .replace('{topic}', topic);
+
+    const MIN_WORK_TEXT_LENGTH = 500;
+    while (text.length < MIN_WORK_TEXT_LENGTH) {
+      text += `\n\n${faker.lorem.paragraph()}`;
+    }
 
     return {
       type: 'doc',
@@ -305,9 +310,7 @@ class Seeder {
           });
         }
 
-        const likeCount = await this.#prisma.like.count({
-          where: { workId: work.id },
-        });
+        const likeCount = faker.number.int({ min: 1, max: 200 });
 
         await this.#prisma.work.update({
           where: { id: work.id },
