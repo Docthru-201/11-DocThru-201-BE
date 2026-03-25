@@ -215,7 +215,6 @@ export class ChallengesService {
       throw error;
     }
 
-    console.log('서비스 결과(#findChallengeOrThrow) =======>:', challenge);
     return challenge;
   }
 }

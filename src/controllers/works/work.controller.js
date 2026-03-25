@@ -1,5 +1,5 @@
 import { BaseController } from '#controllers/base.controller.js';
-import { ERROR_MESSAGE, SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
+import { SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
 import { Router } from 'express';
 import { adminValidator } from '#middlewares';
 export class WorksController extends BaseController {
@@ -44,9 +44,8 @@ export class WorksController extends BaseController {
 
   createWork = async (req, res) => {
     const { challengeId } = req.params;
-    // const userId = req.user?.userId;
-      const userId = '01KMD847HH2DD4M96C8R1TQABX';
- console.log("work controller, create work 진입(userId강제부여):challengeId======>",userId,challengeId)
+    const userId = req.user?.userId;  //토큰 결합시 재확인 필요
+
     const newWork = await this.#worksService.createWork(
       challengeId,
       userId,

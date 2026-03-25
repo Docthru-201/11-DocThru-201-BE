@@ -57,7 +57,6 @@ export class WorksService {
 
   // 새로운 작업물을 생성하고 챌린지 참여자로 등록
   async createWork(challengeId, participantId) {
-    console.log("work service도착:====> challengeId,참가자",challengeId, participantId);
     if (!challengeId || !participantId) {
       const error = new Error(ERROR_MESSAGE.REQUIRED_FIELDS_MISSING);
       error.statusCode = HTTP_STATUS.BAD_REQUEST;
