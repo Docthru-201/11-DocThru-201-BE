@@ -103,6 +103,9 @@ export class WorkRepository {
         user: {
           select: { id: true, nickname: true, image: true },
         },
+        challenge: {
+          select: { title: true },
+        },
         _count: {
           select: {
             likes: true,
