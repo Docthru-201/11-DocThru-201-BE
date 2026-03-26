@@ -17,12 +17,17 @@ export class AuthMiddleware {
         return next();
       }
 
-      const accessUserId = accessToken
-        ? this.#tokenProvider.verifyAccessToken(accessToken)?.userId
+      const accessPayload = accessToken
+        ? this.#tokenProvider.verifyAccessToken(accessToken)
         : null;
 
-      if (accessUserId) {
-        req.user = { id: accessUserId };
+      if (accessPayload?.userId) {
+        req.user = {
+          id: accessPayload.userId,
+          role: accessPayload.role,        
+          nickname: accessPayload.nickname,
+        };
+        console.log('req.user 세팅됨:', req.user);
         return next();
       }
 
@@ -34,9 +39,14 @@ export class AuthMiddleware {
       const { user, tokens } = await this.#authService.refresh(refreshToken);
 
       this.#cookieProvider.setAuthCookies(res, tokens);
-      req.user = { id: user.id };
-
+      req.user = {
+        id: user.id,
+        role: user.role,        // ✅ role
+        nickname: user.nickname, // ✅ nickname
+      };
+      console.log('req.user 세팅됨 (refresh):', req.user);
       return next();
+
     } catch {
       this.#cookieProvider.clearAuthCookies(res);
       return next();
