@@ -43,7 +43,7 @@ export class WorksController extends BaseController {
   createWork = async (req, res) => {
     const { challengeId } = req.params;
     // const userId = req.user?.userId;
-      const userId = '01KMD847HH2DD4M96C8R1TQABX';
+      const userId = '01KMHEPW6E308X4KWXJ5JVM66W';
  console.log("work controller, create work 진입(userId강제부여):challengeId======>",userId,challengeId)
     const newWork = await this.#worksService.createWork(
       challengeId,

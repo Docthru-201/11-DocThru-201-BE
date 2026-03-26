@@ -58,8 +58,8 @@ export class WorksService {
   }
 
   // 새로운 작업물을 생성하고 챌린지 참여자로 등록
-  async createWork(challengeId, participantId) {
-    if (!challengeId || !participantId) {
+  async createWork(challengeId, userId) {
+    if (!challengeId || !userId) {
       const error = new Error(ERROR_MESSAGE.REQUIRED_FIELDS_MISSING);
       error.statusCode = HTTP_STATUS.BAD_REQUEST;
       throw error;
@@ -79,7 +79,18 @@ export class WorksService {
       error.statusCode = HTTP_STATUS.FORBIDDEN;
       throw error;
     }
-    await this.isWorkDuplicate(challengeId, participantId);
+    
+    
+    const hasWork = await this.#workRepository.hasSubmittedWork(
+      challengeId,
+      userId,
+    );
+
+    if (hasWork) {
+      const error = new Error(ERROR_MESSAGE.ALREADY_SUBMITTED_WORK);
+      error.statusCode = HTTP_STATUS.CONFLICT;
+      throw error;
+    }
 
     const participant =
       await this.#participantRepository.findByUserAndChallenge(
@@ -88,10 +99,10 @@ export class WorksService {
       );
     const result = await this.#workRepository.createWork(
       challengeId,
-      participantId,
+      userId,
     );
 
-    if (challenge.authorId !== participantId) {
+    if (challenge.authorId !== userId) {
       this.#sendNotificationSilently(challenge.authorId, challenge.title);
     }
 
