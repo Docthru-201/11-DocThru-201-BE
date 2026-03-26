@@ -61,6 +61,23 @@ export class CommentsService {
       throw new ForbiddenException('삭제 권한이 없습니다.');
     }
 
-    await this.#commentRepository.delete(commentId);
+    // ✅ 답글이 있으면 soft delete, 없으면 hard delete
+    const hasReplies = comment.replies && comment.replies.length > 0;
+
+    if (hasReplies) {
+      await this.#commentRepository.softDelete(commentId);
+    } else {
+      await this.#commentRepository.delete(commentId);
+
+      // ✅ 방법 3: 답글 삭제 후 부모 댓글 확인
+      if (comment.parentId) {
+        const parent = await this.#commentRepository.findById(comment.parentId);
+
+        // 부모 댓글이 soft delete 상태이고 남은 답글이 0개이면 hard delete
+        if (parent && parent.deletedAt && parent.replies.length === 0) {
+          await this.#commentRepository.delete(comment.parentId);
+        }
+      }
+    }
   }
 }
