@@ -3,10 +3,12 @@ import { ForbiddenException, NotFoundException } from '#exceptions';
 export class CommentsService {
   #commentRepository;
   #workRepository;
+  #userRepository;
 
-  constructor({ commentRepository, workRepository }) {
+  constructor({ commentRepository, workRepository, userRepository }) {
     this.#commentRepository = commentRepository;
     this.#workRepository = workRepository;
+    this.#userRepository = userRepository;
   }
 
   async listCommentsByWorkId(workId) {
@@ -57,7 +59,10 @@ export class CommentsService {
     if (!comment) {
       throw new NotFoundException('댓글이 존재하지 않습니다.');
     }
-    if (comment.authorId !== userId) {
+
+    const actor = await this.#userRepository.findUserById(userId);
+    const isAdmin = actor?.role === 'ADMIN';
+    if (!isAdmin && comment.authorId !== userId) {
       throw new ForbiddenException('삭제 권한이 없습니다.');
     }
 
