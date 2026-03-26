@@ -13,8 +13,8 @@ export const ERROR_MESSAGE = {
   FAILED_TO_CREATE_USER: '사용자 생성에 실패했습니다.',
   FAILED_TO_UPDATE_USER: '사용자 수정에 실패했습니다.',
   FAILED_TO_DELETE_USER: '사용자 삭제에 실패했습니다.',
-  NICKNAME_ALREADY_EXISTS: 'Nickname already exists',
-  INVALID_LOGIN: 'Invalid login credentials',
+  NICKNAME_ALREADY_EXISTS: '이미 사용하고 있는 닉네임입니다.',
+  INVALID_LOGIN: '유효하지 않은 로그인 정보입니다.',
 
   // Profile 관련
   PROFILE_NOT_FOUND: 'Profile not found',
@@ -35,6 +35,25 @@ export const ERROR_MESSAGE = {
   RESOURCE_CONFLICT: '이미 존재하는 리소스입니다.',
   INTERNAL_SERVER_ERROR: '서버 내부 오류가 발생했습니다.',
 
-  //notification 관련
-  NOTIFICATION_NOT_FOUND: '알림을 찾을 수 없습니다.',
+  //challenge 관련 실패메시지 추가
+  USER_ID_REQUIRED: '사용자 아이디가 필요합니다.',
+  CHALLENGE_ID_REQUIRED: '챌린지 아이디가 필요합니다.',
+  CHALLENGE_NOT_FOUND: '존재하지 않는 챌린지입니다.',
+  CHALLENGE_ALREADY_CLOSED: '이미 마감된 챌린지입니다.',
+  REQUIRED_FIELDS_MISSING: '필수 입력 항목이 누락되었습니다.',
+  ADMIN_ONLY_ACCESS: '관리자 권한이 필요한 요청입니다.',
+  CANNOT_MODIFY_CLOSED_CHALLENGE: '이미 완료된 챌린지는 수정할 수 없습니다.',
+  ADMIN_ONLY_EDIT: '관리자만 수정할 수 있습니다.',
+  ALREADY_SUBMITTED_WORK: '이미 등록된 작업물이 있습니다.',
+};
+//성공메시지 추가
+export const SUCCESS_MESSAGE = {
+  WORK_CREATED: '작업물이 성공적으로 등록되었습니다.',
+  WORK_UPDATED: '작업물이 수정되었습니다.',
+  WORK_DELETED: '작업물이 삭제되었습니다.',
+  WORK_FETCHED: '작업물 조회가 완료되었습니다.',
+
+  CHALLENGE_CREATED: '챌린지가 생성되었습니다.',
+
+  REQUEST_PROCESSED: '요청이 성공적으로 처리되었습니다.',
 };

@@ -129,7 +129,10 @@ export class AuthController extends BaseController {
 
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
 
-    return res.redirect('http://localhost:3000');
+    const clientBase =
+      process.env.CLIENT_BASE_URL?.trim()?.replace(/\/$/, '') ||
+      'http://localhost:3000';
+    return res.redirect(`${clientBase}/challenges`);
   }
 
   async me(req, res) {

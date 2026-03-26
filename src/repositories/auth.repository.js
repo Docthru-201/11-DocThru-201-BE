@@ -1,4 +1,12 @@
+import { AuthProvider } from '#generated/prisma/enums.ts';
 import { REFRESH_TOKEN_EXPIRES_DAYS } from '../common/constants/auth.js';
+
+const googleSocialInclude = {
+  socials: {
+    where: { provider: AuthProvider.GOOGLE },
+    select: { id: true },
+  },
+};
 
 export class AuthRepository {
   #prisma;
@@ -10,6 +18,7 @@ export class AuthRepository {
   findUserByEmail(email) {
     return this.#prisma.user.findUnique({
       where: { email },
+      include: googleSocialInclude,
     });
   }
 
@@ -21,6 +30,7 @@ export class AuthRepository {
   findUserById(id) {
     return this.#prisma.user.findUnique({
       where: { id },
+      include: googleSocialInclude,
     });
   }
 
@@ -52,6 +62,24 @@ export class AuthRepository {
       where: { userId },
     });
   }
+
+  upsertGoogleSocial(userId, providerId) {
+    return this.#prisma.socialAccount.upsert({
+      where: {
+        userId_provider: {
+          userId,
+          provider: AuthProvider.GOOGLE,
+        },
+      },
+      update: { providerId },
+      create: {
+        userId,
+        provider: AuthProvider.GOOGLE,
+        providerId,
+      },
+    });
+  }
+
   async getGoogleUser(code) {
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',

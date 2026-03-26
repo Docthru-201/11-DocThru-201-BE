@@ -5,13 +5,17 @@ export class ChallengeRepository {
     this.#prisma = prisma;
   }
 
-  async findManyWithCursor({ cursor, skip, take, where, orderBy }) {
+  // 커서 기반 목록 조회 (무한 스크롤링)
+  async findManyWithCursor({ cursor, skip, take, where, orderBy, include }) {
     const args = {
       where,
       take,
       orderBy: orderBy ?? { createdAt: 'desc' },
     };
 
+    if (include) {
+      args.include = include;
+    }
     if (cursor && typeof cursor === 'object') {
       args.cursor = cursor;
     }
@@ -90,16 +94,24 @@ export class ChallengeRepository {
   async findChallengeById(challengeId) {
     return await this.#prisma.challenge.findUnique({
       where: { id: challengeId },
-      select: {
-        id: true,
-        authorId: true,
-        title: true,
-        status: true,
-        isClosed: true,
+      include: {
+        author: true,
+        participants: true,
       },
     });
   }
-
+  // 공통 사용을 위해서 위의 것으로 대체하였음 : swlee
+  // async findChallengeById(challengeId) {
+  //   return await this.#prisma.challenge.findUnique({
+  //     where: { id: challengeId },
+  //     select: {
+  //       id: true,
+  //       authorId: true,
+  //       title: true,
+  //       status: true,
+  //     },
+  //   });
+  // }
   async create(data) {
     return this.#prisma.challenge.create({ data });
   }
@@ -128,6 +140,40 @@ export class ChallengeRepository {
   async findByUserId(userId) {
     return await this.#prisma.challenge.findMany({
       where: { authorId: userId },
+    });
+  }
+
+  async findByAuthorIdForMyList(userId) {
+    return await this.#prisma.challenge.findMany({
+      where: { authorId: userId, deletedAt: null },
+      include: {
+        author: {
+          select: { id: true, nickname: true, image: true },
+        },
+        _count: {
+          select: { participants: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** 나의 챌린지(참가) — Participant 기준 */
+  async findByParticipantUserIdForMyList(userId) {
+    return await this.#prisma.challenge.findMany({
+      where: {
+        deletedAt: null,
+        participants: { some: { userId } },
+      },
+      include: {
+        author: {
+          select: { id: true, nickname: true, image: true },
+        },
+        _count: {
+          select: { participants: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

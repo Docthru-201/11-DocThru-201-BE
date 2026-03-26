@@ -35,7 +35,7 @@ export class AdminController extends BaseController {
     return this.router;
   }
 
-  async getAllChallenges(req, res, next) {
+  async getAllChallenges(req, res) {
     const { page, pageSize, sort, keyword } = req.query;
     const userId = req.user?.userId; // 내 신청 내역만 볼 경우 필요
     const result = await this.#challengesService.getAllChallenges({
@@ -49,7 +49,7 @@ export class AdminController extends BaseController {
     res.status(HTTP_STATUS.OK).json(result);
   }
 
-  async getChallengeDetailById(req, res, next) {
+  async getChallengeDetailById(req, res) {
     const { challengeId } = req.params;
     const result =
       await this.#challengesService.getChallengeDetailById(challengeId);
@@ -63,7 +63,7 @@ export class AdminController extends BaseController {
     res.status(HTTP_STATUS.OK).json(result);
   }
 
-  async updateChallengeStatus(req, res, next) {
+  async updateChallengeStatus(req, res) {
     const challengeId = req.params.challengeId;
     const { userId } = req.user;
     const data = req.body;

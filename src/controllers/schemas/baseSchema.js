@@ -1,6 +1,25 @@
 import { z } from 'zod';
 import { AUTH_LIMITS, REGEX } from '../../common/constants/auth.js';
 
+export const ulidSchema = z.ulid({
+  message: '유효한 ID 형식(ULID)이 아닙니다.',
+});
+
+export const idParamSchema = z
+  .object({
+    id: ulidSchema,
+  })
+  .meta({ description: '경로 파라미터: 리소스 ID (ULID)' });
+
+export const workIdParamSchema = z
+  .object({
+    workId: ulidSchema,
+  })
+  .meta({
+    id: 'params.workId',
+    description: '경로 파라미터: 게시물 workId (ULID)',
+  });
+
 export const emailSchema = z
   .string()
   .trim()
@@ -52,13 +71,6 @@ export const imageUrlSchema = z
   .url({ message: '올바른 이미지 URL 형식이 아닙니다.' })
   .optional();
 
-export const ulidSchema = z
-  .string()
-  .trim()
-  .regex(/^[0-9A-HJKMNP-TV-Z]{26}$/, {
-    message: '유효한 ID 형식(ULID)이 아닙니다.',
-  })
-  .meta({ id: 'ulid', title: 'ULID' });
 export const contentSchema = (maxLen, message) =>
   z
     .string()

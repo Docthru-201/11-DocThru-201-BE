@@ -31,7 +31,7 @@ export class NotificationRepository {
         message: data.message,
         targetId: data.targetId,
         targetUrl: data.targetUrl,
-        isRead: false,
+        message: data.message,
       },
     });
   }

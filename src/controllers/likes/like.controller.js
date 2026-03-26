@@ -1,12 +1,7 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { needsLogin, validate } from '#middlewares';
-import { z } from 'zod';
-
-// 간단한 경로 파라미터 검증을 위한 인라인 스키마 (또는 dto 파일에서 가져오기)
-const workIdParamSchema = z.object({
-  workId: z.string(),
-});
+import { workIdParamSchema } from '#controllers/schemas/baseSchema.js';
 
 export class LikesController extends BaseController {
   #likesService;
