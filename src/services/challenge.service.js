@@ -110,13 +110,11 @@ export class ChallengesService {
   }
 
   async updateChallenge(id, updateData) {
-    // userId 파라미터 제거
     const challenge = await this.#findChallengeOrThrow(id);
     return await this.#challengeRepository.update(id, updateData);
   }
 
   async deleteChallenge(id) {
-    // userId 파라미터 제거
     await this.#findChallengeOrThrow(id);
     await this.#challengeRepository.delete(id);
   }
@@ -180,7 +178,6 @@ export class ChallengesService {
       orderBy: { createdAt: 'desc' },
     };
 
-    // admin인 경우는 전체 조회라서 userId를 넘기지 않음
     if (userId) {
       options.where.authorId = userId;
     }
@@ -211,12 +208,10 @@ export class ChallengesService {
     return await this.#challengeRepository.findAllChallenges(options);
   }
 
-  // Admin 챌린지 관리 - 상세 조회(이전/이후 페이지 포함)
   async getChallengeDetailById(challengeId) {
     return await this.#challengeRepository.findChallengeDetailById(challengeId);
   }
 
-  // Admin 챌린지 신청승인/신청거절
   async updateChallengeStatus(challengeId, data, userId) {
     const challenge = await this.#findChallengeOrThrow(challengeId);
 
@@ -231,7 +226,6 @@ export class ChallengesService {
     const updatedChallenge =
       await this.#challengeRepository.updateChallengeStatus(challengeId, data);
 
-    // 알림 전송
     if (
       this.#notificationsService &&
       challenge.authorId &&

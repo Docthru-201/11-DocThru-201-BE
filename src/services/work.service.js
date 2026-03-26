@@ -81,6 +81,11 @@ export class WorksService {
     }
     await this.isWorkDuplicate(challengeId, participantId);
 
+    const participant =
+      await this.#participantRepository.findByUserAndChallenge(
+        userId,
+        challengeId,
+      );
     const result = await this.#workRepository.createWork(
       challengeId,
       participantId,
@@ -90,6 +95,9 @@ export class WorksService {
       this.#sendNotificationSilently(challenge.authorId, challenge.title);
     }
 
+    const existingWork = await this.#workRepository.findWorkByParticipant(
+      participant.id,
+    );
     return result;
   }
 

@@ -5,11 +5,10 @@ const createAuthorizationMiddleware = function (
   status = HTTP_STATUS.UNAUTHORIZED,
 ) {
   return function (req, res, next) {
-    // ← 미들웨어 함수 반환
     if (predicate(req)) {
-      next(); // 조건 통과 → 다음으로
+      next();
     } else {
-      res.sendStatus(status); // 조건 실패 → 에러 반환
+      res.sendStatus(status);
     }
   };
 };
