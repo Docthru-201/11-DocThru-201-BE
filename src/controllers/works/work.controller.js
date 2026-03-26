@@ -17,6 +17,17 @@ export class WorksController extends BaseController {
     );
     // 임시로 adminValidator -> verifyAccessToken 확인필요
     this.router.post('/', (req, res, next) => this.createWork(req, res, next));
+
+    this.router.get('/:id', (req, res, next) =>
+      this.getWorkById(req, res, next),
+    );
+    this.router.patch('/:id', (req, res, next) =>
+      this.updateWork(req, res, next),
+    );
+    this.router.delete('/:id', (req, res, next) =>
+      this.deleteWork(req, res, next),
+    );
+
     return this.router;
   }
 
@@ -38,6 +49,17 @@ export class WorksController extends BaseController {
         pageSize: pageSize,
       },
     });
+  }
+
+  async getWorkById(req, res, next) {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+      const work = await this.#worksService.getWorkById(id, userId);
+      res.status(HTTP_STATUS.OK).json(work);
+    } catch (error) {
+      next(error);
+    }
   }
 
   createWork = async (req, res, next) => {
