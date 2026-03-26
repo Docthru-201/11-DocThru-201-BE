@@ -1,10 +1,12 @@
 export class CommentsService {
   #commentRepository;
   #workRepository;
+  #userRepository;
 
-  constructor({ commentRepository, workRepository }) {
+  constructor({ commentRepository, workRepository, userRepository }) {
     this.#commentRepository = commentRepository;
     this.#workRepository = workRepository;
+    this.#userRepository = userRepository;
   }
 
   async listCommentsByWorkId(workId) {
@@ -43,7 +45,12 @@ export class CommentsService {
     const comment = await this.#commentRepository.findById(commentId);
 
     if (!comment) throw new Error('댓글이 존재하지 않습니다.');
-    if (comment.authorId !== userId) throw new Error('삭제 권한이 없습니다.');
+
+    const user = await this.#userRepository.findUserById(userId);
+    const isAdmin = user?.role === 'ADMIN';
+    const isOwner = comment.authorId === userId;
+
+    if (!isAdmin && !isOwner) throw new Error('삭제 권한이 없습니다.');
 
     // ✅ 답글이 있으면 soft delete, 없으면 hard delete
     const hasReplies = comment.replies && comment.replies.length > 0;

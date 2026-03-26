@@ -15,7 +15,6 @@ export class UserRepository {
 
   findMany() {}
 
-  findById() {}
   findAllUsers() {
     return this.prisma.user.findMany({
       select: { id: true, nickname: true, image: true },
