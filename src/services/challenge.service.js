@@ -125,6 +125,44 @@ export class ChallengesService {
     return await this.#challengeRepository.findByUserId(userId);
   }
 
+  async getMyChallengesForTabs(userId, tab) {
+    let rows;
+    if (tab === 'applied') {
+      const authored =
+        await this.#challengeRepository.findByAuthorIdForMyList(userId);
+      rows = authored.filter((c) => c.status === 'PENDING');
+    } else if (tab === 'participating') {
+      const joined =
+        await this.#challengeRepository.findByParticipantUserIdForMyList(
+          userId,
+        );
+      rows = joined.filter((c) => !c.isClosed);
+    } else {
+      const joined =
+        await this.#challengeRepository.findByParticipantUserIdForMyList(
+          userId,
+        );
+      rows = joined.filter((c) => c.isClosed);
+    }
+
+    const isParticipantTab = tab === 'participating' || tab === 'done';
+    const items = rows.map((row) => ({
+      ...this.#mapChallengeListItem(row),
+      isParticipating: isParticipantTab,
+    }));
+
+    return {
+      message: '나의 챌린지 조회 성공',
+      data: {
+        items,
+        pagination: {
+          nextCursor: null,
+          hasNext: false,
+        },
+      },
+    };
+  }
+
   // Admin 챌린지 관리 조회
   async getAllChallenges({
     page = 1,

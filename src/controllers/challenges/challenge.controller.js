@@ -5,6 +5,7 @@ import {
   createChallengeSchema,
   challengeIdParamSchema,
   updateChallengeSchema,
+  myChallengesQuerySchema,
 } from './dto/challenge.dto.js';
 
 export class ChallengesController extends BaseController {
@@ -23,8 +24,11 @@ export class ChallengesController extends BaseController {
     this.router.get('/', (req, res) => this.findAll(req, res));
 
     // `/:challengeId` 보다 먼저 등록 (그렇지 않으면 "me"가 id로 매칭됨)
-    this.router.get('/me', needsLogin, (req, res) =>
-      this.getMyChallenges(req, res),
+    this.router.get(
+      '/me',
+      needsLogin,
+      validate('query', myChallengesQuerySchema),
+      (req, res) => this.getMyChallenges(req, res),
     );
 
     this.router.get(
@@ -103,9 +107,12 @@ export class ChallengesController extends BaseController {
 
   async getMyChallenges(req, res) {
     const userId = req.user.id;
+    const { tab } = req.query;
 
-    const myChallenges =
-      await this.#challengesService.getChallengesByUser(userId);
-    res.status(HTTP_STATUS.OK).json(myChallenges);
+    const payload = await this.#challengesService.getMyChallengesForTabs(
+      userId,
+      tab,
+    );
+    res.status(HTTP_STATUS.OK).json(payload);
   }
 }
