@@ -1,6 +1,7 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
 import { Router } from 'express';
+// import { adminValidator , authMiddleware } from '#middlewares';
 import { adminValidator } from '#middlewares';
 export class WorksController extends BaseController {
   #worksService;
@@ -15,13 +16,12 @@ export class WorksController extends BaseController {
     this.router.get('/', adminValidator, (req, res, next) =>
       this.getAllWorks(req, res, next),
     );
-    // 임시로 adminValidator -> verifyAccessToken 확인필요
     this.router.post('/', (req, res, next) => this.createWork(req, res, next));
     return this.router;
   }
 
   async getAllWorks(req, res) {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     const { challengeId } = req.params;
     const { page = 1, pageSize = 5 } = req.query;
     const works = await this.#worksService.getAllWorks(
@@ -40,11 +40,9 @@ export class WorksController extends BaseController {
     });
   }
 
-  createWork = async (req, res) => {
+  async createWork (req, res) {
     const { challengeId } = req.params;
-    // const userId = req.user?.userId;
-      const userId = '01KMHEPW6E308X4KWXJ5JVM66W';
- console.log("work controller, create work 진입(userId강제부여):challengeId======>",userId,challengeId)
+    const userId = req.user.id;
     const newWork = await this.#worksService.createWork(
       challengeId,
       userId,
