@@ -92,6 +92,11 @@ export class WorksService {
       throw error;
     }
 
+    const participant =
+      await this.#participantRepository.findByUserAndChallenge(
+        userId,
+        challengeId,
+      );
     const result = await this.#workRepository.createWork(
       challengeId,
       userId,
@@ -101,6 +106,9 @@ export class WorksService {
       this.#sendNotificationSilently(challenge.authorId, challenge.title);
     }
 
+    const existingWork = await this.#workRepository.findWorkByParticipant(
+      participant.id,
+    );
     return result;
   }
 

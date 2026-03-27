@@ -42,7 +42,7 @@ export class AuthRepository {
 
   saveRefreshToken(userId, token) {
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRES_DAYS); // 7일 후 만료 예시
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRES_DAYS);
 
     return this.#prisma.refreshToken.upsert({
       where: { userId },
@@ -81,7 +81,6 @@ export class AuthRepository {
   }
 
   async getGoogleUser(code) {
-    // 1. code로 accessToken 요청
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -102,7 +101,6 @@ export class AuthRepository {
       throw new Error('구글 토큰 발급 실패');
     }
 
-    // 2. accessToken으로 사용자 정보 요청
     const userResponse = await fetch(
       'https://www.googleapis.com/oauth2/v2/userinfo',
       {
