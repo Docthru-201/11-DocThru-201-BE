@@ -5,6 +5,7 @@ import {
   errorHandler,
   cors,
   helmetMiddleware,
+  csrfOriginMiddleware,
   httpsRedirectMiddleware,
   authRateLimiter,
   apiRateLimiter,
@@ -43,6 +44,7 @@ export class App {
     this.app.use(helmetMiddleware);
     this.app.use(express.json());
     this.app.use(cookieParser());
+    this.app.use(csrfOriginMiddleware);
     this.app.use(cors);
     this.app.use((req, res, next) =>
       authMiddleware.authenticate(req, res, next),

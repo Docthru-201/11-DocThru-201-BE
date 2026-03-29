@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { escapeHtml } from '#utils';
 
 // 비밀번호 재설정 메일 발송
 export async function sendPasswordResetEmail({ to, resetLink }) {
@@ -38,7 +39,7 @@ export async function sendPasswordResetEmail({ to, resetLink }) {
       to,
       subject: '[DocThru] 비밀번호 재설정',
       text: `아래 링크를 눌러 비밀번호를 재설정하세요.\n\n${resetLink}\n\n링크는 1시간 동안만 유효합니다.`,
-      html: `<p>아래 링크를 눌러 비밀번호를 재설정하세요.</p><p><a href="${resetLink}">${resetLink}</a></p><p>링크는 1시간 동안만 유효합니다.</p>`,
+      html: `<p>아래 링크를 눌러 비밀번호를 재설정하세요.</p><p><a href="${escapeHtml(resetLink)}">${escapeHtml(resetLink)}</a></p><p>링크는 1시간 동안만 유효합니다.</p>`,
     });
   } catch (err) {
     console.error(

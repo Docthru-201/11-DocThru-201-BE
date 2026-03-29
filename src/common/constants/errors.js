@@ -32,6 +32,13 @@ export const ERROR_MESSAGE = {
   INVALID_INPUT: '잘못된 입력값입니다.',
   VALIDATION_FAILED: '입력값 검증에 실패했습니다.',
 
+  /** 쿠키 기반 요청 CSRF 방어: Origin/Referer가 허용 목록에 없음 */
+  CSRF_ORIGIN_INVALID:
+    '허용되지 않은 출처에서의 요청입니다. CORS_ORIGINS와 동일한 Origin으로 호출해 주세요.',
+  /** 프로덕션에서 CORS_ORIGINS 미설정 시 상태 변경 요청 차단 */
+  CSRF_CORS_NOT_CONFIGURED:
+    '서버에 CORS_ORIGINS가 설정되어 있지 않아 요청을 거절했습니다. 운영 설정을 확인해 주세요.',
+
   RESOURCE_NOT_FOUND: '리소스를 찾을 수 없습니다.',
   BAD_REQUEST: '잘못된 요청입니다.',
   RESOURCE_CONFLICT: '이미 존재하는 리소스입니다.',
