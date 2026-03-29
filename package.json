@@ -53,6 +53,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.4.2",
+    "argon2": "^0.44.0",
     "awilix": "^13.0.3",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
@@ -63,8 +64,8 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
-    "nodemailer": "^6.9.16",
     "node-cron": "^4.2.1",
+    "nodemailer": "^6.9.16",
     "pg": "^8.17.2",
     "pino": "^10.3.1",
     "swagger-ui-express": "^5.0.1",
