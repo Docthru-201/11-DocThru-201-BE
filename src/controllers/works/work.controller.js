@@ -1,8 +1,8 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
 import { Router } from 'express';
-// import { adminValidator , authMiddleware } from '#middlewares';
-import { adminValidator } from '#middlewares';
+import { adminValidator, validate, needsLogin } from '#middlewares';
+import { workListQuerySchema } from './dto/work.dto.js';
 export class WorksController extends BaseController {
   #worksService;
 
@@ -13,15 +13,20 @@ export class WorksController extends BaseController {
   }
 
   routes() {
-    this.router.get('/', adminValidator, (req, res, next) =>
-      this.getAllWorks(req, res, next),
+    this.router.get(
+      '/',
+      adminValidator,
+      validate('query', workListQuerySchema),
+      (req, res, next) => this.getAllWorks(req, res, next),
     );
-    this.router.post('/', (req, res, next) => this.createWork(req, res, next));
+    this.router.post('/', needsLogin, (req, res, next) =>
+      this.createWork(req, res, next),
+    );
     return this.router;
   }
 
   async getAllWorks(req, res) {
-    const userId = req.user?.id;
+    const userId = req.user?.userId ?? req.user?.id;
     const { challengeId } = req.params;
     const { page = 1, pageSize = 5 } = req.query;
     const works = await this.#worksService.getAllWorks(
@@ -43,11 +48,8 @@ export class WorksController extends BaseController {
   async createWork (req, res) {
     const { challengeId } = req.params;
     const userId = req.user.id;
-    const newWork = await this.#worksService.createWork(
-      challengeId,
-      userId,
-    );
-   
+    const newWork = await this.#worksService.createWork(challengeId, userId);
+
     return res.status(HTTP_STATUS.CREATED).json({
       success: true,
       message: SUCCESS_MESSAGE.WORK_CREATED,
