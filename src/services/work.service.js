@@ -76,8 +76,7 @@ export class WorksService {
       error.statusCode = HTTP_STATUS.FORBIDDEN;
       throw error;
     }
-    
-    
+
     const hasWork = await this.#workRepository.hasSubmittedWork(
       challengeId,
       userId,
@@ -89,10 +88,7 @@ export class WorksService {
       throw error;
     }
 
-    const result = await this.#workRepository.createWork(
-      challengeId,
-      userId,
-    );
+    const result = await this.#workRepository.createWork(challengeId, userId);
 
     if (challenge.authorId !== userId) {
       this.#sendNotificationSilently(challenge.authorId, challenge.title);

@@ -1,8 +1,17 @@
 // role.middleware.js
 
 export function adminValidator(req, res, next) {
-  const role = req.user.role;
- 
+  // 아래 테스트 목적 임시코드
+  req.user = {
+    userId: '01KMHEPW6E308X4KWXJ5JVM66W', // 테스트용 ID
+    role: 'ADMIN',
+  };
+  console.log(
+    '테스트를 위해 강제 ADMIN부여 user(role.middleware.js)=',
+    req.user,
+  );
+  const role = req.user?.role;
+
   if (!role) {
     return res.status(401).json({ message: '로그인이 필요합니다.' });
   }

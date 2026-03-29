@@ -159,6 +159,9 @@ export class ChallengeRepository {
     return await this.#prisma.challenge.update({
       where: { id: challengeId },
       data: { isClosed: true },
+    });
+  }
+
   async findByAuthorIdForMyList(userId) {
     return await this.#prisma.challenge.findMany({
       where: { authorId: userId, deletedAt: null },
