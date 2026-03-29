@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { ulid } from 'ulid';
 import { ERROR_MESSAGE, SUCCESS_MESSAGE } from '#constants';
 import { PASSWORD_RESET_TOKEN_EXPIRES_MS } from '../common/constants/auth.js';
 import { sendPasswordResetEmail } from '#providers';
@@ -90,7 +91,9 @@ export class AuthService {
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
     }
 
-    // 3. 토큰 발급
+    // 3. 세션 고정 방지: 기존 refresh(서버 저장) 무효화 후 새 토큰 쌍 발급
+    await this.#authRepository.deleteRefreshToken(user.id);
+
     const accessToken = this.#tokenProvider.generateAccessToken(user);
     const refreshToken = this.#tokenProvider.generateRefreshToken(user);
 
@@ -132,6 +135,9 @@ export class AuthService {
 
     const user = await this.#authRepository.findUserById(payload.userId);
 
+    // refresh 로테이션: 기존 토큰 행을 지우고 새 refresh만 유효(세션 식별자 교체)
+    await this.#authRepository.deleteRefreshToken(payload.userId);
+
     const newAccessToken = this.#tokenProvider.generateAccessToken(user);
     const newRefreshToken = this.#tokenProvider.generateRefreshToken(user);
 
@@ -161,7 +167,7 @@ export class AuthService {
           'Google OAuth: GOOGLE_REDIRECT_URI가 비어 있습니다. Google Cloud 콘솔에 등록한 리디렉션 URI와 동일한 값을 .env에 설정하세요.',
         );
       }
-      const state = crypto.randomUUID();
+      const state = ulid();
 
       return {
         url: `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent('email profile')}&state=${state}`,
