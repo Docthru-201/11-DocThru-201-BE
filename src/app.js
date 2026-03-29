@@ -1,6 +1,14 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import { errorHandler, cors } from '#middlewares';
+import { config } from '#config';
+import {
+  errorHandler,
+  cors,
+  helmetMiddleware,
+  httpsRedirectMiddleware,
+  authRateLimiter,
+  apiRateLimiter,
+} from '#middlewares';
 // import { registerSwagger } from '#docs/swagger.js';
 
 // 임시: 스웨거
@@ -25,7 +33,14 @@ export class App {
   }
 
   middleware(authMiddleware) {
+    if (config.TRUST_PROXY > 0) {
+      this.app.set('trust proxy', config.TRUST_PROXY);
+    }
+
+    this.app.use(httpsRedirectMiddleware);
+
     this.app.use(express.static('public'));
+    this.app.use(helmetMiddleware);
     this.app.use(express.json());
     this.app.use(cookieParser());
     this.app.use(cors);
@@ -40,6 +55,8 @@ export class App {
       swaggerUi.serve,
       swaggerUi.setup(swaggerDocument),
     );
+    this.app.use('/api/auth', authRateLimiter);
+    this.app.use('/api', apiRateLimiter);
     this.app.use('/api', controller.routes());
   }
 

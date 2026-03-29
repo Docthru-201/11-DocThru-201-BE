@@ -25,3 +25,6 @@ export * from './error-handler.middleware.js';
 export * from './validation.middleware.js';
 export * from './cors.middleware.js';
 export * from './role.middleware.js';
+export * from './helmet.middleware.js';
+export * from './https-redirect.middleware.js';
+export * from './rate-limit.middleware.js';
