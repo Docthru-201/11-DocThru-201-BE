@@ -1,28 +1,27 @@
+import corsLib from 'cors';
 import { corsOrigins, isProduction } from '#config';
 
-export const cors = (req, res, next) => {
-  const origin = req.headers.origin;
-  const isAllowed = !isProduction || (origin && corsOrigins.includes(origin));
+const ALLOWED_HEADERS = [
+  'Content-Type',
+  'Authorization',
+  'Accept',
+  'X-Requested-With',
+];
 
-  if (isAllowed && origin) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-  } else if (!isProduction) {
-    // 개발 환경인데 Origin 헤더가 없는 경우(Postman 등)를 위해 최소한의 허용
-    res.header('Access-Control-Allow-Origin', '*');
+function corsOrigin(origin, callback) {
+  if (!isProduction) {
+    if (!origin) return callback(null, '*');
+    return callback(null, true);
   }
+  if (!origin) return callback(null, false);
+  if (corsOrigins.includes(origin)) return callback(null, true);
+  return callback(null, false);
+}
 
-  // 공통 헤더 설정
-  res.header(
-    'Access-Control-Allow-Methods',
-    'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-  );
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  // Preflight(사전 요청) 처리
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-
-  next();
-};
+export const cors = corsLib({
+  origin: corsOrigin,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ALLOWED_HEADERS,
+  optionsSuccessStatus: 200,
+});
