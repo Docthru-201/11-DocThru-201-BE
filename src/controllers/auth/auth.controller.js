@@ -49,8 +49,6 @@ export class AuthController extends BaseController {
 
     this.router.get('/me', needsLogin, (req, res) => this.me(req, res));
 
-    this.router.get('/me', needsLogin, (req, res) => this.me(req, res));
-
     return this.router;
   }
 
