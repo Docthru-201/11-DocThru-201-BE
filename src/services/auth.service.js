@@ -64,6 +64,10 @@ export class AuthService {
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
     }
 
+    if (user.password == null || user.password === '') {
+      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
+    }
+
     // 2. 비밀번호 검증 (PasswordProvider의 compare 사용)
     const isMatch = await this.#passwordProvider.compare(
       password,
