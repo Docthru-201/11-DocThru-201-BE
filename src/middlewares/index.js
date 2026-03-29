@@ -1,14 +1,14 @@
 // import { AuthMiddleware } from './auth.middleware.js';
-// import { tokenProvider } from '../utils/token.provider.js'; 
-// import { authService } from '../services/auth.service.js';     
-// import { cookieProvider } from '../utils/cookie.provider.js'; 
+// import { tokenProvider } from '../utils/token.provider.js';
+// import { authService } from '../services/auth.service.js';
+// import { cookieProvider } from '../utils/cookie.provider.js';
 
 // // 2. AuthMiddleware 인스턴스를 생성합니다.
 // // 생성자(constructor)에 필요한 객체들을 주입(Dependency Injection)합니다.
-// export const authMiddleware = new AuthMiddleware({ 
-//   tokenProvider, 
-//   authService, 
-//   cookieProvider 
+// export const authMiddleware = new AuthMiddleware({
+//   tokenProvider,
+//   authService,
+//   cookieProvider
 // });
 
 // // 3. 기존의 함수형 미들웨어들을 그대로 내보냅니다.

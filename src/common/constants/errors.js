@@ -15,6 +15,8 @@ export const ERROR_MESSAGE = {
   FAILED_TO_DELETE_USER: '사용자 삭제에 실패했습니다.',
   NICKNAME_ALREADY_EXISTS: '이미 사용하고 있는 닉네임입니다.',
   INVALID_LOGIN: '유효하지 않은 로그인 정보입니다.',
+  PASSWORD_RESET_LINK_INVALID:
+    '유효하지 않거나 만료된 비밀번호 재설정 링크입니다.',
 
   // Profile 관련
   PROFILE_NOT_FOUND: 'Profile not found',
@@ -48,6 +50,7 @@ export const ERROR_MESSAGE = {
 };
 //성공메시지 추가
 export const SUCCESS_MESSAGE = {
+  PASSWORD_RESET_COMPLETED: '비밀번호가 변경되었습니다.',
   WORK_CREATED: '작업물이 성공적으로 등록되었습니다.',
   WORK_UPDATED: '작업물이 수정되었습니다.',
   WORK_DELETED: '작업물이 삭제되었습니다.',
@@ -56,4 +59,7 @@ export const SUCCESS_MESSAGE = {
   CHALLENGE_CREATED: '챌린지가 생성되었습니다.',
 
   REQUEST_PROCESSED: '요청이 성공적으로 처리되었습니다.',
+  /** 비밀번호 재설정 요청 — 계정 존재 여부와 무관하게 동일 응답 */
+  PASSWORD_RESET_REQUEST_ACCEPTED:
+    '요청이 접수되었습니다. 등록된 이메일이 있으면 안내를 보냅니다.',
 };

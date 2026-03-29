@@ -45,7 +45,7 @@ export class WorksController extends BaseController {
     });
   }
 
-  async createWork (req, res) {
+  async createWork(req, res) {
     const { challengeId } = req.params;
     const userId = req.user.id;
     const newWork = await this.#worksService.createWork(challengeId, userId);
@@ -55,7 +55,7 @@ export class WorksController extends BaseController {
       message: SUCCESS_MESSAGE.WORK_CREATED,
       data: newWork,
     });
-  };
+  }
 
   async deleteWork(req, res, next) {
     try {

@@ -20,6 +20,19 @@ export const loginSchema = z
   })
   .strict();
 
+export const passwordResetRequestSchema = z
+  .object({
+    email: emailSchema,
+  })
+  .strict();
+
+export const passwordResetConfirmSchema = z
+  .object({
+    token: z.string().min(1, { message: '토큰이 필요합니다.' }),
+    password: passwordSchema,
+  })
+  .strict();
+
 export const oauthCallbackQuerySchema = z.object({
   code: z.string().min(1, { message: 'code가 필요합니다.' }),
   state: z.string().min(1, { message: 'state가 필요합니다.' }),

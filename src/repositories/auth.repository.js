@@ -117,4 +117,49 @@ export class AuthRepository {
 
     return userData;
   }
+
+  deletePendingPasswordResetsForUser(userId) {
+    return this.#prisma.passwordResetToken.deleteMany({
+      where: { userId, usedAt: null },
+    });
+  }
+
+  createPasswordResetToken({ userId, tokenHash, expiresAt }) {
+    return this.#prisma.passwordResetToken.create({
+      data: { userId, tokenHash, expiresAt },
+    });
+  }
+
+  /**
+   * 토큰 1회용 소비. 성공 시 userId, 실패(만료·이미 사용·없음) 시 null
+   */
+  async consumePasswordResetToken(tokenHash) {
+    return this.#prisma.$transaction(async (tx) => {
+      const row = await tx.passwordResetToken.findUnique({
+        where: { tokenHash },
+      });
+      if (!row || row.usedAt || row.expiresAt <= new Date()) {
+        return null;
+      }
+      const upd = await tx.passwordResetToken.updateMany({
+        where: {
+          id: row.id,
+          usedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        data: { usedAt: new Date() },
+      });
+      if (upd.count !== 1) {
+        return null;
+      }
+      return row.userId;
+    });
+  }
+
+  updateUserPassword(userId, hashedPassword) {
+    return this.#prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+  }
 }

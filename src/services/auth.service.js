@@ -1,9 +1,22 @@
-import { ERROR_MESSAGE } from '#constants';
+import { createHash, randomBytes } from 'node:crypto';
+import { ERROR_MESSAGE, SUCCESS_MESSAGE } from '#constants';
+import { PASSWORD_RESET_TOKEN_EXPIRES_MS } from '../common/constants/auth.js';
+import { sendPasswordResetEmail } from '#providers';
 import {
   BadRequestException,
   ConflictException,
   UnauthorizedException,
 } from '#exceptions';
+
+function buildPasswordResetLink(rawToken) {
+  const base =
+    process.env.CLIENT_BASE_URL?.trim()?.replace(/\/$/, '') ||
+    'http://localhost:3000';
+  const pathSeg =
+    process.env.PASSWORD_RESET_CLIENT_PATH?.trim() || '/reset-password';
+  const path = pathSeg.startsWith('/') ? pathSeg : `/${pathSeg}`;
+  return `${base}${path}?token=${encodeURIComponent(rawToken)}`;
+}
 
 export class AuthService {
   #authRepository;
@@ -206,5 +219,49 @@ export class AuthService {
     }
     const { password: _pw, ...userWithoutPassword } = user;
     return this.#toAuthUserResponse(userWithoutPassword);
+  }
+
+  // 계정 열거 방지
+  async requestPasswordReset({ email }) {
+    const user = await this.#authRepository.findUserByEmail(email);
+    const generic = {
+      message: SUCCESS_MESSAGE.PASSWORD_RESET_REQUEST_ACCEPTED,
+    };
+
+    if (!user || user.password == null || user.password === '') {
+      return generic;
+    }
+
+    await this.#authRepository.deletePendingPasswordResetsForUser(user.id);
+
+    const rawToken = randomBytes(32).toString('base64url');
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_TOKEN_EXPIRES_MS);
+
+    await this.#authRepository.createPasswordResetToken({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    });
+
+    const resetLink = buildPasswordResetLink(rawToken);
+    await sendPasswordResetEmail({ to: user.email, resetLink });
+
+    return generic;
+  }
+
+  async confirmPasswordReset({ token, password }) {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const userId =
+      await this.#authRepository.consumePasswordResetToken(tokenHash);
+    if (!userId) {
+      throw new BadRequestException(ERROR_MESSAGE.PASSWORD_RESET_LINK_INVALID);
+    }
+
+    const hashedPassword = await this.#passwordProvider.hash(password);
+    await this.#authRepository.updateUserPassword(userId, hashedPassword);
+    await this.#authRepository.deleteRefreshToken(userId);
+
+    return { message: SUCCESS_MESSAGE.PASSWORD_RESET_COMPLETED };
   }
 }
