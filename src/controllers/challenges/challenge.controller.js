@@ -99,6 +99,7 @@ export class ChallengesController extends BaseController {
     const updateChallenge = await this.#challengesService.updateChallenge(
       id,
       updateData,
+      req.user,
     );
     res.status(HTTP_STATUS.OK).json(updateChallenge);
   }
@@ -106,7 +107,7 @@ export class ChallengesController extends BaseController {
   async delete(req, res) {
     const { id } = req.params;
 
-    await this.#challengesService.deleteChallenge(id);
+    await this.#challengesService.deleteChallenge(id, req.user);
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 

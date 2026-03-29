@@ -1,5 +1,6 @@
 import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
 import { getCursorParams, parseCursorResult } from '#utils';
+import { requireAdmin } from '../common/utils/permission.util.js';
 
 export class ChallengesService {
   #challengeRepository;
@@ -109,12 +110,14 @@ export class ChallengesService {
     return await this.#challengeRepository.create(data);
   }
 
-  async updateChallenge(id, updateData) {
-    const challenge = await this.#findChallengeOrThrow(id);
+  async updateChallenge(id, updateData, actor) {
+    requireAdmin(actor);
+    await this.#findChallengeOrThrow(id);
     return await this.#challengeRepository.update(id, updateData);
   }
 
-  async deleteChallenge(id) {
+  async deleteChallenge(id, actor) {
+    requireAdmin(actor);
     await this.#findChallengeOrThrow(id);
     await this.#challengeRepository.delete(id);
   }
@@ -168,7 +171,9 @@ export class ChallengesService {
     sort = '',
     keyword,
     userId,
+    actor,
   }) {
+    requireAdmin(actor);
     const offset = (page - 1) * pageSize;
 
     const options = {
@@ -208,11 +213,13 @@ export class ChallengesService {
     return await this.#challengeRepository.findAllChallenges(options);
   }
 
-  async getChallengeDetailById(challengeId) {
+  async getChallengeDetailById(challengeId, actor) {
+    requireAdmin(actor);
     return await this.#challengeRepository.findChallengeDetailById(challengeId);
   }
 
-  async updateChallengeStatus(challengeId, data, userId) {
+  async updateChallengeStatus(challengeId, data, actor) {
+    requireAdmin(actor);
     const challenge = await this.#findChallengeOrThrow(challengeId);
 
     // 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
@@ -229,7 +236,7 @@ export class ChallengesService {
     if (
       this.#notificationsService &&
       challenge.authorId &&
-      challenge.authorId !== userId
+      challenge.authorId !== actor.id
     ) {
       const { status, declineReason, title, id } = updatedChallenge;
 

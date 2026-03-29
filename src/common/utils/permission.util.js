@@ -1,12 +1,16 @@
-import { ForbiddenException } from '../exceptions/http.exception.js';
-// 네 프로젝트에서 쓰는 예외 파일 경로에 맞게 수정하면 됨
+import { ERROR_MESSAGE } from '#constants';
+import { ForbiddenException } from '#exceptions';
 
+/** JWT·req.user 기준 관리자 여부 */
 export function isAdmin(user) {
-  return user.role === 'ADMIN';
+  return user?.role === 'ADMIN';
 }
 
+/**
+ * 관리자 전용 서비스/라우트에서 호출. 라우트 미들웨어와 별개로 서버 측 재검증용.
+ */
 export function requireAdmin(user) {
-  if (user.role !== 'ADMIN') {
-    throw new ForbiddenException('관리자만 가능합니다.');
+  if (!isAdmin(user)) {
+    throw new ForbiddenException(ERROR_MESSAGE.ADMIN_ONLY_ACCESS);
   }
 }

@@ -1,9 +1,11 @@
-// role.middleware.js
+// role.middleware.js — 테스트용: 실제 JWT 없이 관리자 플로우만 확인할 때 사용
+
+const TEST_ADMIN_USER_ID = '01KMHEPW6E308X4KWXJ5JVM66W';
 
 export function adminValidator(req, res, next) {
-  // 아래 테스트 목적 임시코드
   req.user = {
-    userId: '01KMHEPW6E308X4KWXJ5JVM66W', // 테스트용 ID
+    id: TEST_ADMIN_USER_ID,
+    userId: TEST_ADMIN_USER_ID,
     role: 'ADMIN',
   };
   console.log(
