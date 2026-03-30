@@ -27,7 +27,7 @@ export class AuthMiddleware {
           role: accessPayload.role,        
           nickname: accessPayload.nickname,
         };
-        console.log('req.user 세팅됨:', req.user);
+
         return next();
       }
 
@@ -41,10 +41,10 @@ export class AuthMiddleware {
       this.#cookieProvider.setAuthCookies(res, tokens);
       req.user = {
         id: user.id,
-        role: user.role,        // ✅ role
-        nickname: user.nickname, // ✅ nickname
+        role: user.role,     
+        nickname: user.nickname,
       };
-      console.log('req.user 세팅됨 (refresh):', req.user);
+
       return next();
 
     } catch {
