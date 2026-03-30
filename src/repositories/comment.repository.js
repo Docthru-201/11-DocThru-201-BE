@@ -46,6 +46,12 @@ export class CommentRepository {
       where: { id: commentId },
     });
   }
+  async softDelete(commentId) {
+    return this.#prisma.comment.update({
+      where: { id: commentId },
+      data: { deletedAt: new Date() },
+    });
+  }
 
   // 특정 댓글의 대댓글 조회
   async findChildren(parentId) {
