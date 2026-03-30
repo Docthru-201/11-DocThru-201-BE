@@ -214,15 +214,6 @@ export class ChallengesService {
 
   async updateChallengeStatus(challengeId, data, userId) {
     const challenge = await this.#findChallengeOrThrow(challengeId);
-
-    // 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
-    // if (challenge.isClosed) {
-    //   const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
-    //   error.statusCode = HTTP_STATUS.FORBIDDEN;
-
-    //   throw error;
-    // }
-
     const updatedChallenge =
       await this.#challengeRepository.updateChallengeStatus(challengeId, data);
 
@@ -258,8 +249,6 @@ export class ChallengesService {
 
   async #findChallengeOrThrow(challengeId) {
     const challenge =
-      // 1개라도 Repository가 정의되지 않으면 undefined 에러로 주석-swlee
-      // (await this.#challengeRepository.findById?.(challengeId)) ??
       await this.#challengeRepository.findChallengeById?.(challengeId);
 
     if (!challenge) {

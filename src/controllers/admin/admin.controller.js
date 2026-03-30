@@ -37,13 +37,11 @@ export class AdminController extends BaseController {
 
   async getAllChallenges(req, res) {
     const { page, pageSize, sort, keyword } = req.query;
-    const userId = req.user?.userId; // 내 신청 내역만 볼 경우 필요
     const result = await this.#challengesService.getAllChallenges({
       page: Number(page) || 1,
       pageSize: Number(pageSize) || 10,
       sort,
       keyword,
-      // userId, admin인 경우 전체 가져와야해서 일단 제외
     });
 
     res.status(HTTP_STATUS.OK).json(result);

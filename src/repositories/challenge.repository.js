@@ -155,7 +155,7 @@ export class ChallengeRepository {
     });
   }
 
-  async closeChallenge(challengeId) {
+ async closeChallenge(challengeId) {
     return await this.#prisma.challenge.update({
       where: { id: challengeId },
       data: { isClosed: true },
