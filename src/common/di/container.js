@@ -44,6 +44,8 @@ import {
 import { PasswordProvider, TokenProvider, CookieProvider } from '#providers';
 import { AuthMiddleware } from '#middlewares';
 
+import { DeadlineScheduler } from './../utils/scheduler.js';
+
 export const createContainer = () => {
   const container = createAwilixContainer({
     injectionMode: InjectionMode.PROXY,
@@ -126,6 +128,10 @@ export const createContainer = () => {
     }),
 
     controller: asClass(Controller, { lifetime: Lifetime.SINGLETON }),
+
+    deadlineScheduler: asClass(DeadlineScheduler, {
+      lifetime: Lifetime.SINGLETON,
+    }),
   });
 
   return container.cradle;

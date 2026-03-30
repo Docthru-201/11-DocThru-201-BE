@@ -1,3 +1,5 @@
+// role.middleware.js
+
 export function adminValidator(req, res, next) {
   // 아래 테스트 목적 임시코드
   req.user = {

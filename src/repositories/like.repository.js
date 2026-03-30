@@ -42,7 +42,6 @@ export class LikeRepository {
     });
   }
 
-  // findByWorkIdAndUserId와 같은것인지 확인 swlee
   async findManyLiked({ userId, workIds }) {
     return await this.#prisma.like.findMany({
       where: {

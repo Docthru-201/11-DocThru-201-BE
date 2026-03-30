@@ -15,8 +15,10 @@ const swaggerPath = path.join(__dirname, '..', 'swagger.yaml');
 const swaggerDocument = YAML.load(swaggerPath);
 
 export class App {
-  constructor(controller, authMiddleware) {
+  #deadlineScheduler;
+  constructor(controller, authMiddleware, deadlineScheduler) {
     this.app = express();
+    this.#deadlineScheduler = deadlineScheduler;
     this.middleware(authMiddleware);
     this.routes(controller);
     this.errorHandling();
@@ -47,6 +49,9 @@ export class App {
 
   listen(port) {
     return this.app.listen(port, () => {
+      if (this.#deadlineScheduler) {
+        this.#deadlineScheduler.start();
+      }
       console.log(`Server is running at http://localhost:${port}`);
       console.log('API Swagger: http://localhost:5001/api-docs');
     });

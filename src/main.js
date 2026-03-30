@@ -4,9 +4,10 @@ import { App } from './app.js';
 import { setupGracefulShutdown } from './common/lifecycle/graceful-shutdown.js';
 
 async function bootstrap() {
-  const { controller, authMiddleware, prisma } = createContainer();
+  const { controller, authMiddleware, prisma, deadlineScheduler } =
+    createContainer();
 
-  const app = new App(controller, authMiddleware);
+  const app = new App(controller, authMiddleware, deadlineScheduler);
   const server = app.listen(config.PORT);
 
   setupGracefulShutdown(server, prisma);
