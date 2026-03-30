@@ -42,6 +42,11 @@ enum ChallengeStatus {
     DELETED // 어드민에 의한 삭제
 }
 
+enum WorkStatus {
+    DRAFT // 임시저장
+    SUBMITTED // 제출됨
+}
+
 enum NotificationType {
     NEW_WORK // 본인 챌린지에 새로운 작업물 제출됨
     NEW_COMMENT // 본인 작업물에 새로운 댓글 추가됨
@@ -174,6 +179,9 @@ model Work {
     participantId String?
 
     content String @db.Text
+
+    status      WorkStatus @default(DRAFT)
+    submittedAt DateTime?
 
     likes     Like[]
     likeCount Int       @default(0)
