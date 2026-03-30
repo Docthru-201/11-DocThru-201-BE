@@ -1,5 +1,5 @@
 export function adminValidator(req, res, next) {
-  //아래 테스트 목적 임시코드
+  // 아래 테스트 목적 임시코드
   req.user = {
     userId: '01KMD847HH2DD4M96C8R1TQABX', // 테스트용 ID
     role: 'ADMIN',

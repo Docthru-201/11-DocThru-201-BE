@@ -123,6 +123,44 @@ export class ChallengesService {
     return await this.#challengeRepository.findByUserId(userId);
   }
 
+  async getMyChallengesForTabs(userId, tab) {
+    let rows;
+    if (tab === 'applied') {
+      const authored =
+        await this.#challengeRepository.findByAuthorIdForMyList(userId);
+      rows = authored.filter((c) => c.status === 'PENDING');
+    } else if (tab === 'participating') {
+      const joined =
+        await this.#challengeRepository.findByParticipantUserIdForMyList(
+          userId,
+        );
+      rows = joined.filter((c) => !c.isClosed);
+    } else {
+      const joined =
+        await this.#challengeRepository.findByParticipantUserIdForMyList(
+          userId,
+        );
+      rows = joined.filter((c) => c.isClosed);
+    }
+
+    const isParticipantTab = tab === 'participating' || tab === 'done';
+    const items = rows.map((row) => ({
+      ...this.#mapChallengeListItem(row),
+      isParticipating: isParticipantTab,
+    }));
+
+    return {
+      message: '나의 챌린지 조회 성공',
+      data: {
+        items,
+        pagination: {
+          nextCursor: null,
+          hasNext: false,
+        },
+      },
+    };
+  }
+
   async getAllChallenges({
     page = 1,
     pageSize = 10,
@@ -176,12 +214,13 @@ export class ChallengesService {
   async updateChallengeStatus(challengeId, data, userId) {
     const challenge = await this.#findChallengeOrThrow(challengeId);
 
-    if (challenge.isClosed) {
-      const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
-      error.statusCode = HTTP_STATUS.FORBIDDEN;
+    // 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
+    // if (challenge.isClosed) {
+    //   const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
+    //   error.statusCode = HTTP_STATUS.FORBIDDEN;
 
-      throw error;
-    }
+    //   throw error;
+    // }
 
     const updatedChallenge =
       await this.#challengeRepository.updateChallengeStatus(challengeId, data);
@@ -228,7 +267,6 @@ export class ChallengesService {
       throw error;
     }
 
-    console.log('서비스 결과(#findChallengeOrThrow) =======>:', challenge);
     return challenge;
   }
 }
