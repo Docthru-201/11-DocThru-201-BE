@@ -8,6 +8,9 @@ import {
   ConflictException,
   UnauthorizedException,
 } from '#exceptions';
+import { securityDefense } from '../common/security/defense.js';
+import { logSecurityEvent } from '../common/utils/security-audit.js';
+import { maskEmail } from '../common/utils/log-mask.util.js';
 
 function buildPasswordResetLink(rawToken) {
   const base =
@@ -69,16 +72,42 @@ export class AuthService {
     return this.#toAuthUserResponse({ ...userWithoutPassword, socials: [] });
   }
 
-  async login(data) {
+  async login(data, requestContext = {}) {
     const { email, password } = data;
+    const ip = requestContext.ip ?? 'unknown';
+    const emailNorm =
+      typeof email === 'string' ? email.trim().toLowerCase() : '';
 
     // 1. 유저 존재 확인
     const user = await this.#authRepository.findUserByEmail(email);
+    if (
+      user?.loginLockedUntil &&
+      user.loginLockedUntil.getTime() > Date.now()
+    ) {
+      logSecurityEvent({
+        type: 'login_blocked_account_locked',
+        ip,
+        userId: user.id,
+        emailMasked: maskEmail(emailNorm || email || ''),
+      });
+      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
+    }
+
     if (!user) {
+      securityDefense.recordLoginFailure({
+        ip,
+        emailNormalized: emailNorm || null,
+        userId: null,
+      });
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
     }
 
     if (user.password == null || user.password === '') {
+      securityDefense.recordLoginFailure({
+        ip,
+        emailNormalized: emailNorm || user.email,
+        userId: user.id,
+      });
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
     }
 
@@ -88,8 +117,18 @@ export class AuthService {
       user.password,
     );
     if (!isMatch) {
+      const { lockUntil } = securityDefense.recordLoginFailure({
+        ip,
+        emailNormalized: emailNorm || user.email,
+        userId: user.id,
+      });
+      if (lockUntil) {
+        await this.#authRepository.setUserLoginLockedUntil(user.id, lockUntil);
+      }
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
     }
+
+    securityDefense.clearLoginFailuresForEmail(emailNorm || user.email);
 
     // 3. 세션 고정 방지: 기존 refresh(서버 저장) 무효화 후 새 토큰 쌍 발급
     await this.#authRepository.deleteRefreshToken(user.id);
@@ -98,6 +137,13 @@ export class AuthService {
     const refreshToken = this.#tokenProvider.generateRefreshToken(user);
 
     await this.#authRepository.saveRefreshToken(user.id, refreshToken);
+
+    logSecurityEvent({
+      type: 'login_success',
+      ip,
+      userId: user.id,
+      emailMasked: maskEmail(user.email),
+    });
 
     const { password: _pw, ...userWithoutPassword } = user;
     return {
@@ -176,9 +222,16 @@ export class AuthService {
     }
     throw new BadRequestException(`지원하지 않는 provider입니다: ${provider}`);
   }
-  async oauthLogin(provider, code) {
+  async oauthLogin(provider, code, requestContext = {}) {
+    const ip = requestContext.ip ?? 'unknown';
     if (provider === 'google') {
-      const googleUser = await this.#authRepository.getGoogleUser(code);
+      let googleUser;
+      try {
+        googleUser = await this.#authRepository.getGoogleUser(code);
+      } catch (e) {
+        securityDefense.oauthFailure(ip, e?.message ?? 'oauth_token_error');
+        throw e;
+      }
       const { email, name, id: googleProviderId } = googleUser;
 
       if (!googleProviderId) {
@@ -209,6 +262,7 @@ export class AuthService {
       );
 
       const { password: _pw, ...userWithoutPassword } = userWithSocials;
+      securityDefense.oauthSuccess(ip, userWithSocials.id);
       return {
         user: this.#toAuthUserResponse(userWithoutPassword),
         accessToken,
@@ -228,7 +282,16 @@ export class AuthService {
   }
 
   // 계정 열거 방지
-  async requestPasswordReset({ email }) {
+  async requestPasswordReset({ email }, requestContext = {}) {
+    const ip = requestContext.ip ?? 'unknown';
+    logSecurityEvent({
+      type: 'password_reset_request',
+      ip,
+      emailMasked: maskEmail(
+        typeof email === 'string' ? email.trim() : String(email),
+      ),
+    });
+
     const user = await this.#authRepository.findUserByEmail(email);
     const generic = {
       message: SUCCESS_MESSAGE.PASSWORD_RESET_REQUEST_ACCEPTED,
@@ -256,17 +319,30 @@ export class AuthService {
     return generic;
   }
 
-  async confirmPasswordReset({ token, password }) {
+  async confirmPasswordReset({ token, password }, requestContext = {}) {
+    const ip = requestContext.ip ?? 'unknown';
     const tokenHash = createHash('sha256').update(token).digest('hex');
     const userId =
       await this.#authRepository.consumePasswordResetToken(tokenHash);
     if (!userId) {
+      logSecurityEvent({
+        type: 'password_reset_confirm_failed',
+        ip,
+        reason: 'invalid_or_expired_token',
+      });
       throw new BadRequestException(ERROR_MESSAGE.PASSWORD_RESET_LINK_INVALID);
     }
 
     const hashedPassword = await this.#passwordProvider.hash(password);
     await this.#authRepository.updateUserPassword(userId, hashedPassword);
     await this.#authRepository.deleteRefreshToken(userId);
+    await this.#authRepository.setUserLoginLockedUntil(userId, null);
+
+    logSecurityEvent({
+      type: 'password_reset_confirm_success',
+      ip,
+      userId,
+    });
 
     return { message: SUCCESS_MESSAGE.PASSWORD_RESET_COMPLETED };
   }

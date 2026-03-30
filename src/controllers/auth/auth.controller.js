@@ -82,12 +82,16 @@ export class AuthController extends BaseController {
   }
 
   async requestPasswordReset(req, res) {
-    const body = await this.#authService.requestPasswordReset(req.body);
+    const body = await this.#authService.requestPasswordReset(req.body, {
+      ip: req.ip,
+    });
     res.status(HTTP_STATUS.OK).json(body);
   }
 
   async confirmPasswordReset(req, res) {
-    const body = await this.#authService.confirmPasswordReset(req.body);
+    const body = await this.#authService.confirmPasswordReset(req.body, {
+      ip: req.ip,
+    });
     res.status(HTTP_STATUS.OK).json(body);
   }
 
@@ -100,6 +104,7 @@ export class AuthController extends BaseController {
   async login(req, res) {
     const { user, accessToken, refreshToken } = await this.#authService.login(
       req.body,
+      { ip: req.ip, userAgent: req.get('user-agent') },
     );
 
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
@@ -162,7 +167,10 @@ export class AuthController extends BaseController {
       user: _user,
       accessToken,
       refreshToken,
-    } = await this.#authService.oauthLogin(provider, code);
+    } = await this.#authService.oauthLogin(provider, code, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
 
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
 

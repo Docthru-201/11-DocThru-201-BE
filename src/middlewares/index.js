@@ -28,3 +28,4 @@ export * from './helmet.middleware.js';
 export * from './csrf-origin.middleware.js';
 export * from './https-redirect.middleware.js';
 export * from './rate-limit.middleware.js';
+export * from './security.middleware.js';
