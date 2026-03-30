@@ -37,9 +37,16 @@ export const createWorkSchema = z
   .meta({ description: '작업물 생성 DTO' });
 
 // Work 수정 /works/:id (PATCH)
-export const updateWorkSchema = createWorkSchema
-  .partial() // 모든 필드를 optional로 변환
-  .refine((obj) => Object.values(obj).some((v) => v !== undefined), {
+// action: 'SUBMIT' → 제출하기 / 없음 → 임시저장
+export const updateWorkSchema = z
+  .object({
+    content: jsonStringSchema
+      .and(contentSchema(CONTENT_MAX_LENGTH, '작업물 내용을 입력해주세요.'))
+      .optional(),
+    action: z.enum(['SUBMIT']).optional(),
+  })
+  .strict()
+  .refine((obj) => obj.content !== undefined || obj.action !== undefined, {
     message: '수정할 필드가 하나 이상 필요합니다.',
   })
-  .meta({ description: '작업물 수정 DTO (최소 하나의 필드 필요)' });
+  .meta({ description: '작업물 수정 DTO (임시저장 / 제출하기 / 수정하기)' });

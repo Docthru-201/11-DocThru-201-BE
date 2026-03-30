@@ -29,6 +29,9 @@ export class WorksController extends BaseController {
     this.router.post('/', needsLogin, (req, res, next) =>
       this.createWork(req, res, next),
     );
+    this.router.get('/my', needsLogin, (req, res, next) =>
+      this.getMyWork(req, res, next),
+    );
     this.router.get('/:id', needsLogin, (req, res, next) =>
       this.getWorkById(req, res, next),
     );
@@ -92,8 +95,23 @@ export class WorksController extends BaseController {
     try {
       const { id } = req.params;
       const userId = req.user.id;
-      const updated = await this.#worksService.updateWork(id, userId, req.body);
+      const { content, action } = req.body;
+      const updated = await this.#worksService.updateWork(id, userId, {
+        content,
+        action,
+      });
       res.status(HTTP_STATUS.OK).json(updated);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getMyWork(req, res, next) {
+    try {
+      const { challengeId } = req.params;
+      const userId = req.user?.id;
+      const work = await this.#worksService.getMyWork(challengeId, userId);
+      res.status(HTTP_STATUS.OK).json(work);
     } catch (error) {
       next(error);
     }
@@ -102,7 +120,6 @@ export class WorksController extends BaseController {
   async deleteWork(req, res, next) {
     try {
       await this.#worksService.deleteWork(req.params.id, req.user.id);
-
       res.status(HTTP_STATUS.NO_CONTENT).send();
     } catch (error) {
       next(error);

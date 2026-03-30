@@ -79,19 +79,7 @@ export class WorksService {
       throw error;
     }
 
-    // 3. 챌린지 참여 여부 확인
-    const participant =
-      await this.#participantRepository.findByUserAndChallenge(
-        userId,
-        challengeId,
-      );
-    if (!participant) {
-      const error = new Error(ERROR_MESSAGE.NOT_PARTICIPANT);
-      error.statusCode = HTTP_STATUS.FORBIDDEN;
-      throw error;
-    }
-
-    // 4. 중복 작업물 확인
+    // 3. 중복 작업물 확인
     await this.isWorkDuplicate(challengeId, userId);
 
     // 5. 작업물 생성
@@ -131,7 +119,9 @@ export class WorksService {
     }
   }
 
-  async updateWork(workId, userId, data) {
+  // action: 'SUBMIT' → 제출하기 (DRAFT→SUBMITTED) 또는 수정하기 (이미 SUBMITTED)
+  // action 없음 → 임시저장 (DRAFT 유지, content만 업데이트)
+  async updateWork(workId, userId, { content, action }) {
     const work = await this.#workRepository.findById(workId);
 
     if (!work) {
@@ -142,7 +132,38 @@ export class WorksService {
       throw new ForbiddenException('수정 권한이 없습니다.');
     }
 
-    return this.#workRepository.update(workId, data);
+    const updateData = {};
+    if (content !== undefined) updateData.content = content;
+
+    if (action === 'SUBMIT') {
+      if (work.status === 'DRAFT') {
+        // 제출하기: DRAFT → SUBMITTED
+        updateData.status = 'SUBMITTED';
+        updateData.submittedAt = new Date();
+      }
+      // 수정하기: 이미 SUBMITTED이면 status/submittedAt 변경 없이 content만 업데이트
+    }
+    // 임시저장: action 없음 → status는 DRAFT 그대로 유지
+
+    return this.#workRepository.update(workId, updateData);
+  }
+
+  async getMyWork(challengeId, userId) {
+    if (!challengeId || !userId) {
+      throw new BadRequestException(ERROR_MESSAGE.REQUIRED_FIELDS_MISSING);
+    }
+
+    const work = await this.#workRepository.findMyWorkByChallengeId(
+      challengeId,
+      userId,
+    );
+
+    if (!work) {
+      throw new NotFoundException('작업물이 없습니다.');
+    }
+
+    const isLiked = !!(await this.#likeRepository.findLike(work.id, userId));
+    return { ...work, isLiked };
   }
 
   async deleteWork(workId, userId) {
