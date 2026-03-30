@@ -1,7 +1,12 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
 import { Router } from 'express';
-import { adminValidator, validate, needsLogin } from '#middlewares';
+import {
+  adminValidator,
+  auditAdminAction,
+  validate,
+  needsLogin,
+} from '#middlewares';
 import { workListQuerySchema } from './dto/work.dto.js';
 export class WorksController extends BaseController {
   #worksService;
@@ -16,6 +21,7 @@ export class WorksController extends BaseController {
     this.router.get(
       '/',
       adminValidator,
+      auditAdminAction,
       validate('query', workListQuerySchema),
       (req, res, next) => this.getAllWorks(req, res, next),
     );

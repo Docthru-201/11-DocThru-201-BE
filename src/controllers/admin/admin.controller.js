@@ -1,6 +1,6 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
-import { adminValidator, validate } from '#middlewares';
+import { adminValidator, auditAdminAction, validate } from '#middlewares';
 import {
   getAllChallengesScheme,
   updateChallengeStatusScheme,
@@ -16,17 +16,20 @@ export class AdminController extends BaseController {
     this.router.get(
       '/challenges',
       adminValidator,
+      auditAdminAction,
       validate('query', getAllChallengesScheme),
       (req, res, next) => this.getAllChallenges(req, res, next),
     );
     this.router.get(
       '/challenges/:challengeId',
       adminValidator,
+      auditAdminAction,
       (req, res, next) => this.getChallengeDetailById(req, res, next),
     );
     this.router.patch(
       '/challenges/:challengeId',
       adminValidator,
+      auditAdminAction,
       validate('params', updateChallengeStatusScheme.params),
       validate('body', updateChallengeStatusScheme.body),
       (req, res, next) => this.updateChallengeStatus(req, res, next),

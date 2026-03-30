@@ -8,10 +8,6 @@ export function adminValidator(req, res, next) {
     userId: TEST_ADMIN_USER_ID,
     role: 'ADMIN',
   };
-  console.log(
-    '테스트를 위해 강제 ADMIN부여 user(role.middleware.js)=',
-    req.user,
-  );
   const role = req.user?.role;
 
   if (!role) {

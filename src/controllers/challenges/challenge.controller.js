@@ -1,6 +1,11 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
-import { validate, needsLogin, needsAdmin } from '#middlewares';
+import {
+  validate,
+  needsLogin,
+  needsAdmin,
+  auditAdminAction,
+} from '#middlewares';
 import {
   createChallengeSchema,
   challengeIdParamSchema,
@@ -63,6 +68,7 @@ export class ChallengesController extends BaseController {
       '/:id',
       needsLogin,
       needsAdmin,
+      auditAdminAction,
       validate('params', challengeIdParamSchema),
       (req, res) => this.delete(req, res),
     );
