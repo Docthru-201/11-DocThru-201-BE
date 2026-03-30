@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { escapeHtml } from '#utils';
+import { maskEmail } from '../common/utils/log-mask.util.js';
 
 // 비밀번호 재설정 메일 발송
 export async function sendPasswordResetEmail({ to, resetLink }) {
@@ -11,15 +12,19 @@ export async function sendPasswordResetEmail({ to, resetLink }) {
 
   if (!host) {
     if (process.env.NODE_ENV === 'development') {
+      const linkBase = resetLink.includes('?')
+        ? resetLink.slice(0, resetLink.indexOf('?'))
+        : resetLink;
       console.info('[mail] SMTP 미설정 — 비밀번호 재설정 링크(로컬 확인용)', {
-        to,
-        resetLink,
+        to: maskEmail(to),
+        resetLinkBase: linkBase,
+        token: '[쿼리 token은 로그에 남기지 않음 — 브라우저/메일에서만 확인]',
       });
     } else {
       console.warn(
         '[mail] SMTP_HOST가 없어 비밀번호 재설정 메일을 보내지 못했습니다.',
         {
-          to,
+          to: maskEmail(to),
         },
       );
     }
