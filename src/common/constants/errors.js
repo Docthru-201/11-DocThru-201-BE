@@ -15,6 +15,9 @@ export const ERROR_MESSAGE = {
   FAILED_TO_DELETE_USER: '사용자 삭제에 실패했습니다.',
   NICKNAME_ALREADY_EXISTS: '이미 사용하고 있는 닉네임입니다.',
   INVALID_LOGIN: '유효하지 않은 로그인 정보입니다.',
+  /** IP 기반 일시 차단(브루트포스 등). 클라이언트에 상세 사유 미노출 */
+  ACCESS_TEMPORARILY_BLOCKED:
+    '접근이 일시적으로 제한되었습니다. 잠시 후 다시 시도해 주세요.',
   PASSWORD_RESET_LINK_INVALID:
     '유효하지 않거나 만료된 비밀번호 재설정 링크입니다.',
 

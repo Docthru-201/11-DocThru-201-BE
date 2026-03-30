@@ -162,4 +162,11 @@ export class AuthRepository {
       data: { password: hashedPassword },
     });
   }
+
+  setUserLoginLockedUntil(userId, loginLockedUntil) {
+    return this.#prisma.user.update({
+      where: { id: userId },
+      data: { loginLockedUntil },
+    });
+  }
 }

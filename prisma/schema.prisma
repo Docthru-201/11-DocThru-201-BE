@@ -68,6 +68,9 @@ model User {
     updatedAt DateTime  @updatedAt
     deletedAt DateTime?
 
+    /// 반복 로그인 실패 등으로 일시 잠금 (만료 전에는 이메일 로그인 거부)
+    loginLockedUntil DateTime?
+
     refreshTokens         RefreshToken[]
     socials               SocialAccount[]
     passwordResetTokens   PasswordResetToken[]

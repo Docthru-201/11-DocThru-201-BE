@@ -9,6 +9,8 @@ import {
   httpsRedirectMiddleware,
   authRateLimiter,
   apiRateLimiter,
+  securityIpBlockGuard,
+  securityObserveRequest,
 } from '#middlewares';
 // import { registerSwagger } from '#docs/swagger.js';
 
@@ -57,6 +59,8 @@ export class App {
       swaggerUi.serve,
       swaggerUi.setup(swaggerDocument),
     );
+    this.app.use('/api', securityIpBlockGuard);
+    this.app.use('/api', securityObserveRequest);
     this.app.use('/api/auth', authRateLimiter);
     this.app.use('/api', apiRateLimiter);
     this.app.use('/api', controller.routes());
