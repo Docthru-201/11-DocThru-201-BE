@@ -9,7 +9,6 @@ import {
 import {
   createChallengeSchema,
   challengeIdParamSchema,
-  challengeDetailParamSchema,
   listChallengesQuerySchema,
   updateChallengeSchema,
   myChallengesQuerySchema,
@@ -26,7 +25,7 @@ export class ChallengesController extends BaseController {
   }
 
   routes() {
-    this.router.use('/:challengeId/works', this.#worksController.routes());
+    this.router.use('/:id/works', this.#worksController.routes());
     // 전체 목록 조회 (커서 기반 페이지네이션)
     this.router.get(
       '/',
@@ -43,8 +42,9 @@ export class ChallengesController extends BaseController {
     );
 
     this.router.get(
-      '/:challengeId',
-      validate('params', challengeDetailParamSchema),
+      '/:id',
+      needsLogin,
+      validate('params', challengeIdParamSchema),
       (req, res) => this.findById(req, res),
     );
 
@@ -82,7 +82,7 @@ export class ChallengesController extends BaseController {
   }
   // Parameter통일 필요(id -> challengeId로 swlee)
   async findById(req, res) {
-    const { challengeId } = req.params;
+    const { id: challengeId } = req.params;
     const challenge =
       await this.#challengesService.getChallengeDetail(challengeId);
     res.status(HTTP_STATUS.OK).json(challenge);

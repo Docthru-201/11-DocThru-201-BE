@@ -46,7 +46,7 @@ export class WorksController extends BaseController {
 
   async getAllWorks(req, res) {
     const userId = req.user?.userId ?? req.user?.id;
-    const { challengeId } = req.params;
+    const { id: challengeId } = req.params;
     const { page = 1, pageSize = 5 } = req.query;
     const works = await this.#worksService.getAllWorks(
       userId,
@@ -66,7 +66,7 @@ export class WorksController extends BaseController {
 
   async createWork(req, res, next) {
     try {
-      const { challengeId } = req.params;
+      const { id: challengeId } = req.params;
       const userId = req.user.id;
       const newWork = await this.#worksService.createWork(challengeId, userId);
 
@@ -108,7 +108,7 @@ export class WorksController extends BaseController {
 
   async getMyWork(req, res, next) {
     try {
-      const { challengeId } = req.params;
+      const { id: challengeId } = req.params;
       const userId = req.user?.id;
       const work = await this.#worksService.getMyWork(challengeId, userId);
       res.status(HTTP_STATUS.OK).json(work);
