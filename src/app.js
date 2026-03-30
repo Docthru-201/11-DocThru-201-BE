@@ -44,7 +44,7 @@ export class App {
 
     this.app.use(express.static('public'));
     this.app.use(helmetMiddleware);
-    this.app.use(express.json());
+    this.app.use(express.json({ limit: '10mb' }));
     this.app.use(cookieParser());
     this.app.use(csrfOriginMiddleware);
     this.app.use(cors);
