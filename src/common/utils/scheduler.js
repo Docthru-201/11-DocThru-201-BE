@@ -29,9 +29,9 @@ export class DeadlineScheduler {
         await Promise.all(
           targetIds.map((id) =>
             this.#notificationsService.createNotification({
-              userId: id, 
-              message: message, 
-              type: 'CLOSED'
+              userId: id,
+              message: message,
+              type: 'CLOSED',
             }),
           ),
         );

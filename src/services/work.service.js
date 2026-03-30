@@ -40,11 +40,8 @@ export class WorksService {
     );
     const currentWorkIdList = works.map((work) => work.workId);
     const userLikeRecords = await this.#likeRepository.findManyLiked({
-      where: {
-        userId: userId,
-        workId: { in: currentWorkIdList },
-      },
-      select: { workId: true },
+      userId,
+      workIds: currentWorkIdList,
     });
     const likedWorkIdSet = new Set(
       userLikeRecords.map((record) => record.workId),
@@ -79,8 +76,7 @@ export class WorksService {
       error.statusCode = HTTP_STATUS.FORBIDDEN;
       throw error;
     }
-    
-    
+
     const hasWork = await this.#workRepository.hasSubmittedWork(
       challengeId,
       userId,
@@ -92,10 +88,7 @@ export class WorksService {
       throw error;
     }
 
-    const result = await this.#workRepository.createWork(
-      challengeId,
-      userId,
-    );
+    const result = await this.#workRepository.createWork(challengeId, userId);
 
     if (challenge.authorId !== userId) {
       this.#sendNotificationSilently(challenge.authorId, challenge.title);
@@ -128,12 +121,6 @@ export class WorksService {
       error.statusCode = HTTP_STATUS.CONFLICT;
       throw error;
     }
-
-    if (!hasWork) {
-      throw new NotFoundException('작업물을 찾을 수 없습니다.');
-    }
-
-    return hasWork;
   }
 
   async updateWork(workId, userId, data) {

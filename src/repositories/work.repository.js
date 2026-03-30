@@ -101,7 +101,7 @@ export class WorkRepository {
       where: { id },
       include: {
         user: {
-          select: { id: true, nickname: true, image: true }, // 필요한 유저 정보만 선택
+          select: { id: true, nickname: true, image: true },
         },
         _count: {
           select: {
