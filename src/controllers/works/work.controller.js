@@ -1,7 +1,7 @@
 import { BaseController } from '#controllers/base.controller.js';
-import { SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
+import { HTTP_STATUS } from '#constants';
 import { Router } from 'express';
-import { needsLogin, needsAdmin } from '#middlewares';
+import { needsLogin } from '#middlewares';
 
 export class WorksController extends BaseController {
   #worksService;
@@ -37,7 +37,7 @@ export class WorksController extends BaseController {
 
   async getAllWorks(req, res) {
     const userId = req.user?.id;
-    const { challengeId } = req.params;
+    const { id: challengeId } = req.params;
     const { page = 1, pageSize = 5 } = req.query;
     const works = await this.#worksService.getAllWorks(
       userId,
