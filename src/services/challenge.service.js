@@ -161,7 +161,6 @@ export class ChallengesService {
     };
   }
 
-  // Admin 챌린지 관리 조회
   async getAllChallenges({
     page = 1,
     pageSize = 10,

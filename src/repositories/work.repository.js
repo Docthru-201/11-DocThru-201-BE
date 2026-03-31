@@ -11,10 +11,10 @@ export class WorkRepository {
     });
   }
 
-  //현재 챌린지의 모든 work 조회-swlee
+  //현재 챌린지의 모든 work 조회 (SUBMITTED만 반환)
   async findManyByChallengeId(challengeId, page, pageSize) {
     const works = await this.#prisma.work.findMany({
-      where: { challengeId },
+      where: { challengeId, status: 'SUBMITTED' },
       include: {
         _count: {
           select: {
@@ -51,11 +51,31 @@ export class WorkRepository {
       challengeId: work.challengeId,
       challengeTitle: work.challenge.title,
       content: work.content,
+      status: work.status,
+      submittedAt: work.submittedAt,
       createdAt: work.createdAt,
       updatedAt: work.updatedAt,
       likeCount: work.likeCount,
       isLiked: false,
     }));
+  }
+
+  // 본인 work 조회 (DRAFT 포함)
+  async findMyWorkByChallengeId(challengeId, userId) {
+    return this.#prisma.work.findFirst({
+      where: { challengeId, userId },
+      include: {
+        user: {
+          select: { id: true, nickname: true, image: true },
+        },
+        challenge: {
+          select: { title: true },
+        },
+        _count: {
+          select: { likes: true, comments: true },
+        },
+      },
+    });
   }
 
   // work 생성 및 참여자 추가
@@ -69,11 +89,10 @@ export class WorkRepository {
         },
       });
 
-      await tx.participant.create({
-        data: {
-          challengeId,
-          userId: userId,
-        },
+      await tx.participant.upsert({
+        where: { challengeId_userId: { challengeId, userId } },
+        create: { challengeId, userId },
+        update: {},
       });
 
       return work;
@@ -102,6 +121,14 @@ export class WorkRepository {
       include: {
         user: {
           select: { id: true, nickname: true, image: true },
+        },
+        challenge: {
+          select: {
+            title: true,
+            category: true,
+            type: true,
+            originalUrl: true,
+          },
         },
         _count: {
           select: {
