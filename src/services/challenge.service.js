@@ -182,19 +182,20 @@ export class ChallengesService {
     }
 
     const statusValues = ['pending', 'approved', 'rejected'];
+    
     if (statusValues.includes(sort.toLowerCase())) {
       options.where.status = sort.toUpperCase();
-    }
+    } else {
+      const sortOptions = {
+        createdAt_asc: { createdAt: 'asc' },
+        createdAt_desc: { createdAt: 'desc' },
+        deadline_asc: { deadline: 'asc' },
+        deadline_desc: { deadline: 'desc' },
+      };
 
-    const sortOptions = {
-      createdAt_asc: { createdAt: 'asc' },
-      createdAt_desc: { createdAt: 'desc' },
-      deadline_asc: { deadline: 'asc' },
-      deadline_desc: { deadline: 'desc' },
-    };
-
-    if (sortOptions[sort]) {
-      options.orderBy = sortOptions[sort];
+      if (sortOptions[sort]) {
+        options.orderBy = sortOptions[sort];
+      }
     }
 
     if (keyword) {

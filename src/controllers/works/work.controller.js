@@ -37,7 +37,7 @@ export class WorksController extends BaseController {
 
   async getAllWorks(req, res) {
     const userId = req.user?.id;
-    const { challengeId } = req.params;
+    const { id: challengeId } = req.params;
     const { page = 1, pageSize = 5 } = req.query;
     const works = await this.#worksService.getAllWorks(
       userId,
