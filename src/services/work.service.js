@@ -6,20 +6,23 @@ export class WorksService {
   #likeRepository;
   #challengeRepository;
   #notificationsService;
-  #participantRepository; // 추가
+  #participantRepository;
+  #gradeService;
 
   constructor({
     workRepository,
     likeRepository,
     challengeRepository,
     notificationsService,
-    participantRepository, // 추가
+    participantRepository,
+    gradeService,
   }) {
     this.#workRepository = workRepository;
     this.#likeRepository = likeRepository;
     this.#challengeRepository = challengeRepository;
     this.#notificationsService = notificationsService;
-    this.#participantRepository = participantRepository; // 추가
+    this.#participantRepository = participantRepository;
+    this.#gradeService = gradeService;
   }
 
   // 챌린지에 속한 모든 작업물을 페이지네이션 및 각 작업물의 좋아요 상태 포함하여 반환
@@ -177,7 +180,13 @@ export class WorksService {
       throw new ForbiddenException('삭제 권한이 없습니다.');
     }
 
-    return this.#workRepository.delete(workId);
+    await this.#workRepository.delete(workId);
+
+    await this.#participantRepository.deleteByUserAndChallenge(
+      userId,
+      work.challengeId,
+    );
+    await this.#gradeService.updateGradeIfNeeded(userId);
   }
 
   async getWorkById(workId, userId) {

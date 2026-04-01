@@ -51,4 +51,12 @@ export class LikeRepository {
       select: { workId: true },
     });
   }
+
+  async countReceivedByUserId(userId) {
+    return this.#prisma.like.count({
+      where: {
+        work: { userId },
+      },
+    });
+  }
 }
