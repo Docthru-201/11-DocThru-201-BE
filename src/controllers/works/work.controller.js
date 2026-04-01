@@ -37,7 +37,7 @@ export class WorksController extends BaseController {
 
   async getAllWorks(req, res) {
     const userId = req.user?.id;
-    const { challengeId } = req.params;
+    const { id: challengeId } = req.params;
     const { page = 1, pageSize = 5 } = req.query;
     const works = await this.#worksService.getAllWorks(
       userId,
@@ -68,7 +68,7 @@ export class WorksController extends BaseController {
 
   createWork = async (req, res, next) => {
     try {
-      const { challengeId } = req.params;
+      const { id: challengeId } = req.params;
       console.log('challengeId:', challengeId); // ← 추가
       console.log('userId:', req.user?.id); // ← 추가
       const participantId = req.user?.id;
@@ -99,7 +99,7 @@ export class WorksController extends BaseController {
 
   async getMyWork(req, res, next) {
     try {
-      const { challengeId } = req.params;
+      const { id: challengeId } = req.params;
       const userId = req.user?.id;
       const work = await this.#worksService.getMyWork(challengeId, userId);
       res.status(HTTP_STATUS.OK).json(work);
