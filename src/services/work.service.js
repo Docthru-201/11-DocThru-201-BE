@@ -203,4 +203,8 @@ export class WorksService {
 
     return { ...work, isLiked };
   }
+
+  async getMyWorks(userId) {
+    return this.#workRepository.findManyByUserId(userId);
+  }
 }
