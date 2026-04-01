@@ -107,7 +107,28 @@ export class ChallengesService {
   }
 
   async createChallenge(data) {
-    return await this.#challengeRepository.create(data);
+    const challenge = await this.#challengeRepository.create(data);
+
+    await this.#challengeRepository.createParticipant({
+      userId: data.authorId,
+      challengeId: challenge.id,
+    });
+
+    if (this.#notificationsService) {
+      const admin = await this.#challengeRepository.findAdminUser();
+
+      if (admin && admin.id !== data.authorId) {
+        await this.#notificationsService.createNotification({
+          userId: admin.id,
+          type: 'ADMIN_ACTION',
+          targetId: challenge.id,
+          targetUrl: `/challenges/${challenge.id}`,
+          message: `'${challenge.title}' 챌린지가 등록되었어요`,
+        });
+      }
+    }
+
+    return challenge;
   }
 
   async updateChallenge(id, updateData, actor) {
@@ -188,7 +209,7 @@ export class ChallengesService {
     }
 
     const statusValues = ['pending', 'approved', 'rejected'];
-    
+
     if (statusValues.includes(sort.toLowerCase())) {
       options.where.status = sort.toUpperCase();
     } else {
@@ -222,33 +243,41 @@ export class ChallengesService {
   async updateChallengeStatus(challengeId, data, actor) {
     requireAdmin(actor);
     const challenge = await this.#findChallengeOrThrow(challengeId);
+    // 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
+    // if (challenge.isClosed) {
+    //   const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
+    //   error.statusCode = HTTP_STATUS.FORBIDDEN;
+
+    //   throw error;
+    // }
+
     const updatedChallenge =
       await this.#challengeRepository.updateChallengeStatus(challengeId, data);
 
-    if (
-      this.#notificationsService &&
-      challenge.authorId &&
-      challenge.authorId !== actor.id
-    ) {
-      const { status, declineReason, title, id } = updatedChallenge;
+    if (!this.#notificationsService) {
+      return updatedChallenge;
+    }
 
-      const message = ['REJECTED', 'DELETED'].includes(status)
-        ? this.#notificationsService.notificationMessages?.adminReviewResult?.(
-            title,
-            status,
-            declineReason,
-          )
-        : this.#notificationsService.notificationMessages?.challengeProgressUpdate?.(
-            title,
-            status,
-          );
+    const { status, declineReason, title, id } = updatedChallenge;
 
+    const message = ['REJECTED', 'DELETED'].includes(status)
+      ? this.#notificationsService.notificationMessages?.adminReviewResult?.(
+          title,
+          status,
+          declineReason,
+        )
+      : this.#notificationsService.notificationMessages?.challengeProgressUpdate?.(
+          title,
+          status,
+        );
+
+    if (challenge.authorId && challenge.authorId !== actor.id) {
       await this.#notificationsService.createNotification({
         userId: challenge.authorId,
         type: 'CHALLENGE_APPROVAL_RESULT',
         targetId: id,
         targetUrl: `/challenges/${id}`,
-        message: message,
+        message,
       });
     }
 
@@ -257,6 +286,8 @@ export class ChallengesService {
 
   async #findChallengeOrThrow(challengeId) {
     const challenge =
+      // 1개라도 Repository가 정의되지 않으면 undefined 에러로 주석-swlee
+      // (await this.#challengeRepository.findById?.(challengeId)) ??
       await this.#challengeRepository.findChallengeById?.(challengeId);
 
     if (!challenge) {
