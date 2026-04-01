@@ -1,7 +1,6 @@
 // role.middleware.js
 
 export function adminValidator(req, res, next) {
-  
   const role = req.user?.role;
 
   if (!role) {

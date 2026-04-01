@@ -46,4 +46,18 @@ export class ParticipantRepository {
       where: { id },
     });
   }
+
+  async deleteByUserAndChallenge(userId, challengeId) {
+    return this.#prisma.participant.deleteMany({
+      where: {
+        userId,
+        challengeId,
+      },
+    });
+  }
+  async countByUserId(userId) {
+    return this.#prisma.participant.count({
+      where: { userId },
+    });
+  }
 }

@@ -1,10 +1,12 @@
 export class LikesService {
   #likeRepository;
   #workRepository;
+  #gradeService;
 
-  constructor({ likeRepository, workRepository }) {
+  constructor({ likeRepository, workRepository, gradeService }) {
     this.#likeRepository = likeRepository;
     this.#workRepository = workRepository;
+    this.#gradeService = gradeService;
   }
 
   async getLikeCount(workId) {
@@ -29,10 +31,11 @@ export class LikesService {
       throw new Error('이미 좋아요를 누른 작업물입니다.');
     }
 
-    return this.#likeRepository.create({
-      userId,
-      workId,
-    });
+    const result = await this.#likeRepository.create({ userId, workId });
+
+    await this.#gradeService.updateGradeIfNeeded(work.userId);
+
+    return result;
   }
 
   async unlike(userId, workId) {
@@ -40,6 +43,11 @@ export class LikesService {
     if (!existingLike) {
       throw new Error('취소할 좋아요 기록이 없습니다.');
     }
-    return this.#likeRepository.delete(workId, userId);
+    const work = await this.#workRepository.findById(workId);
+    const result = await this.#likeRepository.delete(workId, userId);
+
+    await this.#gradeService.updateGradeIfNeeded(work.userId);
+
+    return result;
   }
 }

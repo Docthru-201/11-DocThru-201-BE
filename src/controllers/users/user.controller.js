@@ -6,15 +6,30 @@ import { updateUserSchema, userIdParamSchema } from './dto/user.dto.js';
 export class UsersController extends BaseController {
   #usersService;
   #profilesController;
+  #statsService;
+  #worksService;
 
-  constructor({ usersService, profilesController }) {
+  constructor({
+    usersService,
+    profilesController,
+    statsService,
+    worksService,
+  }) {
     super();
     this.#usersService = usersService;
     this.#profilesController = profilesController;
+    this.#statsService = statsService;
+    this.#worksService = worksService;
   }
 
   routes() {
     this.router.get('/me', needsLogin, (req, res) => this.getMe(req, res));
+    this.router.get('/me/stats', needsLogin, (req, res) =>
+      this.getMyStats(req, res),
+    );
+    this.router.get('/me/works', needsLogin, (req, res) =>
+      this.getMyWorks(req, res),
+    );
     this.router.patch(
       '/me',
       needsLogin,
@@ -52,5 +67,14 @@ export class UsersController extends BaseController {
   async getUserById(req, res) {
     const user = await this.#usersService.getPublicProfile(req.params.id);
     res.status(HTTP_STATUS.OK).json(user);
+  }
+
+  async getMyStats(req, res) {
+    const stats = await this.#statsService.getMyStats(req.user.id);
+    res.status(HTTP_STATUS.OK).json(stats);
+  }
+  async getMyWorks(req, res) {
+    const works = await this.#worksService.getMyWorks(req.user.id);
+    res.status(HTTP_STATUS.OK).json(works);
   }
 }

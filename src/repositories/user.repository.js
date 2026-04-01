@@ -10,32 +10,35 @@ export class UserRepository {
       where: {
         id: userId,
       },
+      include: {
+        profile: true,
+      },
     });
   }
 
   findMany() {}
 
   findAllUsers() {
-    return this.prisma.user.findMany({
+    return this.#prisma.user.findMany({
       select: { id: true, nickname: true, image: true },
     });
   }
 
   findUserByNickname(nickname) {
-    return this.prisma.user.findUnique({
+    return this.#prisma.user.findUnique({
       where: { nickname },
     });
   }
 
   updateUser(id, data) {
-    return this.prisma.user.update({
+    return this.#prisma.user.update({
       where: { id },
       data,
     });
   }
 
   deleteUser(id) {
-    return this.prisma.user.delete({
+    return this.#prisma.user.delete({
       where: { id },
     });
   }

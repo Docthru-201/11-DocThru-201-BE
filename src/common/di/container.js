@@ -27,6 +27,8 @@ import {
   CommentsService,
   LikesService,
   NotificationsService,
+  GradeService,
+  StatsService,
 } from '#services';
 import {
   AuthController,
@@ -94,9 +96,11 @@ export const createContainer = () => {
       lifetime: Lifetime.SINGLETON,
     }),
     likesService: asClass(LikesService, { lifetime: Lifetime.SINGLETON }),
+    gradeService: asClass(GradeService, { lifetime: Lifetime.SINGLETON }),
     notificationsService: asClass(NotificationsService, {
       lifetime: Lifetime.SINGLETON,
     }),
+    statsService: asClass(StatsService, { lifetime: Lifetime.SINGLETON }),
 
     authMiddleware: asClass(AuthMiddleware, { lifetime: Lifetime.SINGLETON }),
 

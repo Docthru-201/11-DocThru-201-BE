@@ -2,9 +2,11 @@ import { ConflictException } from '#exceptions';
 
 export class ParticipantsService {
   #participantRepository;
+  #gradeService;
 
-  constructor({ participantRepository }) {
+  constructor({ participantRepository, gradeService }) {
     this.#participantRepository = participantRepository;
+    this.#gradeService = gradeService;
   }
 
   async joinChallenge(challengeId, userId) {
@@ -17,10 +19,14 @@ export class ParticipantsService {
       throw new ConflictException('이미 해당 챌린지에 참여 중입니다.');
     }
 
-    return await this.#participantRepository.create({
+    const result = await this.#participantRepository.create({
       challengeId,
       userId,
     });
+
+    await this.#gradeService.updateGradeIfNeeded(userId);
+
+    return result;
   }
 
   async getParticipantsByChallenge(challengeId) {
