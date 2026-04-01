@@ -39,8 +39,10 @@ export class UsersController extends BaseController {
     this.router.delete('/me', needsLogin, (req, res) =>
       this.deleteMe(req, res),
     );
-    this.router.get('/:id', validate('params', userIdParamSchema), (req, res) =>
-      this.getUserById(req, res),
+    this.router.get(
+      '/:userId',
+      validate('params', userIdParamSchema),
+      (req, res) => this.getUserById(req, res),
     );
     this.router.use('/', this.#profilesController.routes());
     return this.router;
@@ -65,7 +67,7 @@ export class UsersController extends BaseController {
   }
 
   async getUserById(req, res) {
-    const user = await this.#usersService.getPublicProfile(req.params.id);
+    const user = await this.#usersService.getPublicProfile(req.params.userId);
     res.status(HTTP_STATUS.OK).json(user);
   }
 
