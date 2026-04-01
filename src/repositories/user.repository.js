@@ -10,6 +10,9 @@ export class UserRepository {
       where: {
         id: userId,
       },
+      include: {
+        profile: true,
+      },
     });
   }
 
