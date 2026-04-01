@@ -9,3 +9,4 @@ export * from './comment.service.js';
 export * from './like.service.js';
 export * from './notification.service.js';
 export * from './grade.service.js';
+export * from './stats.service.js';

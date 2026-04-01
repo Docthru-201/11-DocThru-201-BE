@@ -159,4 +159,22 @@ export class WorkRepository {
       where: { id },
     });
   }
+
+  async countByUserId(userId) {
+    return this.#prisma.work.count({
+      where: { userId },
+    });
+  }
+
+  async findManyByUserId(userId) {
+    return this.#prisma.work.findMany({
+      where: { userId },
+      include: {
+        challenge: {
+          select: { id: true, title: true, category: true, type: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }
