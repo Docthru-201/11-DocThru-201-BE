@@ -18,7 +18,7 @@ export class UsersService {
     }
 
     // 비밀번호 제외하고 반환 (보안 강화)
-    const { password, ...userWithoutPassword } = user;
+    const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -58,8 +58,14 @@ export class UsersService {
       throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
     }
 
-    const { id, nickname, image } = user;
-    return { id, nickname, image };
+    const { id, nickname, image, grade, profile } = user;
+    return {
+      id,
+      nickname,
+      image,
+      grade,
+      introduction: profile?.introduction ?? null,
+    };
   }
 
   // 5️⃣ 전체 유저 목록 조회
