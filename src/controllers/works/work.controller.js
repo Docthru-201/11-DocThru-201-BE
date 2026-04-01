@@ -1,7 +1,7 @@
 import { BaseController } from '#controllers/base.controller.js';
-import { SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
+import { HTTP_STATUS } from '#constants';
 import { Router } from 'express';
-import { needsLogin, needsAdmin } from '#middlewares';
+import { needsLogin } from '#middlewares';
 
 export class WorksController extends BaseController {
   #worksService;
