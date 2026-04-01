@@ -106,7 +106,32 @@ export class ChallengesService {
   }
 
   async createChallenge(data) {
-    return await this.#challengeRepository.create(data);
+    const challenge = await this.#challengeRepository.create(data);
+
+    await this.#challengeRepository.createParticipant({
+      userId: data.authorId,
+      challengeId: challenge.id,
+    });
+    console.log('notificationsService exists:', !!this.#notificationsService);
+    if (this.#notificationsService) {
+      const admin = await this.#challengeRepository.findAdminUser();
+      console.log('admin:', admin);
+
+      if (admin && admin.id !== data.authorId) {
+        const notification =
+          await this.#notificationsService.createNotification({
+            userId: admin.id,
+            type: 'ADMIN_ACTION',
+            targetId: challenge.id,
+            targetUrl: `/challenges/${challenge.id}`,
+            message: `'${challenge.title}' 챌린지가 등록되었어요`,
+          });
+
+        console.log('created notification:', notification);
+      }
+    }
+
+    return challenge;
   }
 
   async updateChallenge(id, updateData) {
@@ -161,6 +186,7 @@ export class ChallengesService {
     };
   }
 
+  // Admin 챌린지 관리 조회
   async getAllChallenges({
     page = 1,
     pageSize = 10,
@@ -182,20 +208,19 @@ export class ChallengesService {
     }
 
     const statusValues = ['pending', 'approved', 'rejected'];
-    
     if (statusValues.includes(sort.toLowerCase())) {
       options.where.status = sort.toUpperCase();
-    } else {
-      const sortOptions = {
-        createdAt_asc: { createdAt: 'asc' },
-        createdAt_desc: { createdAt: 'desc' },
-        deadline_asc: { deadline: 'asc' },
-        deadline_desc: { deadline: 'desc' },
-      };
+    }
 
-      if (sortOptions[sort]) {
-        options.orderBy = sortOptions[sort];
-      }
+    const sortOptions = {
+      createdAt_asc: { createdAt: 'asc' },
+      createdAt_desc: { createdAt: 'desc' },
+      deadline_asc: { deadline: 'asc' },
+      deadline_desc: { deadline: 'desc' },
+    };
+
+    if (sortOptions[sort]) {
+      options.orderBy = sortOptions[sort];
     }
 
     if (keyword) {
@@ -214,33 +239,41 @@ export class ChallengesService {
 
   async updateChallengeStatus(challengeId, data, userId) {
     const challenge = await this.#findChallengeOrThrow(challengeId);
+    // 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
+    // if (challenge.isClosed) {
+    //   const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
+    //   error.statusCode = HTTP_STATUS.FORBIDDEN;
+
+    //   throw error;
+    // }
+
     const updatedChallenge =
       await this.#challengeRepository.updateChallengeStatus(challengeId, data);
 
-    if (
-      this.#notificationsService &&
-      challenge.authorId &&
-      challenge.authorId !== userId
-    ) {
-      const { status, declineReason, title, id } = updatedChallenge;
+    if (!this.#notificationsService) {
+      return updatedChallenge;
+    }
 
-      const message = ['REJECTED', 'DELETED'].includes(status)
-        ? this.#notificationsService.notificationMessages?.adminReviewResult?.(
-            title,
-            status,
-            declineReason,
-          )
-        : this.#notificationsService.notificationMessages?.challengeProgressUpdate?.(
-            title,
-            status,
-          );
+    const { status, declineReason, title, id } = updatedChallenge;
 
+    const message = ['REJECTED', 'DELETED'].includes(status)
+      ? this.#notificationsService.notificationMessages.adminReviewResult(
+          title,
+          status,
+          declineReason,
+        )
+      : this.#notificationsService.notificationMessages.challengeProgressUpdate(
+          title,
+          status,
+        );
+
+    if (challenge.authorId && challenge.authorId !== userId) {
       await this.#notificationsService.createNotification({
         userId: challenge.authorId,
         type: 'CHALLENGE_APPROVAL_RESULT',
         targetId: id,
         targetUrl: `/challenges/${id}`,
-        message: message,
+        message,
       });
     }
 
@@ -249,6 +282,8 @@ export class ChallengesService {
 
   async #findChallengeOrThrow(challengeId) {
     const challenge =
+      // 1개라도 Repository가 정의되지 않으면 undefined 에러로 주석-swlee
+      // (await this.#challengeRepository.findById?.(challengeId)) ??
       await this.#challengeRepository.findChallengeById?.(challengeId);
 
     if (!challenge) {
@@ -260,3 +295,11 @@ export class ChallengesService {
     return challenge;
   }
 }
+
+// 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
+// if (challenge.isClosed) {
+//   const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
+//   error.statusCode = HTTP_STATUS.FORBIDDEN;
+
+//   throw error;
+// }
