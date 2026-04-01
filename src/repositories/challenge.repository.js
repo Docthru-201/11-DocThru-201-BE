@@ -116,6 +116,12 @@ export class ChallengeRepository {
     return this.#prisma.challenge.create({ data });
   }
 
+  async createParticipant(data) {
+    return await this.#prisma.participant.create({
+      data,
+    });
+  }
+
   async update(id, data) {
     return this.#prisma.challenge.update({
       where: { id },
@@ -143,6 +149,18 @@ export class ChallengeRepository {
     });
   }
 
+  async findAdminUser() {
+    return await this.#prisma.user.findFirst({
+      where: { role: 'ADMIN' },
+      select: {
+        id: true,
+        role: true,
+        email: true,
+        nickname: true,
+      },
+    });
+  }
+
   async findEndedChallenges(currentTime) {
     return await this.#prisma.challenge.findMany({
       where: {
@@ -155,7 +173,7 @@ export class ChallengeRepository {
     });
   }
 
- async closeChallenge(challengeId) {
+  async closeChallenge(challengeId) {
     return await this.#prisma.challenge.update({
       where: { id: challengeId },
       data: { isClosed: true },
