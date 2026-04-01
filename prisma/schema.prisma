@@ -1,0 +1,252 @@
+generator client {
+    provider = "prisma-client"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider  = "postgresql"
+}
+
+enum Role {
+    USER
+    ADMIN
+}
+
+enum Grade {
+    NORMAL
+    EXPERT
+}
+
+enum AuthProvider {
+    GOOGLE
+    // 추후 확장
+}
+
+enum Category {
+    DOCUMENT
+    BLOG
+}
+
+enum Type {
+    NEXT_JS
+    API
+    CAREER
+    MODERN_JS
+    WEB
+}
+
+enum ChallengeStatus {
+    PENDING // 승인 대기
+    APPROVED // 신청 승인
+    REJECTED // 신청 거절
+    DELETED // 어드민에 의한 삭제
+}
+
+enum WorkStatus {
+    DRAFT // 임시저장
+    SUBMITTED // 제출됨
+}
+
+enum NotificationType {
+    NEW_WORK // 본인 챌린지에 새로운 작업물 제출됨
+    NEW_COMMENT // 본인 작업물에 새로운 댓글 추가됨
+    NEW_REPLY // 본인 댓글에 새로운 대댓글 추가됨
+    CHALLENGE_APPROVAL_RESULT // 챌린지 승인 결과 알림 (승인/거절)
+    CLOSED // 본인의 챌린지가 마감됨
+    ADMIN_ACTION // 어드민에 의한 챌린지/피드백의 수정 및 삭제
+}
+
+model User {
+    id String @id @default(ulid())
+
+    email    String  @unique
+    nickname String  @unique
+    password String?
+
+    profile Profile?
+    image   String? // 프로필 이미지 URL
+
+    role  Role  @default(USER)
+    grade Grade @default(NORMAL)
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    refreshTokens RefreshToken[]
+    socials       SocialAccount[]
+
+    participates Participant[]
+    works        Work[]
+
+    comments Comment[]
+    likes    Like[]
+
+    notifications Notification[]
+    challenges    Challenge[]
+}
+
+model Profile {
+    id     String @id @default(ulid())
+    userId String @unique
+
+    introduction String?
+    // 추후 확장
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+    id String @id @default(ulid())
+
+    userId String  @unique
+    token  String  @unique
+    device String?
+
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SocialAccount {
+    id String @id @default(ulid())
+
+    userId String
+
+    provider   AuthProvider
+    providerId String
+
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerId])
+    @@unique([userId, provider])
+}
+
+model Challenge {
+    id           String @id @default(ulid())
+    serialNumber Int    @default(autoincrement())
+
+    authorId String
+
+    title           String
+    originalUrl     String
+    category        Category
+    type            Type
+    deadline        DateTime
+    maxParticipants Int
+    description     String
+
+    status        ChallengeStatus @default(PENDING)
+    isClosed      Boolean         @default(false) // deadline이 지났는지 여부
+    declineReason String?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+    // 유저가 삭제시, hard delete / 어드민이 삭제시, soft delete (status: DELETED)
+
+    author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    participants Participant[]
+    works        Work[]
+}
+
+model Participant {
+    id String @id @default(ulid())
+
+    userId      String
+    challengeId String
+
+    joinedAt DateTime @default(now())
+
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+    work      Work?
+
+    @@unique([challengeId, userId])
+}
+
+model Work {
+    id String @id @default(ulid())
+
+    challengeId   String
+    participantId String?
+
+    content String @db.Text
+
+    status      WorkStatus @default(DRAFT)
+    submittedAt DateTime?
+
+    likes     Like[]
+    likeCount Int       @default(0)
+    comments  Comment[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    challenge   Challenge    @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+    participant Participant? @relation(fields: [participantId], references: [id], onDelete: SetNull)
+    user        User?        @relation(fields: [userId], references: [id])
+    userId      String?
+
+    @@unique([participantId])
+}
+
+model Comment {
+    id String @id @default(ulid())
+
+    workId   String
+    authorId String?
+
+    content String
+
+    parentId String? // 대댓글인 경우, 부모 댓글 ID
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    parent  Comment?  @relation("ReplyTo", fields: [parentId], references: [id], onDelete: SetNull) // 부모 댓글
+    replies Comment[] @relation("ReplyTo") // 대댓글으로 달린 댓글들
+
+    work   Work  @relation(fields: [workId], references: [id], onDelete: Cascade)
+    author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+}
+
+model Like {
+    workId String
+    userId String
+
+    createdAt DateTime @default(now())
+
+    work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([workId, userId])
+}
+
+model Notification {
+    id String @id @default(ulid())
+
+    userId  String
+    type    NotificationType
+    message String?
+
+    targetId  String? // 알림과 관련된 대상 ID (댓글 ID, 챌린지 ID 등)
+    targetUrl String? // 클릭 이동 경로
+
+    isRead Boolean   @default(false)
+    readAt DateTime?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? // 일정 시간 이후 자동 삭제 (hard delete)
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

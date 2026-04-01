@@ -1,0 +1,34 @@
+import { config } from '#config';
+import { DAY_IN_MS, MINUTE_IN_MS } from '#constants';
+
+export class CookieProvider {
+  setAuthCookies(res, tokens) {
+    const { accessToken, refreshToken } = tokens;
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: config.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * MINUTE_IN_MS,
+      path: '/',
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: config.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * DAY_IN_MS,
+      path: '/',
+    });
+  }
+
+  clearAuthCookies(res) {
+    res.clearCookie('accessToken', { path: '/' });
+    res.clearCookie('refreshToken', { path: '/' });
+  }
+
+  // 🔹 새로 추가: 요청(req)에서 refreshToken 읽기
+  getRefreshToken(req) {
+    return req.cookies?.refreshToken;
+  }
+}

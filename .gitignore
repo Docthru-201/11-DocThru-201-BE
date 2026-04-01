@@ -1,3 +1,11 @@
+plan/
+
+# DS_STORE
+.DS_STORE
+
+# Prisma
+generated/
+
 # Logs
 logs
 *.log

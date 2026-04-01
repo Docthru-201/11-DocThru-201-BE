@@ -1,0 +1,33 @@
+echo "husky : 🔍 Push 전 변경 파일만 린트 검사를 시작합니다..."
+
+# 최근 1개 커밋 범위(HEAD~1..HEAD)에서 변경된 파일만 검사합니다.
+# pre-commit에서 1차 검증을 하므로, pre-push에서는 전체 eslint(.)를 피합니다.
+
+FROM_REF="HEAD~1"
+if ! git rev-parse "$FROM_REF" >/dev/null 2>&1; then
+  echo "husky : 이전 커밋이 없어 검사 스킵합니다."
+  exit 0
+fi
+
+FILES="$(git diff --name-only "$FROM_REF" HEAD -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.json' '*.md' '*.css.js' '*.css.ts')"
+
+if [ -z "$FILES" ]; then
+  echo "husky : 변경된 검사 대상 파일이 없습니다."
+  exit 0
+fi
+
+# 삭제된 파일(working tree에 존재하지 않는 경로)은 ESLint/Prettier에 전달하면 실패합니다.
+VALID_FILES=""
+for file in $FILES; do
+  if [ -e "$file" ]; then
+    VALID_FILES="$VALID_FILES $file"
+  fi
+done
+
+if [ -z "$VALID_FILES" ]; then
+  echo "husky : 존재하는 파일만 대상으로 검사할 항목이 없습니다."
+  exit 0
+fi
+
+pnpm exec eslint $VALID_FILES
+pnpm exec prettier --check $VALID_FILES
