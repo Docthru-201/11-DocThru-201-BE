@@ -17,27 +17,38 @@ export class DeadlineScheduler {
         await this.#challengeRepository.findEndedChallenges(currentTime);
 
       for (const challenge of challenges) {
-        const message =
-          this.#notificationsService.notificationMessages.challengeEnd(
-            challenge.title,
-          );
-        const targetIds = [
+        const closedAt = currentTime.toISOString().slice(0, 10);
+
+        const recipientIds = [
           challenge.authorId,
-          ...(challenge.participants?.map((p) => p.userId) || []),
-        ];
+          ...(challenge.participants?.map(
+            (participant) => participant.userId,
+          ) || []),
+        ].filter(Boolean);
+
+        const uniqueRecipientIds = [...new Set(recipientIds)];
+
+        await this.#challengeRepository.closeChallenge(challenge.id);
+
+        if (!this.#notificationsService || uniqueRecipientIds.length === 0) {
+          continue;
+        }
+
+        const message = `'${challenge.title}' 챌린지가 마감되었어요. (${closedAt})`;
 
         await Promise.all(
-          targetIds.map((id) =>
+          uniqueRecipientIds.map((recipientId) =>
             this.#notificationsService.createNotification({
-              userId: id,
-              message: message,
+              userId: recipientId,
               type: 'CLOSED',
+              targetId: challenge.id,
+              targetUrl: `/challenges/${challenge.id}`,
+              message,
             }),
           ),
         );
-
-        await this.#challengeRepository.closeChallenge(challenge.id);
       }
+
       console.log(
         `[${currentTime.toLocaleString()}] 스케줄러: ${challenges.length}건 처리 완료`,
       );

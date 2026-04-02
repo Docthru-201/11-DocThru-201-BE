@@ -134,14 +134,89 @@ export class ChallengesService {
     return challenge;
   }
 
-  async updateChallenge(id, updateData) {
-    const challenge = await this.#findChallengeOrThrow(id);
-    return await this.#challengeRepository.update(id, updateData);
+  async updateChallenge(id, updateData, userId) {
+    await this.#findChallengeOrThrow(id);
+
+    const updatedChallenge = await this.#challengeRepository.update(
+      id,
+      updateData,
+    );
+
+    if (!this.#notificationsService) {
+      return updatedChallenge;
+    }
+
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        id,
+      );
+
+    if (!challengeInfo) {
+      return updatedChallenge;
+    }
+
+    const changedAt = new Date(updatedChallenge.updatedAt || new Date())
+      .toISOString()
+      .slice(0, 10);
+
+    const recipientIds = [
+      challengeInfo.authorId,
+      ...challengeInfo.participants.map((participant) => participant.userId),
+    ].filter((recipientId) => recipientId && recipientId !== userId);
+
+    const uniqueRecipientIds = [...new Set(recipientIds)];
+
+    const reasonText = updateData.reason ? ` 사유: ${updateData.reason}` : '';
+
+    const message = updateData.reason
+      ? `'${updatedChallenge.title}' 챌린지가 수정되었어요. ${reasonText}`
+      : `'${updatedChallenge.title}' 챌린지가 수정되었어요. `;
+
+    for (const recipientId of uniqueRecipientIds) {
+      await this.#notificationsService.createNotification({
+        userId: recipientId,
+        type: 'ADMIN_ACTION',
+        targetId: updatedChallenge.id,
+        targetUrl: `/challenges/${updatedChallenge.id}`,
+        message,
+      });
+    }
+
+    return updatedChallenge;
   }
 
-  async deleteChallenge(id) {
-    await this.#findChallengeOrThrow(id);
+  async deleteChallenge(id, userId) {
+    const challenge = await this.#findChallengeOrThrow(id);
+
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        id,
+      );
+
     await this.#challengeRepository.delete(id);
+
+    if (!this.#notificationsService || !challengeInfo) {
+      return;
+    }
+
+    const deletedAt = new Date().toISOString().slice(0, 10);
+
+    const recipientIds = [
+      challengeInfo.authorId,
+      ...challengeInfo.participants.map((participant) => participant.userId),
+    ].filter((recipientId) => recipientId && recipientId !== userId);
+
+    const uniqueRecipientIds = [...new Set(recipientIds)];
+
+    for (const recipientId of uniqueRecipientIds) {
+      await this.#notificationsService.createNotification({
+        userId: recipientId,
+        type: 'ADMIN_ACTION',
+        targetId: id,
+        targetUrl: `/challenges/${id}`,
+        message: `'${challenge.title}' 챌린지가 삭제되었어요. (${deletedAt})`,
+      });
+    }
   }
 
   async getChallengesByUser(userId) {
@@ -249,14 +324,7 @@ export class ChallengesService {
   }
 
   async updateChallengeStatus(challengeId, data, userId) {
-    const challenge = await this.#findChallengeOrThrow(challengeId);
-    // 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
-    // if (challenge.isClosed) {
-    //   const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
-    //   error.statusCode = HTTP_STATUS.FORBIDDEN;
-
-    //   throw error;
-    // }
+    await this.#findChallengeOrThrow(challengeId);
 
     const updatedChallenge =
       await this.#challengeRepository.updateChallengeStatus(challengeId, data);
@@ -265,25 +333,53 @@ export class ChallengesService {
       return updatedChallenge;
     }
 
-    const { status, declineReason, title, id } = updatedChallenge;
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        challengeId,
+      );
 
-    const message = ['REJECTED', 'DELETED'].includes(status)
-      ? this.#notificationsService.notificationMessages.adminReviewResult(
-          title,
-          status,
-          declineReason,
-        )
-      : this.#notificationsService.notificationMessages.challengeProgressUpdate(
-          title,
-          status,
-        );
+    if (!challengeInfo) {
+      return updatedChallenge;
+    }
 
-    if (challenge.authorId && challenge.authorId !== userId) {
+    const changedAt = new Date(updatedChallenge.updatedAt || new Date())
+      .toISOString()
+      .slice(0, 10);
+
+    const recipientIds = [
+      challengeInfo.authorId,
+      ...challengeInfo.participants.map((participant) => participant.userId),
+    ].filter((recipientId) => recipientId && recipientId !== userId);
+
+    const uniqueRecipientIds = [...new Set(recipientIds)];
+
+    let message = `'${updatedChallenge.title}' 챌린지 상태가 변경되었어요.`;
+
+    if (updatedChallenge.status === 'APPROVED') {
+      message = `'${updatedChallenge.title}' 챌린지가 승인되었어요.`;
+    } else if (updatedChallenge.status === 'REJECTED') {
+      const reasonText = updatedChallenge.declineReason
+        ? ` 사유: ${updatedChallenge.declineReason}`
+        : '';
+      message = `'${updatedChallenge.title}' 챌린지가 거절되었어요. ${reasonText}`;
+    } else if (updatedChallenge.status === 'DELETED') {
+      const reasonText = updatedChallenge.declineReason
+        ? ` 사유: ${updatedChallenge.declineReason}`
+        : '';
+      message = `'${updatedChallenge.title}' 챌린지가 삭제되었어요. ${reasonText}`;
+    } else {
+      const reasonText = updatedChallenge.declineReason
+        ? ` 사유: ${updatedChallenge.declineReason}`
+        : '';
+      message = `'${updatedChallenge.title}' 챌린지 정보가 변경되었어요. ${reasonText}`;
+    }
+
+    for (const recipientId of uniqueRecipientIds) {
       await this.#notificationsService.createNotification({
-        userId: challenge.authorId,
-        type: 'CHALLENGE_APPROVAL_RESULT',
-        targetId: id,
-        targetUrl: `/challenges/${id}`,
+        userId: recipientId,
+        type: 'ADMIN_ACTION',
+        targetId: updatedChallenge.id,
+        targetUrl: `/challenges/${updatedChallenge.id}`,
         message,
       });
     }
