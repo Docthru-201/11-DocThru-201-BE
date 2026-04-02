@@ -133,7 +133,24 @@ export class ChallengesService {
 
   async updateChallenge(id, updateData, actor) {
     requireAdmin(actor);
-    await this.#findChallengeOrThrow(id);
+    const challenge = await this.#findChallengeOrThrow(id);
+
+    if (this.#notificationsService) {
+      const message =
+        this.#notificationsService.notificationMessages?.challengeUpdate?.(
+          challenge.title,
+        );
+      if (message) {
+        await this.#notificationsService.createNotification({
+          userId: challenge.authorId,
+          type: 'ADMIN_ACTION',
+          targetId: id,
+          targetUrl: `/challenges/${id}`,
+          message,
+        });
+      }
+    }
+
     return await this.#challengeRepository.update(id, updateData);
   }
 
