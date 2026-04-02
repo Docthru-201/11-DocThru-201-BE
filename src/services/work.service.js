@@ -85,27 +85,35 @@ export class WorksService {
     // 3. 중복 작업물 확인
     await this.isWorkDuplicate(challengeId, userId);
 
-    // 5. 작업물 생성
+    // 4. 작업물 생성
     const result = await this.#workRepository.createWork(challengeId, userId);
 
-    // 6. 챌린지 작성자에게 알림 발송 (본인이 아닐 때만)
-    if (challenge.authorId !== userId) {
-      this.#sendNotificationSilently(challenge.authorId, challenge.title);
+    // 5. 챌린지 작성자 + 참가자에게 알림 발송 (작업물 작성자는 제외)
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        challengeId,
+      );
+
+    if (challengeInfo && this.#notificationsService) {
+      const recipientIds = [
+        challengeInfo.authorId,
+        ...challengeInfo.participants.map((participant) => participant.userId),
+      ].filter((recipientId) => recipientId && recipientId !== userId);
+
+      const uniqueRecipientIds = [...new Set(recipientIds)];
+
+      for (const recipientId of uniqueRecipientIds) {
+        await this.#notificationsService.createNotification({
+          userId: recipientId,
+          type: 'NEW_WORK',
+          targetId: result.id,
+          targetUrl: `/challenges/${challengeId}`,
+          message: `'${challenge.title}' 챌린지에 새로운 작업물이 등록되었어요`,
+        });
+      }
     }
 
     return result;
-  }
-
-  async #sendNotificationSilently(authorId, title) {
-    try {
-      const message =
-        this.#notificationsService.notificationMessages.newWork(title);
-      await this.#notificationsService.createNotification(authorId, message);
-    } catch (notiError) {
-      console.error(
-        `[Notification Error] User: ${authorId} - ${notiError.message}`,
-      );
-    }
   }
 
   // 이미 등록된 작업물 확인
@@ -140,15 +148,42 @@ export class WorksService {
 
     if (action === 'SUBMIT') {
       if (work.status === 'DRAFT') {
-        // 제출하기: DRAFT → SUBMITTED
         updateData.status = 'SUBMITTED';
         updateData.submittedAt = new Date();
       }
-      // 수정하기: 이미 SUBMITTED이면 status/submittedAt 변경 없이 content만 업데이트
     }
-    // 임시저장: action 없음 → status는 DRAFT 그대로 유지
 
-    return this.#workRepository.update(workId, updateData);
+    const updatedWork = await this.#workRepository.update(workId, updateData);
+
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        work.challengeId,
+      );
+
+    if (challengeInfo && this.#notificationsService) {
+      const changedAt = new Date(updatedWork.updatedAt)
+        .toISOString()
+        .slice(0, 10);
+
+      const recipientIds = [
+        challengeInfo.authorId,
+        ...challengeInfo.participants.map((participant) => participant.userId),
+      ].filter((recipientId) => recipientId && recipientId !== userId);
+
+      const uniqueRecipientIds = [...new Set(recipientIds)];
+
+      for (const recipientId of uniqueRecipientIds) {
+        await this.#notificationsService.createNotification({
+          userId: recipientId,
+          type: 'ADMIN_ACTION',
+          targetId: updatedWork.id,
+          targetUrl: `/challenges/${work.challengeId}`,
+          message: `'${challengeInfo.title}' 챌린지의 작업물이 수정되었어요.`,
+        });
+      }
+    }
+
+    return updatedWork;
   }
 
   async getMyWork(challengeId, userId) {
@@ -180,6 +215,11 @@ export class WorksService {
       throw new ForbiddenException('삭제 권한이 없습니다.');
     }
 
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        work.challengeId,
+      );
+
     await this.#workRepository.delete(workId);
 
     await this.#participantRepository.deleteByUserAndChallenge(
@@ -187,6 +227,27 @@ export class WorksService {
       work.challengeId,
     );
     await this.#gradeService.updateGradeIfNeeded(userId);
+
+    if (challengeInfo && this.#notificationsService) {
+      const deletedAt = new Date().toISOString().slice(0, 10);
+
+      const recipientIds = [
+        challengeInfo.authorId,
+        ...challengeInfo.participants.map((participant) => participant.userId),
+      ].filter((recipientId) => recipientId && recipientId !== userId);
+
+      const uniqueRecipientIds = [...new Set(recipientIds)];
+
+      for (const recipientId of uniqueRecipientIds) {
+        await this.#notificationsService.createNotification({
+          userId: recipientId,
+          type: 'ADMIN_ACTION',
+          targetId: workId,
+          targetUrl: `/challenges/${work.challengeId}`,
+          message: `'${challengeInfo.title}' 챌린지의 작업물이 삭제되었어요. (${deletedAt})`,
+        });
+      }
+    }
   }
 
   async getWorkById(workId, userId) {
