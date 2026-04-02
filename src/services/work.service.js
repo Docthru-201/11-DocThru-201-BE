@@ -202,7 +202,7 @@ export class WorksService {
     );
 
     if (!work) {
-      throw new NotFoundException('작업물이 없습니다.');
+      return null;
     }
 
     const isLiked = !!(await this.#likeRepository.findLike(work.id, userId));
