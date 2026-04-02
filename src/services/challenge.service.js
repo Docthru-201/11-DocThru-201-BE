@@ -135,7 +135,24 @@ export class ChallengesService {
   }
 
   async updateChallenge(id, updateData) {
-    const challenge = await this.#findChallengeOrThrow(id);
+    const challenge = await this.#challengeRepository.findChallengeById(id);
+    if (!challenge) {
+      const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND);
+      error.statusCode = HTTP_STATUS.NOT_FOUND;
+      throw error;
+    }
+    const message =
+      this.#notificationsService.notificationMessages.challengeUpdate(
+        challenge.title,
+      );
+    await this.#notificationsService.createNotification({
+      userId: challenge.authorId,
+      type: 'ADMIN_ACTION',
+      targetId: id,
+      targetUrl: `/challenges/${id}`,
+      message,
+    });
+
     return await this.#challengeRepository.update(id, updateData);
   }
 
