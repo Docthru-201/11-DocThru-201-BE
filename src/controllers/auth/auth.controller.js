@@ -121,18 +121,17 @@ export class AuthController extends BaseController {
     }
     res.clearCookie('oauth_state');
 
-    const {
-      user: _user,
-      accessToken,
-      refreshToken,
-    } = await this.#authService.oauthLogin(provider, code);
+    const { user, accessToken, refreshToken } =
+      await this.#authService.oauthLogin(provider, code);
 
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
 
     const clientBase =
       process.env.CLIENT_BASE_URL?.trim()?.replace(/\/$/, '') ||
       'http://localhost:3000';
-    return res.redirect(`${clientBase}/challenges`);
+    const pathAfterLogin =
+      user.role === 'ADMIN' ? '/admin/management' : '/challenges';
+    return res.redirect(`${clientBase}${pathAfterLogin}`);
   }
 
   async me(req, res) {

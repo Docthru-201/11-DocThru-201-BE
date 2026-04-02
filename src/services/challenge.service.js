@@ -149,26 +149,37 @@ export class ChallengesService {
   }
 
   async getMyChallengesForTabs(userId, tab) {
+    const normalizedTab =
+      tab === 'applied' || tab === 'done' || tab === 'participating'
+        ? tab
+        : 'participating';
+
     let rows;
-    if (tab === 'applied') {
+    if (normalizedTab === 'applied') {
+      // 신청한 챌린지: 내가 직접 신청(작성)한 챌린지 중 승인 대기
       const authored =
         await this.#challengeRepository.findByAuthorIdForMyList(userId);
       rows = authored.filter((c) => c.status === 'PENDING');
-    } else if (tab === 'participating') {
-      const joined =
-        await this.#challengeRepository.findByParticipantUserIdForMyList(
-          userId,
-        );
-      rows = joined.filter((c) => !c.isClosed);
+    } else if (normalizedTab === 'done') {
+      // 완료: 내가 work를 제출한 챌린지 중 마감됨
+      rows = await this.#challengeRepository.findBySubmittedWorkForMyList(
+        userId,
+        {
+          isClosed: true,
+        },
+      );
     } else {
-      const joined =
-        await this.#challengeRepository.findByParticipantUserIdForMyList(
-          userId,
-        );
-      rows = joined.filter((c) => c.isClosed);
+      // 참여중: 내가 work를 제출한 챌린지 중 아직 진행중(마감 전)
+      rows = await this.#challengeRepository.findBySubmittedWorkForMyList(
+        userId,
+        {
+          isClosed: false,
+        },
+      );
     }
 
-    const isParticipantTab = tab === 'participating' || tab === 'done';
+    const isParticipantTab =
+      normalizedTab === 'participating' || normalizedTab === 'done';
     const items = rows.map((row) => ({
       ...this.#mapChallengeListItem(row),
       isParticipating: isParticipantTab,

@@ -34,7 +34,7 @@ export class ChallengesController extends BaseController {
     this.router.get(
       '/:id',
       needsLogin,
-       validate('params', challengeIdParamSchema),
+      validate('params', challengeIdParamSchema),
       (req, res) => this.findById(req, res),
     );
 
@@ -71,7 +71,7 @@ export class ChallengesController extends BaseController {
   }
   // Parameter통일 필요(id -> challengeId로 swlee)
   async findById(req, res) {
-    const { id : challengeId } = req.params;
+    const { id: challengeId } = req.params;
     const challenge =
       await this.#challengesService.getChallengeDetail(challengeId);
     res.status(HTTP_STATUS.OK).json(challenge);
