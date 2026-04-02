@@ -55,7 +55,7 @@ export class WorkRepository {
       submittedAt: work.submittedAt,
       createdAt: work.createdAt,
       updatedAt: work.updatedAt,
-      likeCount: work.likeCount,
+      likeCount: work._count.likes,
       isLiked: false,
     }));
   }

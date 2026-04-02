@@ -24,7 +24,7 @@ export class AuthMiddleware {
       if (accessPayload?.userId) {
         req.user = {
           id: accessPayload.userId,
-          role: accessPayload.role,        
+          role: accessPayload.role,
           nickname: accessPayload.nickname,
         };
 
@@ -41,12 +41,11 @@ export class AuthMiddleware {
       this.#cookieProvider.setAuthCookies(res, tokens);
       req.user = {
         id: user.id,
-        role: user.role,     
+        role: user.role,
         nickname: user.nickname,
       };
 
       return next();
-
     } catch {
       this.#cookieProvider.clearAuthCookies(res);
       return next();
