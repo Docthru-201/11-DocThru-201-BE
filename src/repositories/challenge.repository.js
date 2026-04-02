@@ -213,4 +213,42 @@ export class ChallengeRepository {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async findBySubmittedWorkForMyList(userId, { isClosed }) {
+    // DB에는 status 컬럼이 있으나, 로컬 generated Prisma Client가 스키마와 어긋난 경우
+    // prisma.work.findMany({ where: { status } })가 실패할 수 있어 Raw SQL로 조회합니다.
+    // 클라이언트 정합: `pnpm prisma:generate` (DATABASE_URL 설정 후)
+    const submitted = await this.#prisma.$queryRaw`
+      SELECT DISTINCT w."challengeId"
+      FROM "Work" w
+      WHERE w.status = 'SUBMITTED'::"WorkStatus"
+        AND (
+          w."userId" = ${userId}
+          OR EXISTS (
+            SELECT 1 FROM "Participant" p
+            WHERE p.id = w."participantId" AND p."userId" = ${userId}
+          )
+        )
+    `;
+    const challengeIds = [...new Set(submitted.map((row) => row.challengeId))];
+    if (challengeIds.length === 0) {
+      return [];
+    }
+    return await this.#prisma.challenge.findMany({
+      where: {
+        id: { in: challengeIds },
+        deletedAt: null,
+        isClosed,
+      },
+      include: {
+        author: {
+          select: { id: true, nickname: true, image: true },
+        },
+        _count: {
+          select: { participants: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }
