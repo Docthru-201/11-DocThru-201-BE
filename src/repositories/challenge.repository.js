@@ -130,10 +130,10 @@ export class ChallengeRepository {
   }
 
   // 챌린지 정보 업데이트 (상태 변경, 내용 수정 통합)
-  async updateChallengeStatus(challengeId, updateData) {
+  async updateChallengeStatus(challengeId, data) {
     return await this.#prisma.challenge.update({
       where: { id: challengeId },
-      data: updateData,
+      data,
     });
   }
 
@@ -157,6 +157,22 @@ export class ChallengeRepository {
         role: true,
         email: true,
         nickname: true,
+      },
+    });
+  }
+
+  async findNotificationRecipientsByChallengeId(challengeId) {
+    return await this.#prisma.challenge.findUnique({
+      where: { id: challengeId },
+      select: {
+        id: true,
+        title: true,
+        authorId: true,
+        participants: {
+          select: {
+            userId: true,
+          },
+        },
       },
     });
   }

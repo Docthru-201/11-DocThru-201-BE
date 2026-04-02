@@ -2,11 +2,21 @@ export class CommentsService {
   #commentRepository;
   #workRepository;
   #userRepository;
+  #challengeRepository;
+  #notificationsService;
 
-  constructor({ commentRepository, workRepository, userRepository }) {
+  constructor({
+    commentRepository,
+    workRepository,
+    userRepository,
+    challengeRepository,
+    notificationsService,
+  }) {
     this.#commentRepository = commentRepository;
     this.#workRepository = workRepository;
     this.#userRepository = userRepository;
+    this.#challengeRepository = challengeRepository;
+    this.#notificationsService = notificationsService;
   }
 
   async listCommentsByWorkId(workId) {
@@ -25,23 +35,109 @@ export class CommentsService {
       if (!parent) throw new Error('부모 댓글이 존재하지 않습니다.');
     }
 
-    return this.#commentRepository.create({
+    const comment = await this.#commentRepository.create({
       content: data.content,
       workId,
       authorId: userId,
       parentId: data.parentId || null,
     });
+
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        work.challengeId,
+      );
+
+    if (challengeInfo && this.#notificationsService) {
+      const recipientIds = [
+        challengeInfo.authorId,
+        ...challengeInfo.participants.map((participant) => participant.userId),
+      ].filter((recipientId) => recipientId && recipientId !== userId);
+
+      const uniqueRecipientIds = [...new Set(recipientIds)];
+
+      for (const recipientId of uniqueRecipientIds) {
+        await this.#notificationsService.createNotification({
+          userId: recipientId,
+          type: 'NEW_COMMENT',
+          targetId: comment.id,
+          targetUrl: `/works/${workId}`,
+          message: `'${challengeInfo.title}' 챌린지에 댓글이 등록되었어요`,
+        });
+      }
+    }
+
+    return comment;
   }
 
   async updateComment(commentId, userId, data) {
     const comment = await this.#commentRepository.findById(commentId);
     if (!comment) throw new Error('댓글이 존재하지 않습니다.');
-    if (comment.authorId !== userId) throw new Error('수정 권한이 없습니다.');
 
-    return this.#commentRepository.update(commentId, { content: data.content });
+    const user = await this.#userRepository.findUserById(userId);
+    const isAdmin = user?.role === 'ADMIN';
+    const isOwner = comment.authorId === userId;
+
+    if (!isAdmin && !isOwner) throw new Error('수정 권한이 없습니다.');
+
+    const updatedComment = await this.#commentRepository.update(commentId, {
+      content: data.content,
+    });
+
+    if (!this.#notificationsService) {
+      return updatedComment;
+    }
+
+    if (isAdmin) {
+      if (comment.authorId !== userId) {
+        const reasonText = data.reason ? ` 사유: ${data.reason}` : '';
+
+        await this.#notificationsService.createNotification({
+          userId: comment.authorId,
+          type: 'ADMIN_ACTION',
+          targetId: updatedComment.id,
+          targetUrl: `/works/${comment.workId}`,
+          message: `작성한 피드백이 관리자에 의해 수정되었어요. ${reasonText}`,
+        });
+      }
+
+      return updatedComment;
+    }
+
+    const work = await this.#workRepository.findById(comment.workId);
+    if (!work) {
+      return updatedComment;
+    }
+
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        work.challengeId,
+      );
+
+    if (!challengeInfo) {
+      return updatedComment;
+    }
+
+    const recipientIds = [
+      challengeInfo.authorId,
+      ...challengeInfo.participants.map((participant) => participant.userId),
+    ].filter((recipientId) => recipientId && recipientId !== userId);
+
+    const uniqueRecipientIds = [...new Set(recipientIds)];
+
+    for (const recipientId of uniqueRecipientIds) {
+      await this.#notificationsService.createNotification({
+        userId: recipientId,
+        type: 'NEW_COMMENT',
+        targetId: updatedComment.id,
+        targetUrl: `/works/${comment.workId}`,
+        message: `'${challengeInfo.title}' 챌린지의 댓글이 수정되었어요.`,
+      });
+    }
+
+    return updatedComment;
   }
 
-  async deleteComment(commentId, userId) {
+  async deleteComment(commentId, userId, data = {}) {
     const comment = await this.#commentRepository.findById(commentId);
 
     if (!comment) throw new Error('댓글이 존재하지 않습니다.');
@@ -52,7 +148,15 @@ export class CommentsService {
 
     if (!isAdmin && !isOwner) throw new Error('삭제 권한이 없습니다.');
 
-    // ✅ 답글이 있으면 soft delete, 없으면 hard delete
+    const work = await this.#workRepository.findById(comment.workId);
+    const challengeInfo = work
+      ? await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+          work.challengeId,
+        )
+      : null;
+
+    const deletedAt = new Date().toISOString().slice(0, 10);
+
     const hasReplies = comment.replies && comment.replies.length > 0;
 
     if (hasReplies) {
@@ -60,14 +164,51 @@ export class CommentsService {
     } else {
       await this.#commentRepository.delete(commentId);
 
-      // ✅ 방법 3: 답글 삭제 후 부모 댓글 확인
       if (comment.parentId) {
         const parent = await this.#commentRepository.findById(comment.parentId);
 
-        // 부모 댓글이 soft delete 상태이고 남은 답글이 0개이면 hard delete
         if (parent && parent.deletedAt && parent.replies.length === 0) {
           await this.#commentRepository.delete(comment.parentId);
         }
+      }
+    }
+
+    if (!this.#notificationsService) {
+      return;
+    }
+
+    if (isAdmin) {
+      if (comment.authorId !== userId) {
+        const reasonText = data.reason ? ` 사유: ${data.reason}` : '';
+
+        await this.#notificationsService.createNotification({
+          userId: comment.authorId,
+          type: 'ADMIN_ACTION',
+          targetId: commentId,
+          targetUrl: `/works/${comment.workId}`,
+          message: `작성한 피드백이 관리자에 의해 삭제되었어요. (${deletedAt})${reasonText}`,
+        });
+      }
+
+      return;
+    }
+
+    if (challengeInfo) {
+      const recipientIds = [
+        challengeInfo.authorId,
+        ...challengeInfo.participants.map((participant) => participant.userId),
+      ].filter((recipientId) => recipientId && recipientId !== userId);
+
+      const uniqueRecipientIds = [...new Set(recipientIds)];
+
+      for (const recipientId of uniqueRecipientIds) {
+        await this.#notificationsService.createNotification({
+          userId: recipientId,
+          type: 'NEW_COMMENT',
+          targetId: commentId,
+          targetUrl: `/works/${comment.workId}`,
+          message: `'${challengeInfo.title}' 챌린지의 댓글이 삭제되었어요. (${deletedAt})`,
+        });
       }
     }
   }
