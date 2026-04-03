@@ -130,8 +130,6 @@ export class WorksService {
     }
   }
 
-  // action: 'SUBMIT' → 제출하기 (DRAFT→SUBMITTED) 또는 수정하기 (이미 SUBMITTED)
-  // action 없음 → 임시저장 (DRAFT 유지, content만 업데이트)
   async updateWork(workId, userId, { content, action, title }) {
     const work = await this.#workRepository.findById(workId);
 
@@ -144,47 +142,21 @@ export class WorksService {
     }
 
     const updateData = {};
-    if (content !== undefined) updateData.content = content;
     if (title !== undefined) updateData.title = title;
 
     if (action === 'SUBMIT') {
+      // 제출하기/수정하기: draftContent → content로 반영
+      if (content !== undefined) updateData.content = content;
+      updateData.draftContent = null;
       if (work.status === 'DRAFT') {
         updateData.status = 'SUBMITTED';
         updateData.submittedAt = new Date();
       }
+      // 수정하기: 이미 SUBMITTED이면 status/submittedAt 변경 없이 content만 업데이트
     }
+    // 임시저장: action 없음 → status는 DRAFT 그대로 유지
 
-    const updatedWork = await this.#workRepository.update(workId, updateData);
-
-    const challengeInfo =
-      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
-        work.challengeId,
-      );
-
-    if (challengeInfo && this.#notificationsService) {
-      const changedAt = new Date(updatedWork.updatedAt)
-        .toISOString()
-        .slice(0, 10);
-
-      const recipientIds = [
-        challengeInfo.authorId,
-        ...challengeInfo.participants.map((participant) => participant.userId),
-      ].filter((recipientId) => recipientId && recipientId !== userId);
-
-      const uniqueRecipientIds = [...new Set(recipientIds)];
-
-      for (const recipientId of uniqueRecipientIds) {
-        await this.#notificationsService.createNotification({
-          userId: recipientId,
-          type: 'ADMIN_ACTION',
-          targetId: updatedWork.id,
-          targetUrl: `/challenges/${work.challengeId}`,
-          message: `'${challengeInfo.title}' 챌린지의 작업물이 수정되었어요.`,
-        });
-      }
-    }
-
-    return updatedWork;
+    return this.#workRepository.update(workId, updateData);
   }
 
   async getMyWork(challengeId, userId) {

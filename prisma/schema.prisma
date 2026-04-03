@@ -197,7 +197,8 @@ model Work {
     challengeId   String
     participantId String?
 
-    content String @db.Text
+    content      String  @db.Text
+    draftContent String? @db.Text
 
     status      WorkStatus @default(DRAFT)
     submittedAt DateTime?
