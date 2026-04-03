@@ -1,5 +1,9 @@
 import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
-import { ForbiddenException, NotFoundException } from '#exceptions';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '#exceptions';
 
 export class WorksService {
   #workRepository;
