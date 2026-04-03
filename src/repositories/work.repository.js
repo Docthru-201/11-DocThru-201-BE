@@ -26,6 +26,7 @@ export class WorkRepository {
             id: true,
             nickname: true,
             grade: true,
+            image: true,
           },
         },
         challenge: {
@@ -47,6 +48,7 @@ export class WorkRepository {
         authorId: work.user.id,
         authorNickname: work.user.nickname,
         grade: work.user.grade,
+        image: work.user.image,
       },
       challengeId: work.challengeId,
       challengeTitle: work.challenge.title,
