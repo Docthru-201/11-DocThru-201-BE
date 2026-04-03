@@ -1,9 +1,19 @@
 import { Prisma } from '#generated/prisma/client.ts';
 import { ERROR_MESSAGE, HTTP_STATUS, PRISMA_ERROR } from '#constants';
 import { HttpException } from '#exceptions';
+import { redactForLog } from '../common/utils/log-mask.util.js';
+import { securityAuditLogger } from '../common/utils/security-audit.js';
 
 export const errorHandler = (err, req, res, _next) => {
   console.error(err.stack);
+  if (!(err instanceof HttpException) && req) {
+    securityAuditLogger.error({
+      tag: 'unhandled_error_context',
+      method: req.method,
+      path: req.originalUrl,
+      body: redactForLog(req.body),
+    });
+  }
 
   if (err instanceof HttpException) {
     return res.status(err.statusCode).json({

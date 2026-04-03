@@ -9,6 +9,16 @@ const envSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   CORS_ORIGINS: z.string().optional().default(''),
+  // 리버스 프록시(로드밸런서) 홉 수
+  TRUST_PROXY: z.preprocess(
+    (v) => (v === '' || v === undefined ? 0 : Number(v)),
+    z.number().int().min(0).max(10),
+  ),
+  /** HTTP → HTTPS 리다이렉트 (production에서만, 프록시 뒤면 TRUST_PROXY 설정) */
+  FORCE_HTTPS: z.preprocess(
+    (v) => (v === undefined || v === '' ? 'false' : v),
+    z.enum(['true', 'false']),
+  ),
 });
 
 const parseEnvironment = () => {
@@ -20,6 +30,8 @@ const parseEnvironment = () => {
       JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
       JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
       CORS_ORIGINS: process.env.CORS_ORIGINS,
+      TRUST_PROXY: process.env.TRUST_PROXY,
+      FORCE_HTTPS: process.env.FORCE_HTTPS,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

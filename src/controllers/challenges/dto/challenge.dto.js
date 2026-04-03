@@ -14,6 +14,10 @@ const {
 
 export const challengeIdParamSchema = idParamSchema;
 
+export const challengeDetailParamSchema = z.object({
+  challengeId: ulidSchema,
+});
+
 // 커서 기반 페이지네이션
 export const listChallengesQuerySchema = z.object({
   cursor: ulidSchema

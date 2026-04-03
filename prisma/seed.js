@@ -1,7 +1,7 @@
 import { PrismaClient } from '#generated/prisma/client.ts';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { fakerKO as faker } from '@faker-js/faker';
-import bcrypt from 'bcrypt';
+import { hashPasswordArgon2id } from '../src/common/utils/argon2-hash.js';
 import crypto from 'node:crypto';
 import * as seedConstants from './seed.constants.js';
 
@@ -361,7 +361,9 @@ class Seeder {
 
     console.log('🌱 시딩 시작...');
 
-    this.#hashedPassword = await bcrypt.hash(seedConstants.SEED_PASSWORD, 10);
+    this.#hashedPassword = await hashPasswordArgon2id(
+      seedConstants.SEED_PASSWORD,
+    );
 
     await this.#resetDb();
     console.log('🗑️ 기존 데이터 삭제 완료');

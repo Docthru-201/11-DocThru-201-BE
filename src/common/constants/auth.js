@@ -12,3 +12,6 @@ export const REGEX = {
 };
 export const REFRESH_TOKEN_EXPIRES_DAYS = 7;
 export const OAUTH_STATE_EXPIRES_MS = 1000 * 60 * 5; // 5분
+
+/** 비밀번호 재설정 토큰 만료 (짧은 만료 권장) */
+export const PASSWORD_RESET_TOKEN_EXPIRES_MS = 1000 * 60 * 60; // 1시간

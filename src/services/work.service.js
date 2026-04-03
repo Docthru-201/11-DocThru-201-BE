@@ -1,8 +1,8 @@
 import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
 import {
+  BadRequestException,
   ForbiddenException,
   NotFoundException,
-  BadRequestException,
 } from '#exceptions';
 
 export class WorksService {
@@ -46,7 +46,6 @@ export class WorksService {
       challengeId,
       page,
       pageSize,
-      userId,
     );
     const currentWorkIdList = works.map((work) => work.workId);
     const userLikeRecords = await this.#likeRepository.findManyLiked({

@@ -1,5 +1,4 @@
-// role.middleware.js
-
+/** 관리자 전용 라우트: auth 미들웨어 이후 req.user.role === 'ADMIN' 인지 검사 */
 export function adminValidator(req, res, next) {
   const role = req.user?.role;
 

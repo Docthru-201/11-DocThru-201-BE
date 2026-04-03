@@ -1,5 +1,6 @@
 import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
 import { getCursorParams, parseCursorResult } from '#utils';
+import { requireAdmin } from '../common/utils/permission.util.js';
 
 export class ChallengesService {
   #challengeRepository;
@@ -107,29 +108,30 @@ export class ChallengesService {
   async createChallenge(data) {
     const challenge = await this.#challengeRepository.create(data);
 
-    console.log('notificationsService exists:', !!this.#notificationsService);
+    await this.#challengeRepository.createParticipant({
+      userId: data.authorId,
+      challengeId: challenge.id,
+    });
+
     if (this.#notificationsService) {
       const admin = await this.#challengeRepository.findAdminUser();
-      console.log('admin:', admin);
 
       if (admin && admin.id !== data.authorId) {
-        const notification =
-          await this.#notificationsService.createNotification({
-            userId: admin.id,
-            type: 'ADMIN_ACTION',
-            targetId: challenge.id,
-            targetUrl: `/challenges/${challenge.id}`,
-            message: `'${challenge.title}' 챌린지가 등록되었어요`,
-          });
-
-        console.log('created notification:', notification);
+        await this.#notificationsService.createNotification({
+          userId: admin.id,
+          type: 'ADMIN_ACTION',
+          targetId: challenge.id,
+          targetUrl: `/challenges/${challenge.id}`,
+          message: `'${challenge.title}' 챌린지가 등록되었어요`,
+        });
       }
     }
 
     return challenge;
   }
 
-  async updateChallenge(id, updateData, userId) {
+  async updateChallenge(id, updateData, actor) {
+    requireAdmin(actor);
     await this.#findChallengeOrThrow(id);
 
     const updatedChallenge = await this.#challengeRepository.update(
@@ -150,14 +152,10 @@ export class ChallengesService {
       return updatedChallenge;
     }
 
-    const changedAt = new Date(updatedChallenge.updatedAt || new Date())
-      .toISOString()
-      .slice(0, 10);
-
     const recipientIds = [
       challengeInfo.authorId,
       ...challengeInfo.participants.map((participant) => participant.userId),
-    ].filter((recipientId) => recipientId && recipientId !== userId);
+    ].filter((recipientId) => recipientId && recipientId !== actor.id);
 
     const uniqueRecipientIds = [...new Set(recipientIds)];
 
@@ -180,7 +178,8 @@ export class ChallengesService {
     return updatedChallenge;
   }
 
-  async deleteChallenge(id, userId) {
+  async deleteChallenge(id, actor) {
+    requireAdmin(actor);
     const challenge = await this.#findChallengeOrThrow(id);
 
     const challengeInfo =
@@ -199,7 +198,7 @@ export class ChallengesService {
     const recipientIds = [
       challengeInfo.authorId,
       ...challengeInfo.participants.map((participant) => participant.userId),
-    ].filter((recipientId) => recipientId && recipientId !== userId);
+    ].filter((recipientId) => recipientId && recipientId !== actor.id);
 
     const uniqueRecipientIds = [...new Set(recipientIds)];
 
@@ -274,7 +273,9 @@ export class ChallengesService {
     sort = '',
     keyword,
     userId,
+    actor,
   }) {
+    requireAdmin(actor);
     const offset = (page - 1) * pageSize;
 
     const options = {
@@ -289,19 +290,20 @@ export class ChallengesService {
     }
 
     const statusValues = ['pending', 'approved', 'rejected'];
+
     if (statusValues.includes(sort.toLowerCase())) {
       options.where.status = sort.toUpperCase();
-    }
+    } else {
+      const sortOptions = {
+        createdAt_asc: { createdAt: 'asc' },
+        createdAt_desc: { createdAt: 'desc' },
+        deadline_asc: { deadline: 'asc' },
+        deadline_desc: { deadline: 'desc' },
+      };
 
-    const sortOptions = {
-      createdAt_asc: { createdAt: 'asc' },
-      createdAt_desc: { createdAt: 'desc' },
-      deadline_asc: { deadline: 'asc' },
-      deadline_desc: { deadline: 'desc' },
-    };
-
-    if (sortOptions[sort]) {
-      options.orderBy = sortOptions[sort];
+      if (sortOptions[sort]) {
+        options.orderBy = sortOptions[sort];
+      }
     }
 
     if (keyword) {
@@ -314,12 +316,21 @@ export class ChallengesService {
     return await this.#challengeRepository.findAllChallenges(options);
   }
 
-  async getChallengeDetailById(challengeId) {
+  async getChallengeDetailById(challengeId, actor) {
+    requireAdmin(actor);
     return await this.#challengeRepository.findChallengeDetailById(challengeId);
   }
 
-  async updateChallengeStatus(challengeId, data, userId) {
+  async updateChallengeStatus(challengeId, data, actor) {
+    requireAdmin(actor);
     await this.#findChallengeOrThrow(challengeId);
+    // 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
+    // if (challenge.isClosed) {
+    //   const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
+    //   error.statusCode = HTTP_STATUS.FORBIDDEN;
+
+    //   throw error;
+    // }
 
     const updatedChallenge =
       await this.#challengeRepository.updateChallengeStatus(challengeId, data);
@@ -337,37 +348,38 @@ export class ChallengesService {
       return updatedChallenge;
     }
 
-    const changedAt = new Date(updatedChallenge.updatedAt || new Date())
-      .toISOString()
-      .slice(0, 10);
-
     const recipientIds = [
       challengeInfo.authorId,
       ...challengeInfo.participants.map((participant) => participant.userId),
-    ].filter((recipientId) => recipientId && recipientId !== userId);
+    ].filter((recipientId) => recipientId && recipientId !== actor.id);
 
     const uniqueRecipientIds = [...new Set(recipientIds)];
-    const statusMessages = {
-      APPROVED: '승인되었어요.',
-      REJECTED: '거절되었어요.',
-      DELETED: '삭제되었어요.',
-    };
 
-    const statusText =
-      statusMessages[updatedChallenge.status] || '정보가 변경되었어요.';
+    let message = `'${updatedChallenge.title}' 챌린지 상태가 변경되었어요.`;
 
-    const showReason =
-      updatedChallenge.status !== 'APPROVED' && updatedChallenge.declineReason;
-    const reasonText = showReason
-      ? ` 사유: ${updatedChallenge.declineReason}`
-      : '';
-
-    const message = `'${updatedChallenge.title}' 챌린지가 ${statusText}${reasonText}`;
+    if (updatedChallenge.status === 'APPROVED') {
+      message = `'${updatedChallenge.title}' 챌린지가 승인되었어요.`;
+    } else if (updatedChallenge.status === 'REJECTED') {
+      const reasonText = updatedChallenge.declineReason
+        ? ` 사유: ${updatedChallenge.declineReason}`
+        : '';
+      message = `'${updatedChallenge.title}' 챌린지가 거절되었어요. ${reasonText}`;
+    } else if (updatedChallenge.status === 'DELETED') {
+      const reasonText = updatedChallenge.declineReason
+        ? ` 사유: ${updatedChallenge.declineReason}`
+        : '';
+      message = `'${updatedChallenge.title}' 챌린지가 삭제되었어요. ${reasonText}`;
+    } else {
+      const reasonText = updatedChallenge.declineReason
+        ? ` 사유: ${updatedChallenge.declineReason}`
+        : '';
+      message = `'${updatedChallenge.title}' 챌린지 정보가 변경되었어요. ${reasonText}`;
+    }
 
     for (const recipientId of uniqueRecipientIds) {
       await this.#notificationsService.createNotification({
         userId: recipientId,
-        type: 'ADMIN_ACTION',
+        type: 'CHALLENGE_APPROVAL_RESULT',
         targetId: updatedChallenge.id,
         targetUrl: `/challenges/${updatedChallenge.id}`,
         message,
