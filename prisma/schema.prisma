@@ -73,8 +73,12 @@ model User {
     updatedAt DateTime  @updatedAt
     deletedAt DateTime?
 
-    refreshTokens RefreshToken[]
-    socials       SocialAccount[]
+    /// 반복 로그인 실패 등으로 일시 잠금 (만료 전에는 이메일 로그인 거부)
+    loginLockedUntil DateTime?
+
+    refreshTokens         RefreshToken[]
+    socials               SocialAccount[]
+    passwordResetTokens   PasswordResetToken[]
 
     participates Participant[]
     works        Work[]
@@ -111,6 +115,21 @@ model RefreshToken {
     createdAt DateTime @default(now())
 
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// 비밀번호 재설정: DB에는 토큰 해시만 저장, 만료·1회용(usedAt)
+model PasswordResetToken {
+    id String @id @default(ulid())
+
+    userId    String
+    tokenHash String   @unique
+    expiresAt DateTime
+    usedAt    DateTime?
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
 }
 
 model SocialAccount {

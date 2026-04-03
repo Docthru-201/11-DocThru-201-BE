@@ -1,9 +1,15 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
-import { validate, needsLogin, needsAdmin } from '#middlewares';
+import {
+  validate,
+  needsLogin,
+  needsAdmin,
+  auditAdminAction,
+} from '#middlewares';
 import {
   createChallengeSchema,
   challengeIdParamSchema,
+  listChallengesQuerySchema,
   updateChallengeSchema,
   myChallengesQuerySchema,
 } from './dto/challenge.dto.js';
@@ -21,7 +27,11 @@ export class ChallengesController extends BaseController {
   routes() {
     this.router.use('/:id/works', this.#worksController.routes());
     // 전체 목록 조회 (커서 기반 페이지네이션)
-    this.router.get('/', (req, res) => this.findAll(req, res));
+    this.router.get(
+      '/',
+      validate('query', listChallengesQuerySchema),
+      (req, res) => this.findAll(req, res),
+    );
 
     // `/:challengeId` 보다 먼저 등록 (그렇지 않으면 "me"가 id로 매칭됨)
     this.router.get(
@@ -58,6 +68,7 @@ export class ChallengesController extends BaseController {
       '/:id',
       needsLogin,
       needsAdmin,
+      auditAdminAction,
       validate('params', challengeIdParamSchema),
       (req, res) => this.delete(req, res),
     );
@@ -94,6 +105,7 @@ export class ChallengesController extends BaseController {
     const updateChallenge = await this.#challengesService.updateChallenge(
       id,
       updateData,
+      req.user,
     );
     res.status(HTTP_STATUS.OK).json(updateChallenge);
   }
@@ -101,7 +113,7 @@ export class ChallengesController extends BaseController {
   async delete(req, res) {
     const { id } = req.params;
 
-    await this.#challengesService.deleteChallenge(id);
+    await this.#challengesService.deleteChallenge(id, req.user);
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 

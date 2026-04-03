@@ -1,8 +1,8 @@
 import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
 import {
+  BadRequestException,
   ForbiddenException,
   NotFoundException,
-  BadRequestException,
 } from '#exceptions';
 
 export class WorksService {
@@ -30,12 +30,8 @@ export class WorksService {
   }
 
   // 챌린지에 속한 모든 작업물을 페이지네이션 및 각 작업물의 좋아요 상태 포함하여 반환
+  // userId 없음(비로그인): 목록만 반환, isLiked는 모두 false
   async getAllWorks(userId, challengeId, page, pageSize) {
-    if (!userId) {
-      const error = new Error(ERROR_MESSAGE.USER_ID_REQUIRED);
-      error.statusCode = HTTP_STATUS.BAD_REQUEST;
-      throw error;
-    }
     if (!challengeId) {
       const error = new Error(ERROR_MESSAGE.CHALLENGE_ID_REQUIRED);
       error.statusCode = HTTP_STATUS.BAD_REQUEST;
@@ -46,8 +42,15 @@ export class WorksService {
       challengeId,
       page,
       pageSize,
-      userId,
     );
+
+    if (!userId) {
+      return works.map((work) => ({
+        ...work,
+        isLiked: false,
+      }));
+    }
+
     const currentWorkIdList = works.map((work) => work.workId);
     const userLikeRecords = await this.#likeRepository.findManyLiked({
       userId,

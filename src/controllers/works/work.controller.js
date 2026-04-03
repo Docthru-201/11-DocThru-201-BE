@@ -1,7 +1,8 @@
 import { BaseController } from '#controllers/base.controller.js';
-import { HTTP_STATUS } from '#constants';
+import { SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
 import { Router } from 'express';
-import { needsLogin } from '#middlewares';
+import { validate, needsLogin } from '#middlewares';
+import { workListQuerySchema } from './dto/work.dto.js';
 
 export class WorksController extends BaseController {
   #worksService;
@@ -13,8 +14,11 @@ export class WorksController extends BaseController {
   }
 
   routes() {
-    this.router.get('/', needsLogin, (req, res, next) =>
-      this.getAllWorks(req, res, next),
+    /** 챌린지 상세 참여현황 — 공개 조회(로그인 시 좋아요 여부만 채움) */
+    this.router.get(
+      '/',
+      validate('query', workListQuerySchema),
+      (req, res, next) => this.getAllWorks(req, res, next),
     );
     this.router.post('/', needsLogin, (req, res, next) =>
       this.createWork(req, res, next),
@@ -22,7 +26,7 @@ export class WorksController extends BaseController {
     this.router.get('/my', needsLogin, (req, res, next) =>
       this.getMyWork(req, res, next),
     );
-    this.router.get('/:id', (req, res, next) =>
+    this.router.get('/:id', needsLogin, (req, res, next) =>
       this.getWorkById(req, res, next),
     );
     this.router.patch('/:id', needsLogin, (req, res, next) =>
@@ -31,12 +35,11 @@ export class WorksController extends BaseController {
     this.router.delete('/:id', needsLogin, (req, res, next) =>
       this.deleteWork(req, res, next),
     );
-
     return this.router;
   }
 
   async getAllWorks(req, res) {
-    const userId = req.user?.id;
+    const userId = req.user?.userId ?? req.user?.id;
     const { id: challengeId } = req.params;
     const { page = 1, pageSize = 5 } = req.query;
     const works = await this.#worksService.getAllWorks(
@@ -55,6 +58,22 @@ export class WorksController extends BaseController {
     });
   }
 
+  async createWork(req, res, next) {
+    try {
+      const { id: challengeId } = req.params;
+      const userId = req.user.id;
+      const newWork = await this.#worksService.createWork(challengeId, userId);
+
+      return res.status(HTTP_STATUS.CREATED).json({
+        success: true,
+        message: SUCCESS_MESSAGE.WORK_CREATED,
+        data: newWork,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getWorkById(req, res, next) {
     try {
       const { id } = req.params;
@@ -66,26 +85,10 @@ export class WorksController extends BaseController {
     }
   }
 
-  createWork = async (req, res, next) => {
-    try {
-      const { id: challengeId } = req.params;
-      console.log('challengeId:', challengeId); // ← 추가
-      console.log('userId:', req.user?.id); // ← 추가
-      const participantId = req.user?.id;
-      const newWork = await this.#worksService.createWork(
-        challengeId,
-        participantId,
-      );
-      return res.status(HTTP_STATUS.CREATED).json(newWork);
-    } catch (error) {
-      next(error);
-    }
-  };
-
   async updateWork(req, res, next) {
     try {
       const { id } = req.params;
-      const userId = req.user?.id;
+      const userId = req.user.id;
       const { content, action, title } = req.body;
       const updated = await this.#worksService.updateWork(id, userId, {
         content,

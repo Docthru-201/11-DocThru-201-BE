@@ -26,6 +26,7 @@ export class WorkRepository {
             id: true,
             nickname: true,
             grade: true,
+            image: true,
           },
         },
         challenge: {
@@ -47,6 +48,7 @@ export class WorkRepository {
         authorId: work.user.id,
         authorNickname: work.user.nickname,
         grade: work.user.grade,
+        image: work.user.image,
       },
       challengeId: work.challengeId,
       challengeTitle: work.challenge.title,
@@ -165,6 +167,15 @@ export class WorkRepository {
     return this.#prisma.work.count({
       where: { userId },
     });
+  }
+
+  /** 본인 작업물에 표시된 좋아요 수 합계(Work.likeCount 기준) */
+  async sumLikeCountByUserId(userId) {
+    const agg = await this.#prisma.work.aggregate({
+      where: { userId },
+      _sum: { likeCount: true },
+    });
+    return agg._sum.likeCount ?? 0;
   }
 
   async findManyByUserId(userId) {

@@ -99,17 +99,18 @@ export const CHALLENGE_DESCRIPTION_TEMPLATES = [
   '기존에 이미 많이 번역된 주제라도, 더 읽기 쉽고 자연스러운 표현을 찾아보는 것이 이 챌린지의 목표입니다.',
 ];
 
+// 원문 링크: iframe/리다이렉트에 덜 민감한 공식 문서 위주(MDN, react.dev, Node, web.dev)
 export const ORIGINAL_URL_TEMPLATES = [
-  'https://nextjs.org/docs/app/building-your-application/routing/fundamentals',
-  'https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates',
-  'https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/What_should_your_web_site_be_like',
-  'https://nextjs.org/docs/app/building-your-application/data-fetching/fetching',
-  'https://react.dev/learn/start-a-new-react-project',
-  'https://nodejs.org/api/stream.html',
-  'https://www.prisma.io/docs/orm/prisma-schema/data-model',
-  'https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA',
-  'https://www.postgresql.org/docs/current/tutorial-transactions.html',
-  'https://auth0.com/docs/secure/tokens/json-web-tokens',
+  'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise',
+  'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array',
+  'https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview',
+  'https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/What_will_your_website_look_like',
+  'https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Live_Regions',
+  'https://react.dev/learn',
+  'https://react.dev/learn/describing-the-ui',
+  'https://nodejs.org/docs/latest/api/fs.html',
+  'https://nodejs.org/docs/latest/api/stream.html',
+  'https://web.dev/learn/html/basics/',
 ];
 
 export const APPLICATION_MESSAGE_TEMPLATES = [

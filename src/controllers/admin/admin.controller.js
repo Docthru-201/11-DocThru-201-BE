@@ -1,6 +1,6 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
-import { adminValidator, validate } from '#middlewares';
+import { adminValidator, auditAdminAction, validate } from '#middlewares';
 import {
   getAllChallengesScheme,
   updateChallengeStatusScheme,
@@ -16,17 +16,20 @@ export class AdminController extends BaseController {
     this.router.get(
       '/challenges',
       adminValidator,
+      auditAdminAction,
       validate('query', getAllChallengesScheme),
       (req, res, next) => this.getAllChallenges(req, res, next),
     );
     this.router.get(
       '/challenges/:challengeId',
       adminValidator,
+      auditAdminAction,
       (req, res, next) => this.getChallengeDetailById(req, res, next),
     );
     this.router.patch(
       '/challenges/:challengeId',
       adminValidator,
+      auditAdminAction,
       validate('params', updateChallengeStatusScheme.params),
       validate('body', updateChallengeStatusScheme.body),
       (req, res, next) => this.updateChallengeStatus(req, res, next),
@@ -42,6 +45,7 @@ export class AdminController extends BaseController {
       pageSize: Number(pageSize) || 10,
       sort,
       keyword,
+      actor: req.user,
     });
 
     res.status(HTTP_STATUS.OK).json(result);
@@ -49,8 +53,10 @@ export class AdminController extends BaseController {
 
   async getChallengeDetailById(req, res) {
     const { challengeId } = req.params;
-    const result =
-      await this.#challengesService.getChallengeDetailById(challengeId);
+    const result = await this.#challengesService.getChallengeDetailById(
+      challengeId,
+      req.user,
+    );
 
     if (!result) {
       return res
@@ -63,13 +69,12 @@ export class AdminController extends BaseController {
 
   async updateChallengeStatus(req, res) {
     const challengeId = req.params.challengeId;
-    const { userId } = req.user;
     const data = req.body;
 
     const result = await this.#challengesService.updateChallengeStatus(
       challengeId,
       data,
-      userId,
+      req.user,
     );
 
     res.status(HTTP_STATUS.OK).json({ result });

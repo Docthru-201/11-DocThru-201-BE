@@ -1,9 +1,26 @@
-import { ERROR_MESSAGE } from '#constants';
+import { createHash, randomBytes } from 'node:crypto';
+import { ulid } from 'ulid';
+import { ERROR_MESSAGE, SUCCESS_MESSAGE } from '#constants';
+import { PASSWORD_RESET_TOKEN_EXPIRES_MS } from '../common/constants/auth.js';
+import { sendPasswordResetEmail } from '#providers';
 import {
   BadRequestException,
   ConflictException,
   UnauthorizedException,
 } from '#exceptions';
+import { securityDefense } from '../common/security/defense.js';
+import { logSecurityEvent } from '../common/utils/security-audit.js';
+import { maskEmail } from '../common/utils/log-mask.util.js';
+
+function buildPasswordResetLink(rawToken) {
+  const base =
+    process.env.CLIENT_BASE_URL?.trim()?.replace(/\/$/, '') ||
+    'http://localhost:3000';
+  const pathSeg =
+    process.env.PASSWORD_RESET_CLIENT_PATH?.trim() || '/reset-password';
+  const path = pathSeg.startsWith('/') ? pathSeg : `/${pathSeg}`;
+  return `${base}${path}?token=${encodeURIComponent(rawToken)}`;
+}
 
 export class AuthService {
   #authRepository;
@@ -55,12 +72,42 @@ export class AuthService {
     return this.#toAuthUserResponse({ ...userWithoutPassword, socials: [] });
   }
 
-  async login(data) {
+  async login(data, requestContext = {}) {
     const { email, password } = data;
+    const ip = requestContext.ip ?? 'unknown';
+    const emailNorm =
+      typeof email === 'string' ? email.trim().toLowerCase() : '';
 
     // 1. 유저 존재 확인
     const user = await this.#authRepository.findUserByEmail(email);
+    if (
+      user?.loginLockedUntil &&
+      user.loginLockedUntil.getTime() > Date.now()
+    ) {
+      logSecurityEvent({
+        type: 'login_blocked_account_locked',
+        ip,
+        userId: user.id,
+        emailMasked: maskEmail(emailNorm || email || ''),
+      });
+      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
+    }
+
     if (!user) {
+      securityDefense.recordLoginFailure({
+        ip,
+        emailNormalized: emailNorm || null,
+        userId: null,
+      });
+      throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
+    }
+
+    if (user.password == null || user.password === '') {
+      securityDefense.recordLoginFailure({
+        ip,
+        emailNormalized: emailNorm || user.email,
+        userId: user.id,
+      });
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
     }
 
@@ -70,14 +117,33 @@ export class AuthService {
       user.password,
     );
     if (!isMatch) {
+      const { lockUntil } = securityDefense.recordLoginFailure({
+        ip,
+        emailNormalized: emailNorm || user.email,
+        userId: user.id,
+      });
+      if (lockUntil) {
+        await this.#authRepository.setUserLoginLockedUntil(user.id, lockUntil);
+      }
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_LOGIN);
     }
 
-    // 3. 토큰 발급
+    securityDefense.clearLoginFailuresForEmail(emailNorm || user.email);
+
+    // 3. 세션 고정 방지: 기존 refresh(서버 저장) 무효화 후 새 토큰 쌍 발급
+    await this.#authRepository.deleteRefreshToken(user.id);
+
     const accessToken = this.#tokenProvider.generateAccessToken(user);
     const refreshToken = this.#tokenProvider.generateRefreshToken(user);
 
     await this.#authRepository.saveRefreshToken(user.id, refreshToken);
+
+    logSecurityEvent({
+      type: 'login_success',
+      ip,
+      userId: user.id,
+      emailMasked: maskEmail(user.email),
+    });
 
     const { password: _pw, ...userWithoutPassword } = user;
     return {
@@ -115,6 +181,9 @@ export class AuthService {
 
     const user = await this.#authRepository.findUserById(payload.userId);
 
+    // refresh 로테이션: 기존 토큰 행을 지우고 새 refresh만 유효(세션 식별자 교체)
+    await this.#authRepository.deleteRefreshToken(payload.userId);
+
     const newAccessToken = this.#tokenProvider.generateAccessToken(user);
     const newRefreshToken = this.#tokenProvider.generateRefreshToken(user);
 
@@ -144,7 +213,7 @@ export class AuthService {
           'Google OAuth: GOOGLE_REDIRECT_URI가 비어 있습니다. Google Cloud 콘솔에 등록한 리디렉션 URI와 동일한 값을 .env에 설정하세요.',
         );
       }
-      const state = crypto.randomUUID();
+      const state = ulid();
 
       return {
         url: `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(CLIENT_ID)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent('email profile')}&state=${state}`,
@@ -153,9 +222,16 @@ export class AuthService {
     }
     throw new BadRequestException(`지원하지 않는 provider입니다: ${provider}`);
   }
-  async oauthLogin(provider, code) {
+  async oauthLogin(provider, code, requestContext = {}) {
+    const ip = requestContext.ip ?? 'unknown';
     if (provider === 'google') {
-      const googleUser = await this.#authRepository.getGoogleUser(code);
+      let googleUser;
+      try {
+        googleUser = await this.#authRepository.getGoogleUser(code);
+      } catch (e) {
+        securityDefense.oauthFailure(ip, e?.message ?? 'oauth_token_error');
+        throw e;
+      }
       const { email, name, id: googleProviderId } = googleUser;
 
       if (!googleProviderId) {
@@ -186,6 +262,7 @@ export class AuthService {
       );
 
       const { password: _pw, ...userWithoutPassword } = userWithSocials;
+      securityDefense.oauthSuccess(ip, userWithSocials.id);
       return {
         user: this.#toAuthUserResponse(userWithoutPassword),
         accessToken,
@@ -202,5 +279,71 @@ export class AuthService {
     }
     const { password: _pw, ...userWithoutPassword } = user;
     return this.#toAuthUserResponse(userWithoutPassword);
+  }
+
+  // 계정 열거 방지
+  async requestPasswordReset({ email }, requestContext = {}) {
+    const ip = requestContext.ip ?? 'unknown';
+    logSecurityEvent({
+      type: 'password_reset_request',
+      ip,
+      emailMasked: maskEmail(
+        typeof email === 'string' ? email.trim() : String(email),
+      ),
+    });
+
+    const user = await this.#authRepository.findUserByEmail(email);
+    const generic = {
+      message: SUCCESS_MESSAGE.PASSWORD_RESET_REQUEST_ACCEPTED,
+    };
+
+    if (!user || user.password == null || user.password === '') {
+      return generic;
+    }
+
+    await this.#authRepository.deletePendingPasswordResetsForUser(user.id);
+
+    const rawToken = randomBytes(32).toString('base64url');
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_TOKEN_EXPIRES_MS);
+
+    await this.#authRepository.createPasswordResetToken({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    });
+
+    const resetLink = buildPasswordResetLink(rawToken);
+    await sendPasswordResetEmail({ to: user.email, resetLink });
+
+    return generic;
+  }
+
+  async confirmPasswordReset({ token, password }, requestContext = {}) {
+    const ip = requestContext.ip ?? 'unknown';
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const userId =
+      await this.#authRepository.consumePasswordResetToken(tokenHash);
+    if (!userId) {
+      logSecurityEvent({
+        type: 'password_reset_confirm_failed',
+        ip,
+        reason: 'invalid_or_expired_token',
+      });
+      throw new BadRequestException(ERROR_MESSAGE.PASSWORD_RESET_LINK_INVALID);
+    }
+
+    const hashedPassword = await this.#passwordProvider.hash(password);
+    await this.#authRepository.updateUserPassword(userId, hashedPassword);
+    await this.#authRepository.deleteRefreshToken(userId);
+    await this.#authRepository.setUserLoginLockedUntil(userId, null);
+
+    logSecurityEvent({
+      type: 'password_reset_confirm_success',
+      ip,
+      userId,
+    });
+
+    return { message: SUCCESS_MESSAGE.PASSWORD_RESET_COMPLETED };
   }
 }

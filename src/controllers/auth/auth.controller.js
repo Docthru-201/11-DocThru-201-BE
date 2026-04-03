@@ -5,7 +5,14 @@ import {
   signupSchema,
   loginSchema,
   oauthCallbackQuerySchema,
+  passwordResetRequestSchema,
+  passwordResetConfirmSchema,
 } from './dto/auth.dto.js';
+import {
+  authSensitiveEmailLimiter,
+  authSensitiveIpLimiter,
+  passwordResetConfirmIpLimiter,
+} from '#middlewares';
 import { OAUTH_STATE_EXPIRES_MS } from '../../common/constants/auth.js';
 import { BadRequestException } from '#exceptions';
 
@@ -20,12 +27,34 @@ export class AuthController extends BaseController {
   }
 
   routes() {
-    this.router.post('/signup', validate('body', signupSchema), (req, res) =>
-      this.signup(req, res),
+    this.router.post(
+      '/password-reset/request',
+      authSensitiveIpLimiter,
+      authSensitiveEmailLimiter,
+      validate('body', passwordResetRequestSchema),
+      (req, res) => this.requestPasswordReset(req, res),
+    );
+    this.router.post(
+      '/password-reset/confirm',
+      passwordResetConfirmIpLimiter,
+      validate('body', passwordResetConfirmSchema),
+      (req, res) => this.confirmPasswordReset(req, res),
     );
 
-    this.router.post('/login', validate('body', loginSchema), (req, res) =>
-      this.login(req, res),
+    this.router.post(
+      '/signup',
+      authSensitiveIpLimiter,
+      authSensitiveEmailLimiter,
+      validate('body', signupSchema),
+      (req, res) => this.signup(req, res),
+    );
+
+    this.router.post(
+      '/login',
+      authSensitiveIpLimiter,
+      authSensitiveEmailLimiter,
+      validate('body', loginSchema),
+      (req, res) => this.login(req, res),
     );
     this.router.get('/:provider/login', (req, res) =>
       this.oauthLogin(req, res),
@@ -49,9 +78,21 @@ export class AuthController extends BaseController {
 
     this.router.get('/me', needsLogin, (req, res) => this.me(req, res));
 
-    this.router.get('/me', needsLogin, (req, res) => this.me(req, res));
-
     return this.router;
+  }
+
+  async requestPasswordReset(req, res) {
+    const body = await this.#authService.requestPasswordReset(req.body, {
+      ip: req.ip,
+    });
+    res.status(HTTP_STATUS.OK).json(body);
+  }
+
+  async confirmPasswordReset(req, res) {
+    const body = await this.#authService.confirmPasswordReset(req.body, {
+      ip: req.ip,
+    });
+    res.status(HTTP_STATUS.OK).json(body);
   }
 
   async signup(req, res) {
@@ -63,6 +104,7 @@ export class AuthController extends BaseController {
   async login(req, res) {
     const { user, accessToken, refreshToken } = await this.#authService.login(
       req.body,
+      { ip: req.ip, userAgent: req.get('user-agent') },
     );
 
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
@@ -122,7 +164,10 @@ export class AuthController extends BaseController {
     res.clearCookie('oauth_state');
 
     const { user, accessToken, refreshToken } =
-      await this.#authService.oauthLogin(provider, code);
+      await this.#authService.oauthLogin(provider, code, {
+        ip: req.ip,
+        userAgent: req.get('user-agent'),
+      });
 
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
 

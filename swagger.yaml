@@ -159,6 +159,51 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /auth/password-reset/request:
+    post:
+      tags: [Auth]
+      summary: 비밀번호 재설정 메일 요청
+      description: 계정 존재 여부와 무관하게 동일한 응답을 반환합니다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequestBody'
+      responses:
+        '200':
+          description: 요청 접수(항상 동일 메시지)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetRequestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          description: 요청 한도 초과
+
+  /auth/password-reset/confirm:
+    post:
+      tags: [Auth]
+      summary: 비밀번호 재설정 확정(토큰 1회용)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmBody'
+      responses:
+        '200':
+          description: 비밀번호 변경 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOnlyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          description: 요청 한도 초과
+
   /auth/logout:
     post:
       tags: [Auth]
@@ -1488,6 +1533,37 @@ components:
           format: email
         password:
           type: string
+
+    PasswordResetRequestBody:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+
+    PasswordResetRequestResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: 요청이 접수되었습니다. 등록된 이메일이 있으면 안내를 보냅니다.
+
+    PasswordResetConfirmBody:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+          description: 이메일로 받은 일회용 토큰(평문은 서버에 저장하지 않음)
+        password:
+          type: string
+          minLength: 8
 
     UpdateMeRequest:
       type: object
