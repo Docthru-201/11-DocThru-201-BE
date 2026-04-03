@@ -132,7 +132,7 @@ export class WorksService {
 
   // action: 'SUBMIT' → 제출하기 (DRAFT→SUBMITTED) 또는 수정하기 (이미 SUBMITTED)
   // action 없음 → 임시저장 (DRAFT 유지, content만 업데이트)
-  async updateWork(workId, userId, { content, action }) {
+  async updateWork(workId, userId, { content, action, title }) {
     const work = await this.#workRepository.findById(workId);
 
     if (!work) {
@@ -145,6 +145,7 @@ export class WorksService {
 
     const updateData = {};
     if (content !== undefined) updateData.content = content;
+    if (title !== undefined) updateData.title = title;
 
     if (action === 'SUBMIT') {
       if (work.status === 'DRAFT') {
