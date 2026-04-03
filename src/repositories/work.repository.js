@@ -169,6 +169,15 @@ export class WorkRepository {
     });
   }
 
+  /** 본인 작업물에 표시된 좋아요 수 합계(Work.likeCount 기준) */
+  async sumLikeCountByUserId(userId) {
+    const agg = await this.#prisma.work.aggregate({
+      where: { userId },
+      _sum: { likeCount: true },
+    });
+    return agg._sum.likeCount ?? 0;
+  }
+
   async findManyByUserId(userId) {
     return this.#prisma.work.findMany({
       where: { userId },

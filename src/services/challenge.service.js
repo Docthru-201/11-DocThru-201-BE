@@ -107,10 +107,6 @@ export class ChallengesService {
   async createChallenge(data) {
     const challenge = await this.#challengeRepository.create(data);
 
-    await this.#challengeRepository.createParticipant({
-      userId: data.authorId,
-      challengeId: challenge.id,
-    });
     console.log('notificationsService exists:', !!this.#notificationsService);
     if (this.#notificationsService) {
       const admin = await this.#challengeRepository.findAdminUser();
