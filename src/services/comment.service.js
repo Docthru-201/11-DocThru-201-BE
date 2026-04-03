@@ -99,7 +99,7 @@ export class CommentsService {
       return updatedComment;
     }
 
-    if (isAdmin) {
+    if (isUserAdmin) {
       if (comment.authorId !== userId) {
         const reasonText = data.reason ? ` 사유: ${data.reason}` : '';
 

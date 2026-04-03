@@ -354,22 +354,27 @@ export class ChallengesService {
     ].filter((recipientId) => recipientId && recipientId !== actor.id);
 
     const uniqueRecipientIds = [...new Set(recipientIds)];
-    const statusMessages = {
-      APPROVED: '승인되었어요.',
-      REJECTED: '거절되었어요.',
-      DELETED: '삭제되었어요.',
-    };
 
-    const statusText =
-      statusMessages[updatedChallenge.status] || '정보가 변경되었어요.';
+    let message = `'${updatedChallenge.title}' 챌린지 상태가 변경되었어요.`;
 
-    const showReason =
-      updatedChallenge.status !== 'APPROVED' && updatedChallenge.declineReason;
-    const reasonText = showReason
-      ? ` 사유: ${updatedChallenge.declineReason}`
-      : '';
-
-    const message = `'${updatedChallenge.title}' 챌린지가 ${statusText}${reasonText}`;
+    if (updatedChallenge.status === 'APPROVED') {
+      message = `'${updatedChallenge.title}' 챌린지가 승인되었어요.`;
+    } else if (updatedChallenge.status === 'REJECTED') {
+      const reasonText = updatedChallenge.declineReason
+        ? ` 사유: ${updatedChallenge.declineReason}`
+        : '';
+      message = `'${updatedChallenge.title}' 챌린지가 거절되었어요. ${reasonText}`;
+    } else if (updatedChallenge.status === 'DELETED') {
+      const reasonText = updatedChallenge.declineReason
+        ? ` 사유: ${updatedChallenge.declineReason}`
+        : '';
+      message = `'${updatedChallenge.title}' 챌린지가 삭제되었어요. ${reasonText}`;
+    } else {
+      const reasonText = updatedChallenge.declineReason
+        ? ` 사유: ${updatedChallenge.declineReason}`
+        : '';
+      message = `'${updatedChallenge.title}' 챌린지 정보가 변경되었어요. ${reasonText}`;
+    }
 
     for (const recipientId of uniqueRecipientIds) {
       await this.#notificationsService.createNotification({
