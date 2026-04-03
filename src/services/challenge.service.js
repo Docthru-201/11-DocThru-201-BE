@@ -16,7 +16,7 @@ export class ChallengesService {
 
     const where = {
       deletedAt: null,
-      ...(status ? { status } : { status: 'APPROVED' }),
+      ...(status ? { status } : {}),
       ...(category && { category }),
       ...(type && { type }),
       ...(keyword && {
