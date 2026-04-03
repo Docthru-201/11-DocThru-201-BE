@@ -55,16 +55,17 @@ class Seeder {
   }
 
   async #resetDb() {
-    return this.#prisma.$transaction([
-      this.#prisma.like.deleteMany(),
-      this.#prisma.comment.deleteMany(),
-      this.#prisma.work.deleteMany(),
-      this.#prisma.participant.deleteMany(),
-      this.#prisma.notification.deleteMany(),
-      this.#prisma.challenge.deleteMany(),
-      this.#prisma.profile.deleteMany(),
-      this.#prisma.user.deleteMany(),
-    ]);
+    // FK 순서대로 삭제. $transaction(기본 5초)으로 묶으면 데이터가 많을 때 타임아웃(P2028)이 날 수 있어 순차 실행함.
+    await this.#prisma.like.deleteMany();
+    await this.#prisma.comment.deleteMany();
+    await this.#prisma.work.deleteMany();
+    await this.#prisma.participant.deleteMany();
+    await this.#prisma.notification.deleteMany();
+    await this.#prisma.challenge.deleteMany();
+    await this.#prisma.profile.deleteMany();
+    await this.#prisma.refreshToken.deleteMany();
+    await this.#prisma.socialAccount.deleteMany();
+    await this.#prisma.user.deleteMany();
   }
 
   async #seedUsers() {
@@ -147,14 +148,18 @@ class Seeder {
       const titleTemplate = faker.helpers.arrayElement(
         seedConstants.CHALLENGE_TITLE_TEMPLATES,
       );
-      const statusIndex =
+      // 균등 분포면 비승인 챌린지가 ~75%가 되어 참가자 0이 과다해짐 → 승인·대기 비중을 크게 둠
+      const statusRoll = faker.number.int({ min: 1, max: 100 });
+      const status =
         i === 0
-          ? 1
-          : faker.number.int({
-              min: 0,
-              max: seedConstants.CHALLENGE_STATUSES.length - 1,
-            });
-      const status = seedConstants.CHALLENGE_STATUSES[statusIndex];
+          ? 'APPROVED'
+          : statusRoll <= 68
+            ? 'APPROVED'
+            : statusRoll <= 88
+              ? 'PENDING'
+              : statusRoll <= 94
+                ? 'REJECTED'
+                : 'DELETED';
 
       const shouldClose = faker.number.int({ min: 1, max: 10 }) <= 3; // 1~10 중 3 이하 → 약 30%
       const rawDeadline = shouldClose
@@ -199,20 +204,23 @@ class Seeder {
   }
 
   async #seedParticipants(challenges, users) {
-    const approvedStatus = 'APPROVED';
-    const openChallenges = challenges.filter(
-      (c) => c.status === approvedStatus && !c.isClosed,
+    // 승인됨·승인대기 챌린지에만 참가자 부여 (거절/삭제는 0명이 자연스러움)
+    const withParticipants = challenges.filter((c) =>
+      ['APPROVED', 'PENDING'].includes(c.status),
     );
 
-    for (const challenge of openChallenges) {
-      // maxParticipants를 넘지 않도록 참가자 수 상한을 챌린지 정원에 맞춤
+    for (const challenge of withParticipants) {
+      // 유저 수와 정원 중 작은 값이 실제로 뽑을 수 있는 최대 인원
       const cap = Math.min(challenge.maxParticipants, users.length);
-      const minPick = Math.min(seedConstants.APPLICANTS_MIN, cap);
-      const maxPick = Math.min(seedConstants.APPLICANTS_MAX, cap);
+      if (cap < 1) continue;
+
+      // 정원의 20%~100% 구간에서 참가자 수 결정 (최소 1명)
+      const minCount = Math.max(1, Math.ceil(cap * 0.2));
+      const targetCount = faker.number.int({ min: minCount, max: cap });
 
       const participants = faker.helpers.arrayElements(users, {
-        min: minPick,
-        max: maxPick,
+        min: targetCount,
+        max: targetCount,
       });
 
       for (const user of participants) {
@@ -237,11 +245,6 @@ class Seeder {
       const commenters = await this.#prisma.user.findMany({
         take: seedConstants.COMMENTERS_TAKE,
         orderBy: { createdAt: 'desc' },
-      });
-
-      const likers = await this.#prisma.user.findMany({
-        take: seedConstants.LIKERS_TAKE,
-        orderBy: { createdAt: 'asc' },
       });
 
       for (const participant of participants) {
@@ -295,22 +298,7 @@ class Seeder {
           }
         }
 
-        for (const liker of likers) {
-          await this.#prisma.like.upsert({
-            where: {
-              workId_userId: {
-                workId: work.id,
-                userId: liker.id,
-              },
-            },
-            create: {
-              workId: work.id,
-              userId: liker.id,
-            },
-            update: {},
-          });
-        }
-
+        // 좋아요 수는 API/목록에서 Work.likeCount 기준 — 100~2000 랜덤(Like 행은 생성하지 않음)
         const likeCount = faker.number.int({ min: 100, max: 2000 });
 
         await this.#prisma.work.update({
