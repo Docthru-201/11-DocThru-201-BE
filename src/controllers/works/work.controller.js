@@ -1,12 +1,7 @@
 import { BaseController } from '#controllers/base.controller.js';
 import { SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
 import { Router } from 'express';
-import {
-  adminValidator,
-  auditAdminAction,
-  validate,
-  needsLogin,
-} from '#middlewares';
+import { validate, needsLogin } from '#middlewares';
 import { workListQuerySchema } from './dto/work.dto.js';
 
 export class WorksController extends BaseController {
@@ -19,10 +14,9 @@ export class WorksController extends BaseController {
   }
 
   routes() {
+    /** 챌린지 상세 참여현황 — 공개 조회(로그인 시 좋아요 여부만 채움) */
     this.router.get(
       '/',
-      adminValidator,
-      auditAdminAction,
       validate('query', workListQuerySchema),
       (req, res, next) => this.getAllWorks(req, res, next),
     );
