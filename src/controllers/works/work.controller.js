@@ -86,10 +86,11 @@ export class WorksController extends BaseController {
     try {
       const { id } = req.params;
       const userId = req.user?.id;
-      const { content, action } = req.body;
+      const { content, action, title } = req.body;
       const updated = await this.#worksService.updateWork(id, userId, {
         content,
         action,
+        title,
       });
       res.status(HTTP_STATUS.OK).json(updated);
     } catch (error) {

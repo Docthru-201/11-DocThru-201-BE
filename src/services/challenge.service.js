@@ -134,14 +134,89 @@ export class ChallengesService {
     return challenge;
   }
 
-  async updateChallenge(id, updateData) {
-    const challenge = await this.#findChallengeOrThrow(id);
-    return await this.#challengeRepository.update(id, updateData);
+  async updateChallenge(id, updateData, userId) {
+    await this.#findChallengeOrThrow(id);
+
+    const updatedChallenge = await this.#challengeRepository.update(
+      id,
+      updateData,
+    );
+
+    if (!this.#notificationsService) {
+      return updatedChallenge;
+    }
+
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        id,
+      );
+
+    if (!challengeInfo) {
+      return updatedChallenge;
+    }
+
+    const changedAt = new Date(updatedChallenge.updatedAt || new Date())
+      .toISOString()
+      .slice(0, 10);
+
+    const recipientIds = [
+      challengeInfo.authorId,
+      ...challengeInfo.participants.map((participant) => participant.userId),
+    ].filter((recipientId) => recipientId && recipientId !== userId);
+
+    const uniqueRecipientIds = [...new Set(recipientIds)];
+
+    const reasonText = updateData.reason ? ` 사유: ${updateData.reason}` : '';
+
+    const message = updateData.reason
+      ? `'${updatedChallenge.title}' 챌린지가 수정되었어요. ${reasonText}`
+      : `'${updatedChallenge.title}' 챌린지가 수정되었어요. `;
+
+    for (const recipientId of uniqueRecipientIds) {
+      await this.#notificationsService.createNotification({
+        userId: recipientId,
+        type: 'ADMIN_ACTION',
+        targetId: updatedChallenge.id,
+        targetUrl: `/challenges/${updatedChallenge.id}`,
+        message,
+      });
+    }
+
+    return updatedChallenge;
   }
 
-  async deleteChallenge(id) {
-    await this.#findChallengeOrThrow(id);
+  async deleteChallenge(id, userId) {
+    const challenge = await this.#findChallengeOrThrow(id);
+
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        id,
+      );
+
     await this.#challengeRepository.delete(id);
+
+    if (!this.#notificationsService || !challengeInfo) {
+      return;
+    }
+
+    const deletedAt = new Date().toISOString().slice(0, 10);
+
+    const recipientIds = [
+      challengeInfo.authorId,
+      ...challengeInfo.participants.map((participant) => participant.userId),
+    ].filter((recipientId) => recipientId && recipientId !== userId);
+
+    const uniqueRecipientIds = [...new Set(recipientIds)];
+
+    for (const recipientId of uniqueRecipientIds) {
+      await this.#notificationsService.createNotification({
+        userId: recipientId,
+        type: 'ADMIN_ACTION',
+        targetId: id,
+        targetUrl: `/challenges/${id}`,
+        message: `'${challenge.title}' 챌린지가 삭제되었어요. (${deletedAt})`,
+      });
+    }
   }
 
   async getChallengesByUser(userId) {
@@ -149,26 +224,37 @@ export class ChallengesService {
   }
 
   async getMyChallengesForTabs(userId, tab) {
+    const normalizedTab =
+      tab === 'applied' || tab === 'done' || tab === 'participating'
+        ? tab
+        : 'participating';
+
     let rows;
-    if (tab === 'applied') {
+    if (normalizedTab === 'applied') {
+      // 신청한 챌린지: 내가 직접 신청(작성)한 챌린지 중 승인 대기
       const authored =
         await this.#challengeRepository.findByAuthorIdForMyList(userId);
       rows = authored.filter((c) => c.status === 'PENDING');
-    } else if (tab === 'participating') {
-      const joined =
-        await this.#challengeRepository.findByParticipantUserIdForMyList(
-          userId,
-        );
-      rows = joined.filter((c) => !c.isClosed);
+    } else if (normalizedTab === 'done') {
+      // 완료: 내가 work를 제출한 챌린지 중 마감됨
+      rows = await this.#challengeRepository.findBySubmittedWorkForMyList(
+        userId,
+        {
+          isClosed: true,
+        },
+      );
     } else {
-      const joined =
-        await this.#challengeRepository.findByParticipantUserIdForMyList(
-          userId,
-        );
-      rows = joined.filter((c) => c.isClosed);
+      // 참여중: 내가 work를 제출한 챌린지 중 아직 진행중(마감 전)
+      rows = await this.#challengeRepository.findBySubmittedWorkForMyList(
+        userId,
+        {
+          isClosed: false,
+        },
+      );
     }
 
-    const isParticipantTab = tab === 'participating' || tab === 'done';
+    const isParticipantTab =
+      normalizedTab === 'participating' || normalizedTab === 'done';
     const items = rows.map((row) => ({
       ...this.#mapChallengeListItem(row),
       isParticipating: isParticipantTab,
@@ -238,14 +324,7 @@ export class ChallengesService {
   }
 
   async updateChallengeStatus(challengeId, data, userId) {
-    const challenge = await this.#findChallengeOrThrow(challengeId);
-    // 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
-    // if (challenge.isClosed) {
-    //   const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
-    //   error.statusCode = HTTP_STATUS.FORBIDDEN;
-
-    //   throw error;
-    // }
+    await this.#findChallengeOrThrow(challengeId);
 
     const updatedChallenge =
       await this.#challengeRepository.updateChallengeStatus(challengeId, data);
@@ -254,25 +333,48 @@ export class ChallengesService {
       return updatedChallenge;
     }
 
-    const { status, declineReason, title, id } = updatedChallenge;
+    const challengeInfo =
+      await this.#challengeRepository.findNotificationRecipientsByChallengeId(
+        challengeId,
+      );
 
-    const message = ['REJECTED', 'DELETED'].includes(status)
-      ? this.#notificationsService.notificationMessages.adminReviewResult(
-          title,
-          status,
-          declineReason,
-        )
-      : this.#notificationsService.notificationMessages.challengeProgressUpdate(
-          title,
-          status,
-        );
+    if (!challengeInfo) {
+      return updatedChallenge;
+    }
 
-    if (challenge.authorId && challenge.authorId !== userId) {
+    const changedAt = new Date(updatedChallenge.updatedAt || new Date())
+      .toISOString()
+      .slice(0, 10);
+
+    const recipientIds = [
+      challengeInfo.authorId,
+      ...challengeInfo.participants.map((participant) => participant.userId),
+    ].filter((recipientId) => recipientId && recipientId !== userId);
+
+    const uniqueRecipientIds = [...new Set(recipientIds)];
+    const statusMessages = {
+      APPROVED: '승인되었어요.',
+      REJECTED: '거절되었어요.',
+      DELETED: '삭제되었어요.',
+    };
+
+    const statusText =
+      statusMessages[updatedChallenge.status] || '정보가 변경되었어요.';
+
+    const showReason =
+      updatedChallenge.status !== 'APPROVED' && updatedChallenge.declineReason;
+    const reasonText = showReason
+      ? ` 사유: ${updatedChallenge.declineReason}`
+      : '';
+
+    const message = `'${updatedChallenge.title}' 챌린지가 ${statusText}${reasonText}`;
+
+    for (const recipientId of uniqueRecipientIds) {
       await this.#notificationsService.createNotification({
-        userId: challenge.authorId,
-        type: 'CHALLENGE_APPROVAL_RESULT',
-        targetId: id,
-        targetUrl: `/challenges/${id}`,
+        userId: recipientId,
+        type: 'ADMIN_ACTION',
+        targetId: updatedChallenge.id,
+        targetUrl: `/challenges/${updatedChallenge.id}`,
         message,
       });
     }
@@ -282,24 +384,14 @@ export class ChallengesService {
 
   async #findChallengeOrThrow(challengeId) {
     const challenge =
-      // 1개라도 Repository가 정의되지 않으면 undefined 에러로 주석-swlee
-      // (await this.#challengeRepository.findById?.(challengeId)) ??
       await this.#challengeRepository.findChallengeById?.(challengeId);
 
     if (!challenge) {
-      const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND); // "존재하지 않는 챌린지"
-      error.statusCode = HTTP_STATUS.NOT_FOUND; //404
+      const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND);
+      error.statusCode = HTTP_STATUS.NOT_FOUND;
       throw error;
     }
 
     return challenge;
   }
 }
-
-// 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
-// if (challenge.isClosed) {
-//   const error = new Error(ERROR_MESSAGE.CANNOT_MODIFY_CLOSED_CHALLENGE);
-//   error.statusCode = HTTP_STATUS.FORBIDDEN;
-
-//   throw error;
-// }
