@@ -54,6 +54,17 @@ class Seeder {
     };
   }
 
+  /** 챌린지 제목과 동일 규칙: CHALLENGE_TITLE_TEMPLATES + topic 치환 */
+  #buildWorkTitle() {
+    const topic = faker.helpers.arrayElement(
+      seedConstants.CHALLENGE_TOPIC_TEMPLATES,
+    );
+    const titleTemplate = faker.helpers.arrayElement(
+      seedConstants.CHALLENGE_TITLE_TEMPLATES,
+    );
+    return titleTemplate.replace('{topic}', topic);
+  }
+
   async #resetDb() {
     // FK 순서대로 삭제. $transaction(기본 5초)으로 묶으면 데이터가 많을 때 타임아웃(P2028)이 날 수 있어 순차 실행함.
     await this.#prisma.like.deleteMany();
@@ -255,6 +266,7 @@ class Seeder {
             challengeId: challenge.id,
             participantId: participant.id,
             userId: participant.userId,
+            title: this.#buildWorkTitle(),
             content: JSON.stringify(content),
             status: 'SUBMITTED',
           },
