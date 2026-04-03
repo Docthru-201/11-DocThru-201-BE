@@ -311,7 +311,7 @@ class Seeder {
           });
         }
 
-        const likeCount = faker.number.int({ min: 1, max: 200 });
+        const likeCount = faker.number.int({ min: 100, max: 2000 });
 
         await this.#prisma.work.update({
           where: { id: work.id },

@@ -13,10 +13,9 @@ export class ChallengesService {
   async listChallenges(query) {
     const { cursor, limit, status, category, type, keyword } = query;
 
-    // 공개 목록: 기본은 승인된 챌린지만. 쿼리에 status가 있으면 해당 값으로 필터.
     const where = {
       deletedAt: null,
-      ...(status ? { status } : { status: 'APPROVED' }),
+      ...(status ? { status } : {}),
       ...(category && { category }),
       ...(type && { type }),
       ...(keyword && {
