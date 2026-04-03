@@ -253,6 +253,7 @@ class Seeder {
             participantId: participant.id,
             userId: participant.userId,
             content: JSON.stringify(content),
+            status: 'SUBMITTED',
           },
         });
 
