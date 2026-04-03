@@ -135,26 +135,28 @@ export class WorksService {
     }
   }
 
-  // action: 'SUBMIT' → 제출하기 (DRAFT→SUBMITTED) 또는 수정하기 (이미 SUBMITTED)
-  // action 없음 → 임시저장 (DRAFT 유지, content만 업데이트)
-  async updateWork(workId, userId, { content, action }) {
+  async updateWork(workId, userId, { content, action, title }) {
     const work = await this.#workRepository.findById(workId);
 
-    if (!work) {
-      throw new NotFoundException('작업물이 없습니다.');
-    }
-
-    if (work.userId !== userId) {
+    if (!work) throw new NotFoundException('작업물이 없습니다.');
+    if (work.userId !== userId)
       throw new ForbiddenException('수정 권한이 없습니다.');
-    }
 
     const updateData = {};
-    if (content !== undefined) updateData.content = content;
+    if (title !== undefined) updateData.title = title;
 
     if (action === 'SUBMIT') {
+      if (content !== undefined) updateData.content = content;
+      updateData.draftContent = null;
       if (work.status === 'DRAFT') {
         updateData.status = 'SUBMITTED';
         updateData.submittedAt = new Date();
+      }
+    } else {
+      if (work.status === 'SUBMITTED') {
+        if (content !== undefined) updateData.draftContent = content;
+      } else {
+        if (content !== undefined) updateData.content = content;
       }
     }
 
@@ -166,10 +168,6 @@ export class WorksService {
       );
 
     if (challengeInfo && this.#notificationsService) {
-      const changedAt = new Date(updatedWork.updatedAt)
-        .toISOString()
-        .slice(0, 10);
-
       const recipientIds = [
         challengeInfo.authorId,
         ...challengeInfo.participants.map((participant) => participant.userId),
@@ -202,7 +200,7 @@ export class WorksService {
     );
 
     if (!work) {
-      throw new NotFoundException('작업물이 없습니다.');
+      return null;
     }
 
     const isLiked = !!(await this.#likeRepository.findLike(work.id, userId));

@@ -50,12 +50,13 @@ export class WorkRepository {
       },
       challengeId: work.challengeId,
       challengeTitle: work.challenge.title,
+      title: work.title,
       content: work.content,
       status: work.status,
       submittedAt: work.submittedAt,
       createdAt: work.createdAt,
       updatedAt: work.updatedAt,
-      likeCount: work._count.likes,
+      likeCount: work.likeCount,
       isLiked: false,
     }));
   }
