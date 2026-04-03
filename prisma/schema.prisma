@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-    provider  = "postgresql"
+    provider = "postgresql"
 }
 
 enum Role {
@@ -194,6 +194,8 @@ model Work {
     participant Participant? @relation(fields: [participantId], references: [id], onDelete: SetNull)
     user        User?        @relation(fields: [userId], references: [id])
     userId      String?
+
+    title String?
 
     @@unique([participantId])
 }
