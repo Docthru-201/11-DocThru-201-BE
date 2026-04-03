@@ -355,27 +355,22 @@ export class ChallengesService {
     ].filter((recipientId) => recipientId && recipientId !== actor.id);
 
     const uniqueRecipientIds = [...new Set(recipientIds)];
+    const statusMessages = {
+      APPROVED: '승인되었어요.',
+      REJECTED: '거절되었어요.',
+      DELETED: '삭제되었어요.',
+    };
 
-    let message = `'${updatedChallenge.title}' 챌린지 상태가 변경되었어요.`;
+    const statusText =
+      statusMessages[updatedChallenge.status] || '정보가 변경되었어요.';
 
-    if (updatedChallenge.status === 'APPROVED') {
-      message = `'${updatedChallenge.title}' 챌린지가 승인되었어요.`;
-    } else if (updatedChallenge.status === 'REJECTED') {
-      const reasonText = updatedChallenge.declineReason
-        ? ` 사유: ${updatedChallenge.declineReason}`
-        : '';
-      message = `'${updatedChallenge.title}' 챌린지가 거절되었어요. ${reasonText}`;
-    } else if (updatedChallenge.status === 'DELETED') {
-      const reasonText = updatedChallenge.declineReason
-        ? ` 사유: ${updatedChallenge.declineReason}`
-        : '';
-      message = `'${updatedChallenge.title}' 챌린지가 삭제되었어요. ${reasonText}`;
-    } else {
-      const reasonText = updatedChallenge.declineReason
-        ? ` 사유: ${updatedChallenge.declineReason}`
-        : '';
-      message = `'${updatedChallenge.title}' 챌린지 정보가 변경되었어요. ${reasonText}`;
-    }
+    const showReason =
+      updatedChallenge.status !== 'APPROVED' && updatedChallenge.declineReason;
+    const reasonText = showReason
+      ? ` 사유: ${updatedChallenge.declineReason}`
+      : '';
+
+    const message = `'${updatedChallenge.title}' 챌린지가 ${statusText}${reasonText}`;
 
     for (const recipientId of uniqueRecipientIds) {
       await this.#notificationsService.createNotification({
@@ -392,13 +387,11 @@ export class ChallengesService {
 
   async #findChallengeOrThrow(challengeId) {
     const challenge =
-      // 1개라도 Repository가 정의되지 않으면 undefined 에러로 주석-swlee
-      // (await this.#challengeRepository.findById?.(challengeId)) ??
       await this.#challengeRepository.findChallengeById?.(challengeId);
 
     if (!challenge) {
-      const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND); // "존재하지 않는 챌린지"
-      error.statusCode = HTTP_STATUS.NOT_FOUND; //404
+      const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND);
+      error.statusCode = HTTP_STATUS.NOT_FOUND;
       throw error;
     }
 
