@@ -13,7 +13,8 @@ export class LikesService {
     const work = await this.#workRepository.findById(workId);
     if (!work) throw new Error('작업물을 찾을 수 없습니다.');
 
-    return this.#likeRepository.countByWorkId(workId);
+    // 목록/랭킹과 동일하게 Work.likeCount(비정규화) 기준 — Like 행 개수만 세면 시드·초기값과 불일치
+    return work.likeCount ?? 0;
   }
 
   async getMyLikeStatus(userId, workId) {
@@ -33,6 +34,10 @@ export class LikesService {
 
     const result = await this.#likeRepository.create({ userId, workId });
 
+    await this.#workRepository.update(workId, {
+      likeCount: { increment: 1 },
+    });
+
     await this.#gradeService.updateGradeIfNeeded(work.userId);
 
     return result;
@@ -45,6 +50,12 @@ export class LikesService {
     }
     const work = await this.#workRepository.findById(workId);
     const result = await this.#likeRepository.delete(workId, userId);
+
+    if (work && work.likeCount > 0) {
+      await this.#workRepository.update(workId, {
+        likeCount: { decrement: 1 },
+      });
+    }
 
     await this.#gradeService.updateGradeIfNeeded(work.userId);
 

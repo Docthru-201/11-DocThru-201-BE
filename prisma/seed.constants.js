@@ -11,11 +11,7 @@ export const CHALLENGE_DEADLINE = 30;
 export const CHALLENGE_MIN_PARTICIPANTS = 5;
 export const CHALLENGE_MAX_PARTICIPANTS = 15;
 
-export const APPLICANTS_MIN = 5;
-export const APPLICANTS_MAX = 20;
-
 export const COMMENTERS_TAKE = 15;
-export const LIKERS_TAKE = 10;
 
 export const NOTIFICATIONS_PER_USER_MIN = 3;
 export const NOTIFICATIONS_PER_USER_MAX = 10;
