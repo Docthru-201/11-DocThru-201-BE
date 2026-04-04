@@ -19,6 +19,14 @@ const envSchema = z.object({
     (v) => (v === undefined || v === '' ? 'false' : v),
     z.enum(['true', 'false']),
   ),
+  /**
+   * true면 로그인·refresh JSON에 access/refresh 토큰을 포함 (프론트가 별도 도메인일 때만).
+   * Vercel+Render처럼 API와 웹 출처가 다를 때 Next Server Action용 쿠키 동기화에 필요.
+   */
+  EXPOSE_AUTH_TOKENS_IN_BODY: z.preprocess(
+    (v) => (v === undefined || v === '' ? 'false' : v),
+    z.enum(['true', 'false']),
+  ),
 });
 
 const parseEnvironment = () => {
@@ -32,6 +40,7 @@ const parseEnvironment = () => {
       CORS_ORIGINS: process.env.CORS_ORIGINS,
       TRUST_PROXY: process.env.TRUST_PROXY,
       FORCE_HTTPS: process.env.FORCE_HTTPS,
+      EXPOSE_AUTH_TOKENS_IN_BODY: process.env.EXPOSE_AUTH_TOKENS_IN_BODY,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -51,3 +60,6 @@ export const isTest = config.NODE_ENV === 'test';
 export const corsOrigins = config.CORS_ORIGINS.split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+
+export const exposeAuthTokensInBody =
+  config.EXPOSE_AUTH_TOKENS_IN_BODY === 'true';

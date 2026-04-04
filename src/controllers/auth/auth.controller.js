@@ -15,6 +15,7 @@ import {
 } from '#middlewares';
 import { OAUTH_STATE_EXPIRES_MS } from '../../common/constants/auth.js';
 import { BadRequestException } from '#exceptions';
+import { exposeAuthTokensInBody } from '#config';
 
 export class AuthController extends BaseController {
   #authService;
@@ -109,6 +110,15 @@ export class AuthController extends BaseController {
 
     this.#cookieProvider.setAuthCookies(res, { accessToken, refreshToken });
 
+    if (exposeAuthTokensInBody) {
+      res.status(HTTP_STATUS.OK).json({
+        ...user,
+        accessToken,
+        refreshToken,
+      });
+      return;
+    }
+
     res.status(HTTP_STATUS.OK).json(user);
   }
 
@@ -137,6 +147,14 @@ export class AuthController extends BaseController {
       accessToken,
       refreshToken: newRefreshToken,
     });
+
+    if (exposeAuthTokensInBody) {
+      res.status(HTTP_STATUS.OK).json({
+        accessToken,
+        refreshToken: newRefreshToken,
+      });
+      return;
+    }
 
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
