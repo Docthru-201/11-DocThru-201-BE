@@ -149,7 +149,7 @@ export class CommentsService {
     return updatedComment;
   }
 
-  async deleteComment(commentId, userId, data = {}) {
+  async deleteComment(commentId, userId, data: { reason?: string } = {}) {
     const comment = await this.#commentRepository.findById(commentId);
 
     if (!comment) {

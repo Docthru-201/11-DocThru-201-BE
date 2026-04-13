@@ -1,6 +1,7 @@
-import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
+import { ERROR_MESSAGE } from '#constants';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   NotFoundException,
 } from '#exceptions';
@@ -33,9 +34,7 @@ export class WorksService {
   // userId 없음(비로그인): 목록만 반환, isLiked는 모두 false
   async getAllWorks(userId, challengeId, page, pageSize) {
     if (!challengeId) {
-      const error = new Error(ERROR_MESSAGE.CHALLENGE_ID_REQUIRED);
-      error.statusCode = HTTP_STATUS.BAD_REQUEST;
-      throw error;
+      throw new BadRequestException(ERROR_MESSAGE.CHALLENGE_ID_REQUIRED);
     }
 
     const works = await this.#workRepository.findManyByChallengeId(
@@ -69,25 +68,19 @@ export class WorksService {
   // 새로운 작업물을 생성하고 챌린지 참여자로 등록
   async createWork(challengeId, userId) {
     if (!challengeId || !userId) {
-      const error = new Error(ERROR_MESSAGE.REQUIRED_FIELDS_MISSING);
-      error.statusCode = HTTP_STATUS.BAD_REQUEST;
-      throw error;
+      throw new BadRequestException(ERROR_MESSAGE.REQUIRED_FIELDS_MISSING);
     }
 
     // 1. 챌린지 존재 확인
     const challenge =
       await this.#challengeRepository.findChallengeById(challengeId);
     if (!challenge) {
-      const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND);
-      error.statusCode = HTTP_STATUS.NOT_FOUND;
-      throw error;
+      throw new NotFoundException(ERROR_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
     // 2. 챌린지 마감 여부 확인
     if (challenge.isClosed || challenge.status === 'CLOSED') {
-      const error = new Error(ERROR_MESSAGE.CHALLENGE_ALREADY_CLOSED);
-      error.statusCode = HTTP_STATUS.FORBIDDEN;
-      throw error;
+      throw new ForbiddenException(ERROR_MESSAGE.CHALLENGE_ALREADY_CLOSED);
     }
 
     // 3. 중복 작업물 확인
@@ -132,9 +125,7 @@ export class WorksService {
     );
 
     if (hasWork) {
-      const error = new Error(ERROR_MESSAGE.ALREADY_SUBMITTED_WORK);
-      error.statusCode = HTTP_STATUS.CONFLICT;
-      throw error;
+      throw new ConflictException(ERROR_MESSAGE.ALREADY_SUBMITTED_WORK);
     }
   }
 
@@ -145,7 +136,7 @@ export class WorksService {
     if (work.userId !== userId)
       throw new ForbiddenException('수정 권한이 없습니다.');
 
-    const updateData = {};
+    const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title;
 
     if (action === 'SUBMIT') {

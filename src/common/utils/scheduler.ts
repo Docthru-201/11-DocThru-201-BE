@@ -64,7 +64,6 @@ export class DeadlineScheduler {
 
     // 2. 매일 자정 실행 예약
     cron.schedule('0 0 * * *', () => this.processCloseChallenges(), {
-      scheduled: true,
       timezone: 'Asia/Seoul',
     });
 

@@ -57,6 +57,9 @@ export const ERROR_MESSAGE = {
   CANNOT_MODIFY_CLOSED_CHALLENGE: '이미 완료된 챌린지는 수정할 수 없습니다.',
   ADMIN_ONLY_EDIT: '관리자만 수정할 수 있습니다.',
   ALREADY_SUBMITTED_WORK: '이미 등록된 작업물이 있습니다.',
+
+  // notification 관련
+  NOTIFICATION_NOT_FOUND: '알림을 찾을 수 없습니다.',
 };
 //성공메시지 추가
 export const SUCCESS_MESSAGE = {

@@ -72,7 +72,7 @@ export class AuthService {
     return this.#toAuthUserResponse({ ...userWithoutPassword, socials: [] });
   }
 
-  async login(data, requestContext = {}) {
+  async login(data, requestContext: { ip?: string } = {}) {
     const { email, password } = data;
     const ip = requestContext.ip ?? 'unknown';
     const emailNorm =
@@ -222,7 +222,7 @@ export class AuthService {
     }
     throw new BadRequestException(`지원하지 않는 provider입니다: ${provider}`);
   }
-  async oauthLogin(provider, code, requestContext = {}) {
+  async oauthLogin(provider, code, requestContext: { ip?: string } = {}) {
     const ip = requestContext.ip ?? 'unknown';
     if (provider === 'google') {
       let googleUser;
@@ -282,7 +282,7 @@ export class AuthService {
   }
 
   // 계정 열거 방지
-  async requestPasswordReset({ email }, requestContext = {}) {
+  async requestPasswordReset({ email }, requestContext: { ip?: string } = {}) {
     const ip = requestContext.ip ?? 'unknown';
     logSecurityEvent({
       type: 'password_reset_request',
@@ -319,7 +319,10 @@ export class AuthService {
     return generic;
   }
 
-  async confirmPasswordReset({ token, password }, requestContext = {}) {
+  async confirmPasswordReset(
+    { token, password },
+    requestContext: { ip?: string } = {},
+  ) {
     const ip = requestContext.ip ?? 'unknown';
     const tokenHash = createHash('sha256').update(token).digest('hex');
     const userId =

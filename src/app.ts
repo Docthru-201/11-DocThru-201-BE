@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type Application } from 'express';
 import cookieParser from 'cookie-parser';
 import { config } from '#config';
 import {
@@ -26,8 +26,10 @@ const swaggerPath = path.join(__dirname, '..', 'swagger.yaml');
 const swaggerDocument = YAML.load(swaggerPath);
 
 export class App {
+  app: Application;
   #deadlineScheduler;
-  constructor(controller, authMiddleware, deadlineScheduler) {
+
+  constructor(controller: any, authMiddleware: any, deadlineScheduler: any) {
     this.app = express();
     this.#deadlineScheduler = deadlineScheduler;
     this.middleware(authMiddleware);

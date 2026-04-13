@@ -5,7 +5,10 @@ export class NotificationRepository {
     this.#prisma = prisma;
   }
 
-  async findManyByUserId(userId, { skip, take } = {}) {
+  async findManyByUserId(
+    userId,
+    { skip, take }: { skip?: number; take?: number } = {},
+  ) {
     return await this.#prisma.notification.findMany({
       where: {
         userId,

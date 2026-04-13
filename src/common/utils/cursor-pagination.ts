@@ -17,6 +17,11 @@ export function getCursorParams({
   limit = DEFAULT_CURSOR_LIMIT,
   maxLimit = MAX_CURSOR_LIMIT,
   cursorKey = 'id',
+}: {
+  cursor?: string | null;
+  limit?: number;
+  maxLimit?: number;
+  cursorKey?: string;
 } = {}) {
   const resolvedLimit = normalizeLimit(limit, maxLimit);
   const trimmedCursor = cursor == null ? '' : String(cursor).trim();
@@ -38,6 +43,11 @@ export function parseCursorResult({
   limit = DEFAULT_CURSOR_LIMIT,
   maxLimit = MAX_CURSOR_LIMIT,
   cursorKey = 'id',
+}: {
+  items?: unknown[];
+  limit?: number;
+  maxLimit?: number;
+  cursorKey?: string;
 } = {}) {
   const list = Array.isArray(items) ? items : [];
   const resolvedLimit = normalizeLimit(limit, maxLimit);

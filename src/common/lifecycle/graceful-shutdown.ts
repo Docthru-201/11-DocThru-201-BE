@@ -7,7 +7,7 @@ export const setupGracefulShutdown = (server, prisma) => {
     console.log(`\n${signal} 신호를 받았습니다. 서버를 종료합니다...`);
 
     try {
-      await new Promise((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         server.close((error) => {
           // 새로운 요청은 받지 않음, 이미 처리 중인 요청은 끝날 때까지 기다림
           if (error) {

@@ -7,7 +7,7 @@ export class ChallengeRepository {
 
   // 커서 기반 목록 조회 (무한 스크롤링)
   async findManyWithCursor({ cursor, skip, take, where, orderBy, include }) {
-    const args = {
+    const args: Record<string, unknown> = {
       where,
       take,
       orderBy: orderBy ?? { createdAt: 'desc' },

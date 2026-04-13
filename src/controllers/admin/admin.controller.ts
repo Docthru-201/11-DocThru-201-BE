@@ -18,13 +18,13 @@ export class AdminController extends BaseController {
       adminValidator,
       auditAdminAction,
       validate('query', getAllChallengesScheme),
-      (req, res, next) => this.getAllChallenges(req, res, next),
+      (req, res) => this.getAllChallenges(req, res),
     );
     this.router.get(
       '/challenges/:challengeId',
       adminValidator,
       auditAdminAction,
-      (req, res, next) => this.getChallengeDetailById(req, res, next),
+      (req, res) => this.getChallengeDetailById(req, res),
     );
     this.router.patch(
       '/challenges/:challengeId',
@@ -32,7 +32,7 @@ export class AdminController extends BaseController {
       auditAdminAction,
       validate('params', updateChallengeStatusScheme.params),
       validate('body', updateChallengeStatusScheme.body),
-      (req, res, next) => this.updateChallengeStatus(req, res, next),
+      (req, res) => this.updateChallengeStatus(req, res),
     );
 
     return this.router;

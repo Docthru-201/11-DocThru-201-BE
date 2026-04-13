@@ -15,10 +15,8 @@ export class WorksController extends BaseController {
 
   routes() {
     /** 챌린지 상세 참여현황 — 공개 조회(로그인 시 좋아요 여부만 채움) */
-    this.router.get(
-      '/',
-      validate('query', workListQuerySchema),
-      (req, res, next) => this.getAllWorks(req, res, next),
+    this.router.get('/', validate('query', workListQuerySchema), (req, res) =>
+      this.getAllWorks(req, res),
     );
     this.router.post('/', needsLogin, (req, res, next) =>
       this.createWork(req, res, next),

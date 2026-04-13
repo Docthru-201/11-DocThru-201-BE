@@ -50,8 +50,8 @@ export const createChallengeSchema = z.object({
     .min(1, '제목을 입력해 주세요.')
     .max(TITLE_MAX_LENGTH, `제목은 ${TITLE_MAX_LENGTH}자를 넘을 수 없습니다.`), // 101자 에러
   originalUrl: z.url('올바른 URL 형식으로 입력해 주세요'),
-  type: z.enum(Type, { required_error: '타입을 선택해 주세요.' }),
-  category: z.enum(Category, { required_error: '카테고리를 선택해 주세요' }),
+  type: z.enum(Type, { error: '타입을 선택해 주세요.' }),
+  category: z.enum(Category, { error: '카테고리를 선택해 주세요' }),
   description: z
     .string()
     .min(
@@ -62,7 +62,7 @@ export const createChallengeSchema = z.object({
       DESCRIPTION_MAX_LENGTH,
       `설명은 ${DESCRIPTION_MAX_LENGTH}자 이하여야 합니다.`,
     ),
-  deadline: z.iso.datetime({ required_error: '마감일을 정해주세요.' }),
+  deadline: z.iso.datetime({ error: '마감일을 정해주세요.' }),
   maxParticipants: z.coerce
     .number()
     .int()
@@ -76,8 +76,8 @@ export const updateChallengeSchema = z.object({
     .min(1, '제목을 입력해 주세요.')
     .max(TITLE_MAX_LENGTH, `제목은 ${TITLE_MAX_LENGTH}자를 넘을 수 없습니다.`),
   originalUrl: z.url(`올바른 웹 주소 형식이 아닙니다.`),
-  type: z.enum(Type, { required_error: '타입을 선택해 주세요.' }).optional(),
-  category: z.enum(Category, { required_error: '카테고리를 선택해 주세요' }),
+  type: z.enum(Type, { error: '타입을 선택해 주세요.' }).optional(),
+  category: z.enum(Category, { error: '카테고리를 선택해 주세요' }),
   description: z
     .string()
     .trim()

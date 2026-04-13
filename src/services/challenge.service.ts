@@ -1,4 +1,5 @@
-import { ERROR_MESSAGE, HTTP_STATUS } from '#constants';
+import { ERROR_MESSAGE } from '#constants';
+import { NotFoundException } from '#exceptions';
 import { getCursorParams, parseCursorResult } from '#utils';
 import { requireAdmin } from '../common/utils/permission.util.js';
 
@@ -278,7 +279,12 @@ export class ChallengesService {
     requireAdmin(actor);
     const offset = (page - 1) * pageSize;
 
-    const options = {
+    const options: {
+      skip: number;
+      take: number;
+      where: Record<string, unknown>;
+      orderBy: Record<string, unknown>;
+    } = {
       skip: offset,
       take: pageSize,
       where: {},
@@ -294,7 +300,7 @@ export class ChallengesService {
     if (statusValues.includes(sort.toLowerCase())) {
       options.where.status = sort.toUpperCase();
     } else {
-      const sortOptions = {
+      const sortOptions: Record<string, Record<string, string>> = {
         createdAt_asc: { createdAt: 'asc' },
         createdAt_desc: { createdAt: 'desc' },
         deadline_asc: { deadline: 'asc' },
@@ -394,9 +400,7 @@ export class ChallengesService {
       await this.#challengeRepository.findChallengeById?.(challengeId);
 
     if (!challenge) {
-      const error = new Error(ERROR_MESSAGE.RESOURCE_NOT_FOUND);
-      error.statusCode = HTTP_STATUS.NOT_FOUND;
-      throw error;
+      throw new NotFoundException(ERROR_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
     return challenge;

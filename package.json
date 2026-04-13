@@ -3,27 +3,28 @@
   "version": "1.0.0",
   "description": "개발 문서 번역 챌린지 서비스 '독스루(DocThru)'의 백엔드 서버 레포지토리",
   "type": "module",
-  "main": "./src/main.js",
+  "main": "./src/main.ts",
   "imports": {
-    "#generated/prisma": "./generated/prisma/index.js",
+    "#generated/prisma": "./generated/prisma/index.ts",
     "#generated/*": "./generated/*",
-    "#config": "./src/config/config.js",
+    "#config": "./src/config/config.ts",
     "#db/*": "./src/db/*",
     "#docs/*": "./src/docs/*",
-    "#repositories": "./src/repositories/index.js",
-    "#constants": "./src/common/constants/index.js",
-    "#utils": "./src/common/utils/index.js",
+    "#repositories": "./src/repositories/index.ts",
+    "#constants": "./src/common/constants/index.ts",
+    "#utils": "./src/common/utils/index.ts",
     "#utils/*": "./src/common/utils/*",
-    "#exceptions": "./src/common/exceptions/index.js",
-    "#controllers": "./src/controllers/index.js",
+    "#exceptions": "./src/common/exceptions/index.ts",
+    "#controllers": "./src/controllers/index.ts",
     "#controllers/*": "./src/controllers/*",
-    "#services": "./src/services/index.js",
-    "#middlewares": "./src/middlewares/index.js",
-    "#providers": "./src/providers/index.js"
+    "#services": "./src/services/index.ts",
+    "#middlewares": "./src/middlewares/index.ts",
+    "#providers": "./src/providers/index.ts"
   },
   "scripts": {
-    "dev": "nodemon --env-file=./env/.env.development ./src/main.js",
-    "prod": "node --env-file=./env/.env.production src/main.js",
+    "dev": "tsx --env-file=./env/.env.development ./src/main.ts",
+    "build": "tsc --noEmit",
+    "prod": "tsx --env-file=./env/.env.production src/main.ts",
     "prisma:push": "dotenv -e ./env/.env.development -- prisma db push",
     "prisma:reset": "dotenv -e ./env/.env.development -- prisma migrate reset",
     "prisma:migrate": "dotenv -e ./env/.env.development -- prisma migrate dev",
@@ -39,7 +40,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{js,jsx,mjs,json,md}": [
+    "*.{ts,js,mjs,json,md}": [
       "pnpm exec eslint",
       "pnpm exec prettier --check"
     ]
@@ -77,6 +78,15 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@faker-js/faker": "^10.2.0",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.6.0",
+    "@types/nodemailer": "^8.0.0",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/yamljs": "^0.2.34",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.2",
     "globals": "^17.4.0",
@@ -85,6 +95,8 @@
     "nodemon": "^3.1.11",
     "prettier": "^3.8.1",
     "prisma": "^7.5.0",
-    "supabase": "^2.81.3"
+    "supabase": "^2.81.3",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
   }
 }

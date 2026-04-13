@@ -64,9 +64,6 @@ const challengeSummarySchema = createChallengeSchema
     createdAt: z.string().describe('생성 시각 (ISO8601)'),
     updatedAt: z.string().describe('수정 시각 (ISO8601)'),
   })
-  .partial({
-    declineReason: true,
-  })
   .meta({
     id: 'ChallengeSummary',
     description: '챌린지 목록용 요약 정보',
