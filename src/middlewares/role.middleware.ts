@@ -1,5 +1,11 @@
+import type { Request, Response, NextFunction } from 'express';
+
 /** 관리자 전용 라우트: auth 미들웨어 이후 req.user.role === 'ADMIN' 인지 검사 */
-export function adminValidator(req, res, next) {
+export function adminValidator(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const role = req.user?.role;
 
   if (!role) {

@@ -1,18 +1,19 @@
+import type { Request, Response, NextFunction } from 'express';
 import { corsOrigins, isDevelopment, isProduction, isTest } from '#config';
 import { ERROR_MESSAGE } from '#constants';
 import { ForbiddenException } from '#exceptions';
 
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-function hasAuthCookie(req) {
+function hasAuthCookie(req: Request) {
   return Boolean(req.cookies?.accessToken || req.cookies?.refreshToken);
 }
 
-function originAllowed(origin) {
+function originAllowed(origin: string | undefined) {
   return Boolean(origin && corsOrigins.includes(origin));
 }
 
-function refererOriginAllowed(referer) {
+function refererOriginAllowed(referer: string | undefined) {
   if (!referer) return false;
   try {
     const u = new URL(referer);
@@ -27,7 +28,11 @@ function refererOriginAllowed(referer) {
  * Origin 또는 Referer가 CORS 허용 목록과 일치하는지 검사.
  * 개발 환경에서는 적용 X
  */
-export function csrfOriginMiddleware(req, _res, next) {
+export function csrfOriginMiddleware(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
   try {
     if (!UNSAFE_METHODS.has(req.method)) {
       return next();

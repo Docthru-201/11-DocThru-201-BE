@@ -1,15 +1,26 @@
-export class LikesService {
-  #likeRepository;
-  #workRepository;
-  #gradeService;
+import type { LikeRepository, WorkRepository } from '#repositories';
+import type { GradeService } from '#services';
 
-  constructor({ likeRepository, workRepository, gradeService }) {
+export class LikesService {
+  #likeRepository: LikeRepository;
+  #workRepository: WorkRepository;
+  #gradeService: GradeService;
+
+  constructor({
+    likeRepository,
+    workRepository,
+    gradeService,
+  }: {
+    likeRepository: LikeRepository;
+    workRepository: WorkRepository;
+    gradeService: GradeService;
+  }) {
     this.#likeRepository = likeRepository;
     this.#workRepository = workRepository;
     this.#gradeService = gradeService;
   }
 
-  async getLikeCount(workId) {
+  async getLikeCount(workId: string) {
     const work = await this.#workRepository.findById(workId);
     if (!work) throw new Error('작업물을 찾을 수 없습니다.');
 
@@ -17,13 +28,13 @@ export class LikesService {
     return work.likeCount ?? 0;
   }
 
-  async getMyLikeStatus(userId, workId) {
+  async getMyLikeStatus(userId: string, workId: string) {
     const like = await this.#likeRepository.findLike(workId, userId);
 
     return !!like;
   }
 
-  async like(userId, workId) {
+  async like(userId: string, workId: string) {
     const work = await this.#workRepository.findById(workId);
     if (!work) throw new Error('작업물을 찾을 수 없습니다.');
 
@@ -38,12 +49,14 @@ export class LikesService {
       likeCount: { increment: 1 },
     });
 
-    await this.#gradeService.updateGradeIfNeeded(work.userId);
+    if (work.userId) {
+      await this.#gradeService.updateGradeIfNeeded(work.userId);
+    }
 
     return result;
   }
 
-  async unlike(userId, workId) {
+  async unlike(userId: string, workId: string) {
     const existingLike = await this.#likeRepository.findLike(workId, userId);
     if (!existingLike) {
       throw new Error('취소할 좋아요 기록이 없습니다.');
@@ -57,7 +70,9 @@ export class LikesService {
       });
     }
 
-    await this.#gradeService.updateGradeIfNeeded(work.userId);
+    if (work && work.userId) {
+      await this.#gradeService.updateGradeIfNeeded(work.userId);
+    }
 
     return result;
   }

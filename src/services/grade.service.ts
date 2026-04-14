@@ -1,16 +1,30 @@
 // src/services/grade.service.js
-export class GradeService {
-  #userRepository;
-  #participantRepository;
-  #likeRepository;
+import type {
+  UserRepository,
+  ParticipantRepository,
+  LikeRepository,
+} from '#repositories';
 
-  constructor({ userRepository, participantRepository, likeRepository }) {
+export class GradeService {
+  #userRepository: UserRepository;
+  #participantRepository: ParticipantRepository;
+  #likeRepository: LikeRepository;
+
+  constructor({
+    userRepository,
+    participantRepository,
+    likeRepository,
+  }: {
+    userRepository: UserRepository;
+    participantRepository: ParticipantRepository;
+    likeRepository: LikeRepository;
+  }) {
     this.#userRepository = userRepository;
     this.#participantRepository = participantRepository;
     this.#likeRepository = likeRepository;
   }
 
-  async updateGradeIfNeeded(userId) {
+  async updateGradeIfNeeded(userId: string) {
     const participantCount =
       await this.#participantRepository.countByUserId(userId);
     const likeCount = await this.#likeRepository.countReceivedByUserId(userId);

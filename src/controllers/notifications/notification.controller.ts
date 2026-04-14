@@ -1,6 +1,8 @@
+import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '#constants';
 import { BaseController } from '#controllers/base.controller.js';
 import { needsLogin, validate } from '#middlewares';
+import type { NotificationsService } from '#services';
 import {
   createNotificationSchema,
   getMyNotificationsQuerySchema,
@@ -9,9 +11,13 @@ import {
 } from './dto/notification.dto.js';
 
 export class NotificationsController extends BaseController {
-  #notificationsService;
+  #notificationsService: NotificationsService;
 
-  constructor({ notificationsService }) {
+  constructor({
+    notificationsService,
+  }: {
+    notificationsService: NotificationsService;
+  }) {
     super();
     this.#notificationsService = notificationsService;
   }
@@ -53,20 +59,19 @@ export class NotificationsController extends BaseController {
     return this.router;
   }
 
-  async create(req, res) {
-    const { userId, message, targetType, targetId, targetUrl } = req.body;
+  async create(req: Request, res: Response) {
+    const { userId, message, targetId, targetUrl } = req.body;
     const notification = await this.#notificationsService.createNotification({
       actorId: req.user.id,
       userId,
       message,
-      targetType,
       targetId,
       targetUrl,
     });
     res.status(HTTP_STATUS.CREATED).json(notification);
   }
 
-  async listMy(req, res) {
+  async listMy(req: Request, res: Response) {
     const { page, limit, targetType } = req.query;
     const notifications = await this.#notificationsService.listMyNotifications({
       userId: req.user.id,
@@ -77,8 +82,8 @@ export class NotificationsController extends BaseController {
     res.status(HTTP_STATUS.OK).json(notifications);
   }
 
-  async deleteMy(req, res) {
-    const { id } = req.params;
+  async deleteMy(req: Request, res: Response) {
+    const id = req.params.id as string;
     await this.#notificationsService.deleteMyNotification({
       userId: req.user.id,
       notificationId: id,
@@ -86,8 +91,8 @@ export class NotificationsController extends BaseController {
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 
-  async markAsRead(req, res) {
-    const { id } = req.params;
+  async markAsRead(req: Request, res: Response) {
+    const id = req.params.id as string;
     const { isRead } = req.body;
     const updated = await this.#notificationsService.markAsRead({
       userId: req.user.id,

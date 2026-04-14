@@ -1,9 +1,14 @@
+import type { Request, Response, NextFunction } from 'express';
 import { ERROR_MESSAGE } from '#constants';
 import { ForbiddenException } from '#exceptions';
 import { securityDefense } from '../common/security/defense.js';
 import { logSecurityEvent } from '../common/utils/security-audit.js';
 
-export function securityIpBlockGuard(req, _res, next) {
+export function securityIpBlockGuard(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
   const ip = req.ip ?? 'unknown';
   if (securityDefense.isIpBlocked(ip)) {
     logSecurityEvent({
@@ -18,7 +23,11 @@ export function securityIpBlockGuard(req, _res, next) {
   next();
 }
 
-export function securityObserveRequest(req, _res, next) {
+export function securityObserveRequest(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
   const ip = req.ip ?? 'unknown';
   securityDefense.recordRequestBurst(ip);
   securityDefense.logSuspiciousUserAgent(ip, req.get('user-agent'));
@@ -28,7 +37,11 @@ export function securityObserveRequest(req, _res, next) {
 /**
  * 관리자 전용 동작 감사(응답 완료 후 1회 기록)
  */
-export function auditAdminAction(req, res, next) {
+export function auditAdminAction(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const userId = req.user?.id ?? req.user?.userId;
   const role = req.user?.role;
   res.on('finish', () => {

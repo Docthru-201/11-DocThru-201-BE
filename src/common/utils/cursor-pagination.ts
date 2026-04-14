@@ -2,7 +2,10 @@ const DEFAULT_CURSOR_LIMIT = 20;
 const MAX_CURSOR_LIMIT = 100;
 
 // 쿼리 정규화
-function normalizeLimit(value, maxLimit = MAX_CURSOR_LIMIT) {
+function normalizeLimit(
+  value: number | undefined,
+  maxLimit = MAX_CURSOR_LIMIT,
+) {
   const safeMaxLimit = Math.max(1, Number(maxLimit) || MAX_CURSOR_LIMIT);
 
   return Math.min(
@@ -38,13 +41,13 @@ export function getCursorParams({
 }
 
 // findMany 결과에서 다음 커서와 잘린 목록 추출
-export function parseCursorResult({
+export function parseCursorResult<T extends Record<string, unknown>>({
   items,
   limit = DEFAULT_CURSOR_LIMIT,
   maxLimit = MAX_CURSOR_LIMIT,
   cursorKey = 'id',
 }: {
-  items?: unknown[];
+  items?: T[];
   limit?: number;
   maxLimit?: number;
   cursorKey?: string;

@@ -1,11 +1,17 @@
+import type { Request, Response, NextFunction } from 'express';
 import { Prisma } from '#generated/prisma/client.ts';
 import { ERROR_MESSAGE, HTTP_STATUS, PRISMA_ERROR } from '#constants';
 import { HttpException } from '#exceptions';
 import { redactForLog } from '../common/utils/log-mask.util.js';
 import { securityAuditLogger } from '../common/utils/security-audit.js';
 
-export const errorHandler = (err, req, res, _next) => {
-  console.error(err.stack);
+export const errorHandler = (
+  err: unknown,
+  req: Request,
+  res: Response,
+  _next: NextFunction,
+) => {
+  console.error(err instanceof Error ? err.stack : err);
   if (!(err instanceof HttpException) && req) {
     securityAuditLogger.error({
       tag: 'unhandled_error_context',
@@ -25,7 +31,7 @@ export const errorHandler = (err, req, res, _next) => {
 
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === PRISMA_ERROR.UNIQUE_CONSTRAINT) {
-      const field = err.meta?.target?.[0];
+      const field = (err.meta?.target as string[] | undefined)?.[0];
       return res.status(HTTP_STATUS.CONFLICT).json({
         success: false,
         message: `${field}가 이미 사용 중입니다.`,

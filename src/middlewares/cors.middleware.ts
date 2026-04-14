@@ -8,7 +8,10 @@ const ALLOWED_HEADERS = [
   'X-Requested-With',
 ];
 
-function corsOrigin(origin, callback) {
+function corsOrigin(
+  origin: string | undefined,
+  callback: (err: Error | null, allow?: boolean | string) => void,
+) {
   if (!isProduction) {
     if (!origin) return callback(null, '*');
     return callback(null, true);

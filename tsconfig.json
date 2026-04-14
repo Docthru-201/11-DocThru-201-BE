@@ -5,11 +5,27 @@
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "rootDir": ".",
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "#config": ["./src/config/config.ts"],
+      "#db/*": ["./src/db/*"],
+      "#repositories": ["./src/repositories/index.ts"],
+      "#services": ["./src/services/index.ts"],
+      "#controllers": ["./src/controllers/index.ts"],
+      "#controllers/*": ["./src/controllers/*"],
+      "#middlewares": ["./src/middlewares/index.ts"],
+      "#providers": ["./src/providers/index.ts"],
+      "#utils": ["./src/common/utils/index.ts"],
+      "#utils/*": ["./src/common/utils/*"],
+      "#constants": ["./src/common/constants/index.ts"],
+      "#exceptions": ["./src/common/exceptions/index.ts"],
+      "#generated/prisma": ["./generated/prisma/index.ts"],
+      "#generated/*": ["./generated/*"]
+    }
   },
   "include": ["src", "generated"],
   "exclude": ["node_modules", "dist"]

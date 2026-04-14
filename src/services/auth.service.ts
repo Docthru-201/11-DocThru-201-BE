@@ -11,8 +11,10 @@ import {
 import { securityDefense } from '../common/security/defense.js';
 import { logSecurityEvent } from '../common/utils/security-audit.js';
 import { maskEmail } from '../common/utils/log-mask.util.js';
+import type { AuthRepository } from '#repositories';
+import type { PasswordProvider, TokenProvider } from '#providers';
 
-function buildPasswordResetLink(rawToken) {
+function buildPasswordResetLink(rawToken: string) {
   const base =
     process.env.CLIENT_BASE_URL?.trim()?.replace(/\/$/, '') ||
     'http://localhost:3000';
@@ -23,17 +25,25 @@ function buildPasswordResetLink(rawToken) {
 }
 
 export class AuthService {
-  #authRepository;
-  #passwordProvider;
-  #tokenProvider;
+  #authRepository: AuthRepository;
+  #passwordProvider: PasswordProvider;
+  #tokenProvider: TokenProvider;
 
-  constructor({ authRepository, passwordProvider, tokenProvider }) {
+  constructor({
+    authRepository,
+    passwordProvider,
+    tokenProvider,
+  }: {
+    authRepository: AuthRepository;
+    passwordProvider: PasswordProvider;
+    tokenProvider: TokenProvider;
+  }) {
     this.#authRepository = authRepository;
     this.#passwordProvider = passwordProvider;
     this.#tokenProvider = tokenProvider;
   }
 
-  #toAuthUserResponse(user) {
+  #toAuthUserResponse(user: Record<string, unknown> | null | undefined) {
     if (!user) return user;
     const { password: _pw, socials, ...rest } = user;
     return {
@@ -42,7 +52,7 @@ export class AuthService {
     };
   }
 
-  async signup(data) {
+  async signup(data: { email: string; nickname: string; password: string }) {
     const { email, nickname, password } = data;
 
     // 1. 이메일/닉네임 중복 확인
@@ -72,7 +82,10 @@ export class AuthService {
     return this.#toAuthUserResponse({ ...userWithoutPassword, socials: [] });
   }
 
-  async login(data, requestContext: { ip?: string } = {}) {
+  async login(
+    data: { email: string; password: string },
+    requestContext: { ip?: string; userAgent?: string } = {},
+  ) {
     const { email, password } = data;
     const ip = requestContext.ip ?? 'unknown';
     const emailNorm =
@@ -153,15 +166,15 @@ export class AuthService {
     };
   }
 
-  async logout(userId) {
+  async logout(userId: string) {
     await this.#authRepository.deleteRefreshToken(userId);
   }
 
-  async logoutAll(userId) {
+  async logoutAll(userId: string) {
     await this.#authRepository.deleteRefreshToken(userId);
   }
 
-  async refresh(refreshToken) {
+  async refresh(refreshToken: string | undefined) {
     if (!refreshToken) {
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_TOKEN);
     }
@@ -180,6 +193,9 @@ export class AuthService {
     }
 
     const user = await this.#authRepository.findUserById(payload.userId);
+    if (!user) {
+      throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND);
+    }
 
     // refresh 로테이션: 기존 토큰 행을 지우고 새 refresh만 유효(세션 식별자 교체)
     await this.#authRepository.deleteRefreshToken(payload.userId);
@@ -199,7 +215,7 @@ export class AuthService {
       },
     };
   }
-  getOAuthLoginUrl(provider) {
+  getOAuthLoginUrl(provider: string) {
     if (provider === 'google') {
       const CLIENT_ID = process.env.GOOGLE_CLIENT_ID?.trim();
       const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI?.trim();
@@ -222,14 +238,21 @@ export class AuthService {
     }
     throw new BadRequestException(`지원하지 않는 provider입니다: ${provider}`);
   }
-  async oauthLogin(provider, code, requestContext: { ip?: string } = {}) {
+  async oauthLogin(
+    provider: string,
+    code: string,
+    requestContext: { ip?: string; userAgent?: string } = {},
+  ) {
     const ip = requestContext.ip ?? 'unknown';
     if (provider === 'google') {
       let googleUser;
       try {
         googleUser = await this.#authRepository.getGoogleUser(code);
       } catch (e) {
-        securityDefense.oauthFailure(ip, e?.message ?? 'oauth_token_error');
+        securityDefense.oauthFailure(
+          ip,
+          e instanceof Error ? e.message : 'oauth_token_error',
+        );
         throw e;
       }
       const { email, name, id: googleProviderId } = googleUser;
@@ -240,17 +263,24 @@ export class AuthService {
         );
       }
 
-      let user = await this.#authRepository.findUserByEmail(email);
-      if (!user) {
-        user = await this.#authRepository.createUser({
+      const foundUser = await this.#authRepository.findUserByEmail(email);
+      let userId: string;
+      if (!foundUser) {
+        const newUser = await this.#authRepository.createUser({
           email,
           nickname: name,
           password: null,
         });
+        userId = newUser.id;
+      } else {
+        userId = foundUser.id;
       }
 
-      await this.#authRepository.upsertGoogleSocial(user.id, googleProviderId);
-      const userWithSocials = await this.#authRepository.findUserById(user.id);
+      await this.#authRepository.upsertGoogleSocial(userId, googleProviderId);
+      const userWithSocials = await this.#authRepository.findUserById(userId);
+      if (!userWithSocials) {
+        throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND);
+      }
 
       const accessToken =
         this.#tokenProvider.generateAccessToken(userWithSocials);
@@ -272,7 +302,7 @@ export class AuthService {
 
     throw new BadRequestException(`지원하지 않는 provider입니다: ${provider}`);
   }
-  async me(userId) {
+  async me(userId: string) {
     const user = await this.#authRepository.findUserById(userId);
     if (!user) {
       throw new UnauthorizedException(ERROR_MESSAGE.USER_NOT_FOUND);
@@ -282,7 +312,10 @@ export class AuthService {
   }
 
   // 계정 열거 방지
-  async requestPasswordReset({ email }, requestContext: { ip?: string } = {}) {
+  async requestPasswordReset(
+    { email }: { email: string },
+    requestContext: { ip?: string } = {},
+  ) {
     const ip = requestContext.ip ?? 'unknown';
     logSecurityEvent({
       type: 'password_reset_request',
@@ -320,7 +353,7 @@ export class AuthService {
   }
 
   async confirmPasswordReset(
-    { token, password },
+    { token, password }: { token: string; password: string },
     requestContext: { ip?: string } = {},
   ) {
     const ip = requestContext.ip ?? 'unknown';

@@ -1,6 +1,9 @@
 import express, { type Application } from 'express';
 import cookieParser from 'cookie-parser';
 import { config } from '#config';
+import type { Controller } from './controllers/index.js';
+import type { AuthMiddleware } from './middlewares/auth.middleware.js';
+import type { DeadlineScheduler } from './common/utils/scheduler.js';
 import {
   errorHandler,
   cors,
@@ -27,9 +30,13 @@ const swaggerDocument = YAML.load(swaggerPath);
 
 export class App {
   app: Application;
-  #deadlineScheduler;
+  #deadlineScheduler: DeadlineScheduler;
 
-  constructor(controller: any, authMiddleware: any, deadlineScheduler: any) {
+  constructor(
+    controller: Controller,
+    authMiddleware: AuthMiddleware,
+    deadlineScheduler: DeadlineScheduler,
+  ) {
     this.app = express();
     this.#deadlineScheduler = deadlineScheduler;
     this.middleware(authMiddleware);
@@ -37,7 +44,7 @@ export class App {
     this.errorHandling();
   }
 
-  middleware(authMiddleware) {
+  middleware(authMiddleware: AuthMiddleware) {
     if (config.TRUST_PROXY > 0) {
       this.app.set('trust proxy', config.TRUST_PROXY);
     }
@@ -55,7 +62,7 @@ export class App {
     );
   }
 
-  routes(controller) {
+  routes(controller: Controller) {
     this.app.use(
       '/api-docs',
       swaggerUi.serve,
@@ -72,7 +79,7 @@ export class App {
     this.app.use(errorHandler);
   }
 
-  listen(port) {
+  listen(port: number) {
     return this.app.listen(port, () => {
       if (this.#deadlineScheduler) {
         this.#deadlineScheduler.start();

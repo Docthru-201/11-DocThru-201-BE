@@ -1,15 +1,20 @@
+import type { Request, Response, NextFunction } from 'express';
+import type { ZodTypeAny } from 'zod';
 import { isProduction } from '#config';
 import { flattenError } from 'zod';
 import { ERROR_MESSAGE } from '#constants';
 import { BadRequestException } from '#exceptions';
 
-export const validate = (target, schema) => {
+export const validate = (
+  target: 'body' | 'query' | 'params',
+  schema: ZodTypeAny,
+) => {
   if (!['body', 'query', 'params'].includes(target)) {
     throw new Error(
       `[validate middleware] Invalid target: "${target}". Expected "body", "query", or "params".`,
     );
   }
-  return (req, res, next) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = schema.safeParse(req[target]);
 
@@ -29,7 +34,7 @@ export const validate = (target, schema) => {
 
         throw new BadRequestException(
           ERROR_MESSAGE.VALIDATION_FAILED,
-          fieldErrors,
+          fieldErrors as Record<string, string[]>,
         );
       }
 

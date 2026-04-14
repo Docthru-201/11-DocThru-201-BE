@@ -1,13 +1,29 @@
-export class ChallengeRepository {
-  #prisma;
+import type { PrismaClient, Prisma } from '#generated/prisma/client.js';
 
-  constructor({ prisma }) {
+export class ChallengeRepository {
+  #prisma: PrismaClient;
+
+  constructor({ prisma }: { prisma: PrismaClient }) {
     this.#prisma = prisma;
   }
 
   // 커서 기반 목록 조회 (무한 스크롤링)
-  async findManyWithCursor({ cursor, skip, take, where, orderBy, include }) {
-    const args: Record<string, unknown> = {
+  async findManyWithCursor({
+    cursor,
+    skip,
+    take,
+    where,
+    orderBy,
+    include,
+  }: {
+    cursor?: Record<string, string>;
+    skip?: number;
+    take?: number;
+    where?: Prisma.ChallengeWhereInput;
+    orderBy?: Prisma.ChallengeOrderByWithRelationInput;
+    include?: Prisma.ChallengeInclude;
+  }) {
+    const args: Prisma.ChallengeFindManyArgs = {
       where,
       take,
       orderBy: orderBy ?? { createdAt: 'desc' },
@@ -17,7 +33,7 @@ export class ChallengeRepository {
       args.include = include;
     }
     if (cursor && typeof cursor === 'object') {
-      args.cursor = cursor;
+      args.cursor = cursor as unknown as Prisma.ChallengeWhereUniqueInput;
     }
     if (typeof skip === 'number') {
       args.skip = skip;
@@ -27,7 +43,12 @@ export class ChallengeRepository {
   }
 
   // 챌린지 관리 : 관리자 페이지와 일반 사용자 페이지에서 모두 사용 가능합니다.
-  async findAllChallenges(options) {
+  async findAllChallenges(options: {
+    skip: number;
+    take: number;
+    where: Prisma.ChallengeWhereInput;
+    orderBy: Prisma.ChallengeOrderByWithRelationInput;
+  }) {
     const { skip, take, where, orderBy } = options;
 
     const [data, totalCount] = await Promise.all([
@@ -58,7 +79,7 @@ export class ChallengeRepository {
   }
 
   // 챌린지 상세 조회 (이전/다음글 로직 포함)
-  async findChallengeDetailById(challengeId) {
+  async findChallengeDetailById(challengeId: string) {
     const current = await this.#prisma.challenge.findUnique({
       where: { id: challengeId },
       include: {
@@ -91,7 +112,7 @@ export class ChallengeRepository {
   }
 
   // 단순 챌린지 정보 조회 (권한 확인용 등)
-  async findChallengeById(challengeId) {
+  async findChallengeById(challengeId: string) {
     return await this.#prisma.challenge.findUnique({
       where: { id: challengeId },
       include: {
@@ -112,17 +133,17 @@ export class ChallengeRepository {
   //     },
   //   });
   // }
-  async create(data) {
+  async create(data: Prisma.ChallengeCreateInput) {
     return this.#prisma.challenge.create({ data });
   }
 
-  async createParticipant(data) {
+  async createParticipant(data: { userId: string; challengeId: string }) {
     return await this.#prisma.participant.create({
       data,
     });
   }
 
-  async update(id, data) {
+  async update(id: string, data: Prisma.ChallengeUpdateInput) {
     return this.#prisma.challenge.update({
       where: { id },
       data,
@@ -130,20 +151,23 @@ export class ChallengeRepository {
   }
 
   // 챌린지 정보 업데이트 (상태 변경, 내용 수정 통합)
-  async updateChallengeStatus(challengeId, data) {
+  async updateChallengeStatus(
+    challengeId: string,
+    data: Prisma.ChallengeUpdateInput,
+  ) {
     return await this.#prisma.challenge.update({
       where: { id: challengeId },
       data,
     });
   }
 
-  async delete(id) {
+  async delete(id: string) {
     return await this.#prisma.challenge.delete({
       where: { id: id },
     });
   }
 
-  async findByUserId(userId) {
+  async findByUserId(userId: string) {
     return await this.#prisma.challenge.findMany({
       where: { authorId: userId },
     });
@@ -161,7 +185,7 @@ export class ChallengeRepository {
     });
   }
 
-  async findNotificationRecipientsByChallengeId(challengeId) {
+  async findNotificationRecipientsByChallengeId(challengeId: string) {
     return await this.#prisma.challenge.findUnique({
       where: { id: challengeId },
       select: {
@@ -177,7 +201,7 @@ export class ChallengeRepository {
     });
   }
 
-  async findEndedChallenges(currentTime) {
+  async findEndedChallenges(currentTime: Date) {
     return await this.#prisma.challenge.findMany({
       where: {
         isClosed: false,
@@ -189,14 +213,14 @@ export class ChallengeRepository {
     });
   }
 
-  async closeChallenge(challengeId) {
+  async closeChallenge(challengeId: string) {
     return await this.#prisma.challenge.update({
       where: { id: challengeId },
       data: { isClosed: true },
     });
   }
 
-  async findByAuthorIdForMyList(userId) {
+  async findByAuthorIdForMyList(userId: string) {
     return await this.#prisma.challenge.findMany({
       where: { authorId: userId, deletedAt: null },
       include: {
@@ -212,7 +236,7 @@ export class ChallengeRepository {
   }
 
   /** 나의 챌린지(참가) — Participant 기준 */
-  async findByParticipantUserIdForMyList(userId) {
+  async findByParticipantUserIdForMyList(userId: string) {
     return await this.#prisma.challenge.findMany({
       where: {
         deletedAt: null,
@@ -230,11 +254,14 @@ export class ChallengeRepository {
     });
   }
 
-  async findBySubmittedWorkForMyList(userId, { isClosed }) {
+  async findBySubmittedWorkForMyList(
+    userId: string,
+    { isClosed }: { isClosed?: boolean },
+  ) {
     // DB에는 status 컬럼이 있으나, 로컬 generated Prisma Client가 스키마와 어긋난 경우
     // prisma.work.findMany({ where: { status } })가 실패할 수 있어 Raw SQL로 조회합니다.
     // 클라이언트 정합: `pnpm prisma:generate` (DATABASE_URL 설정 후)
-    const submitted = await this.#prisma.$queryRaw`
+    const submitted = await this.#prisma.$queryRaw<{ challengeId: string }[]>`
       SELECT DISTINCT w."challengeId"
       FROM "Work" w
       WHERE w.status = 'SUBMITTED'::"WorkStatus"

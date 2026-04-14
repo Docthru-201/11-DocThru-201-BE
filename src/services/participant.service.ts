@@ -1,15 +1,23 @@
 import { ConflictException } from '#exceptions';
+import type { ParticipantRepository } from '#repositories';
+import type { GradeService } from '#services';
 
 export class ParticipantsService {
-  #participantRepository;
-  #gradeService;
+  #participantRepository: ParticipantRepository;
+  #gradeService: GradeService;
 
-  constructor({ participantRepository, gradeService }) {
+  constructor({
+    participantRepository,
+    gradeService,
+  }: {
+    participantRepository: ParticipantRepository;
+    gradeService: GradeService;
+  }) {
     this.#participantRepository = participantRepository;
     this.#gradeService = gradeService;
   }
 
-  async joinChallenge(challengeId, userId) {
+  async joinChallenge(challengeId: string, userId: string) {
     const existing = await this.#participantRepository.findByUserAndChallenge(
       userId,
       challengeId,
@@ -29,7 +37,7 @@ export class ParticipantsService {
     return result;
   }
 
-  async getParticipantsByChallenge(challengeId) {
+  async getParticipantsByChallenge(challengeId: string) {
     return await this.#participantRepository.findManyByChallengeId(challengeId);
   }
 }

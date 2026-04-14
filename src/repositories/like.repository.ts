@@ -1,17 +1,19 @@
-export class LikeRepository {
-  #prisma;
+import type { PrismaClient } from '#generated/prisma/client.js';
 
-  constructor({ prisma }) {
+export class LikeRepository {
+  #prisma: PrismaClient;
+
+  constructor({ prisma }: { prisma: PrismaClient }) {
     this.#prisma = prisma;
   }
 
-  async countByWorkId(workId) {
+  async countByWorkId(workId: string) {
     return this.#prisma.like.count({
       where: { workId },
     });
   }
 
-  async findLike(workId, userId) {
+  async findLike(workId: string, userId: string) {
     return this.#prisma.like.findUnique({
       where: {
         workId_userId: {
@@ -22,7 +24,7 @@ export class LikeRepository {
     });
   }
 
-  async create(data) {
+  async create(data: { workId: string; userId: string }) {
     return this.#prisma.like.create({
       data: {
         workId: data.workId,
@@ -31,7 +33,7 @@ export class LikeRepository {
     });
   }
 
-  async delete(workId, userId) {
+  async delete(workId: string, userId: string) {
     return this.#prisma.like.delete({
       where: {
         workId_userId: {
@@ -42,7 +44,13 @@ export class LikeRepository {
     });
   }
 
-  async findManyLiked({ userId, workIds }) {
+  async findManyLiked({
+    userId,
+    workIds,
+  }: {
+    userId: string;
+    workIds: string[];
+  }) {
     return await this.#prisma.like.findMany({
       where: {
         userId: userId,
@@ -52,7 +60,7 @@ export class LikeRepository {
     });
   }
 
-  async countReceivedByUserId(userId) {
+  async countReceivedByUserId(userId: string) {
     return this.#prisma.like.count({
       where: {
         work: { userId },

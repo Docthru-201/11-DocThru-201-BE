@@ -1,17 +1,18 @@
 // src/services/users.service.js
 import { ConflictException, NotFoundException } from '#exceptions';
 import { ERROR_MESSAGE } from '#constants';
+import type { UserRepository } from '#repositories';
 
 export class UsersService {
-  #userRepository;
+  #userRepository: UserRepository;
 
   // 생성자 주입 이름을 userRepository로 변경하여 컨테이너와 일치시킵니다.
-  constructor({ userRepository }) {
+  constructor({ userRepository }: { userRepository: UserRepository }) {
     this.#userRepository = userRepository;
   }
 
   // 1️⃣ ID로 내 정보 조회 (전체 필드)
-  async getUserById(userId) {
+  async getUserById(userId: string) {
     const user = await this.#userRepository.findUserById(userId);
     if (!user) {
       throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
@@ -22,7 +23,7 @@ export class UsersService {
     return userWithoutPassword;
   }
 
-  async updateUser(userId, data) {
+  async updateUser(userId: string, data: Record<string, unknown>) {
     const user = await this.#userRepository.findUserById(userId);
     if (!user) {
       throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
@@ -30,7 +31,7 @@ export class UsersService {
 
     if (data.nickname && data.nickname !== user.nickname) {
       const exist = await this.#userRepository.findUserByNickname(
-        data.nickname,
+        data.nickname as string,
       );
 
       if (exist) {
@@ -42,7 +43,7 @@ export class UsersService {
   }
 
   // 3️⃣ 계정 삭제
-  async deleteUser(userId) {
+  async deleteUser(userId: string) {
     const user = await this.#userRepository.findUserById(userId);
     if (!user) {
       throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);
@@ -52,7 +53,7 @@ export class UsersService {
   }
 
   // 4️⃣ 다른 유저 공개 프로필 조회
-  async getPublicProfile(userId) {
+  async getPublicProfile(userId: string) {
     const user = await this.#userRepository.findUserById(userId);
     if (!user) {
       throw new NotFoundException(ERROR_MESSAGE.USER_NOT_FOUND);

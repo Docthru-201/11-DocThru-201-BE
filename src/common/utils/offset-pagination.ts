@@ -3,11 +3,14 @@ import { MAX_PAGE_SIZE, PAGINATION } from '#constants';
 const DEFAULT_PAGE_SIZE = PAGINATION.OFFSET_DEFAULT_PAGE_SIZE;
 
 // 쿼리 정규화
-function normalizePage(value) {
+function normalizePage(value: number | undefined) {
   return Math.max(1, Number(value) || 1);
 }
 
-function normalizePageSize(value, maxPageSize = MAX_PAGE_SIZE) {
+function normalizePageSize(
+  value: number | undefined,
+  maxPageSize = MAX_PAGE_SIZE,
+) {
   const safeMaxPageSize = Math.max(1, Number(maxPageSize) || MAX_PAGE_SIZE);
 
   return Math.min(
@@ -33,7 +36,15 @@ export function getOffsetParams({
   };
 }
 
-export function getOffsetMeta({ totalCount, page, pageSize }) {
+export function getOffsetMeta({
+  totalCount,
+  page,
+  pageSize,
+}: {
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}) {
   const total = Math.max(0, Number(totalCount) || 0);
   const currentPage = normalizePage(page);
   const size = normalizePageSize(pageSize);

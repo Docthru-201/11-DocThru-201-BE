@@ -9,28 +9,41 @@ function now() {
   return Date.now();
 }
 
-function normalizeIp(ip) {
+function normalizeIp(ip: string | null | undefined) {
   return ip || 'unknown';
 }
 
-function emailCounterKey(emailNormalized) {
+function emailCounterKey(emailNormalized: string) {
   return `e:${emailNormalized}`;
 }
 
-function ipCounterKey(ip) {
+function ipCounterKey(ip: string) {
   return `ip:${normalizeIp(ip)}`;
 }
 
-function loginTargetKey(emailNormalized, ip) {
+function loginTargetKey(
+  emailNormalized: string | null | undefined,
+  ip: string,
+) {
   return emailNormalized ? emailCounterKey(emailNormalized) : ipCounterKey(ip);
 }
 
-function formatUaSample(value) {
+function formatUaSample(value: string | null | undefined) {
   if (!value) return '(empty)';
   return value.length > 80 ? `${value.slice(0, 80)}…` : value;
 }
 
-function pruneExpiredIpBlocks(map) {
+interface IpBlockEntry {
+  until: number;
+  reason: string;
+}
+
+interface BurstEntry {
+  count: number;
+  windowStart: number;
+}
+
+function pruneExpiredIpBlocks(map: Map<string, IpBlockEntry>) {
   const t = now();
   for (const [key, value] of map) {
     if (!value || value.until <= t) {
@@ -39,7 +52,7 @@ function pruneExpiredIpBlocks(map) {
   }
 }
 
-function pruneBurstMap(map, windowMs) {
+function pruneBurstMap(map: Map<string, BurstEntry>, windowMs: number) {
   const t = now();
   for (const [key, value] of map) {
     if (!value || t - value.windowStart >= windowMs) {
@@ -48,11 +61,17 @@ function pruneBurstMap(map, windowMs) {
   }
 }
 
+interface CounterEntry {
+  count: number;
+  windowStart: number;
+  lastSeen: number;
+}
+
 // 고정 window 카운터
 class FixedWindowCounter {
-  #map = new Map();
+  #map = new Map<string, CounterEntry>();
 
-  increment(key, windowMs) {
+  increment(key: string, windowMs: number): number {
     const t = now();
     const current = this.#map.get(key);
 
@@ -71,11 +90,11 @@ class FixedWindowCounter {
     return current.count;
   }
 
-  reset(key) {
+  reset(key: string): void {
     this.#map.delete(key);
   }
 
-  pruneInactive(maxAgeMs) {
+  pruneInactive(maxAgeMs: number): void {
     const t = now();
     for (const [key, value] of this.#map) {
       if (!value || t - value.lastSeen >= maxAgeMs) {
@@ -87,8 +106,8 @@ class FixedWindowCounter {
 
 const emailFails = new FixedWindowCounter();
 const ipFails = new FixedWindowCounter();
-const ipBlocks = new Map();
-const burstByIp = new Map();
+const ipBlocks = new Map<string, IpBlockEntry>();
+const burstByIp = new Map<string, BurstEntry>();
 
 const SUSPICIOUS_UA = /sqlmap|nikto|masscan|nmap|acunetix|nessus|scanner/i;
 
@@ -103,7 +122,7 @@ class SecurityDefense {
     pruneBurstMap(burstByIp, BURST_WINDOW_MS);
   }
 
-  isIpBlocked(ip) {
+  isIpBlocked(ip: string): boolean {
     this.#pruneTransientState();
 
     const key = normalizeIp(ip);
@@ -112,7 +131,7 @@ class SecurityDefense {
     return Boolean(row && row.until > now());
   }
 
-  blockIp(ip, durationMs, reason) {
+  blockIp(ip: string, durationMs: number, reason: string): Date {
     const key = normalizeIp(ip);
     const until = now() + durationMs;
 
@@ -135,7 +154,7 @@ class SecurityDefense {
     return new Date(until);
   }
 
-  recordRequestBurst(ip) {
+  recordRequestBurst(ip: string): number {
     this.#pruneTransientState();
 
     const key = normalizeIp(ip);
@@ -171,7 +190,7 @@ class SecurityDefense {
     return row.count;
   }
 
-  logSuspiciousUserAgent(ip, ua) {
+  logSuspiciousUserAgent(ip: string, ua: string | undefined): void {
     const ipKey = normalizeIp(ip);
     const raw = typeof ua === 'string' ? ua : '';
     const trimmed = raw.trim();
@@ -187,7 +206,15 @@ class SecurityDefense {
     }
   }
 
-  recordLoginFailure({ ip, emailNormalized, userId }) {
+  recordLoginFailure({
+    ip,
+    emailNormalized,
+    userId,
+  }: {
+    ip: string;
+    emailNormalized: string | null;
+    userId: string | null;
+  }) {
     this.#pruneTransientState();
 
     const {
@@ -256,16 +283,16 @@ class SecurityDefense {
     return { lockUntil, blockedUntil };
   }
 
-  clearLoginFailuresForEmail(emailNormalized) {
+  clearLoginFailuresForEmail(emailNormalized: string): void {
     if (!emailNormalized) return;
     emailFails.reset(emailCounterKey(emailNormalized));
   }
 
-  clearLoginFailuresForIp(ip) {
+  clearLoginFailuresForIp(ip: string): void {
     ipFails.reset(ipCounterKey(ip));
   }
 
-  oauthFailure(ip, message) {
+  oauthFailure(ip: string, message: string): void {
     logSecurityEvent({
       type: 'oauth_login_failure',
       ip: normalizeIp(ip),
@@ -273,7 +300,7 @@ class SecurityDefense {
     });
   }
 
-  oauthSuccess(ip, userId) {
+  oauthSuccess(ip: string, userId: string): void {
     logSecurityEvent({
       type: 'oauth_login_success',
       ip: normalizeIp(ip),

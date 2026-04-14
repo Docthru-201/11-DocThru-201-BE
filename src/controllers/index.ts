@@ -1,5 +1,16 @@
+import type { Request, Response } from 'express';
 import { format } from 'date-fns';
 import { BaseController } from './base.controller.js';
+import type { AuthController } from './auth/index.js';
+import type { UsersController } from './users/index.js';
+import type { ProfilesController } from './profiles/index.js';
+import type { ChallengesController } from './challenges/index.js';
+import type { ParticipantsController } from './participants/index.js';
+import type { WorksController } from './works/index.js';
+import type { CommentsController } from './comments/index.js';
+import type { LikesController } from './likes/index.js';
+import type { NotificationsController } from './notifications/index.js';
+import type { AdminController } from './admin/index.js';
 
 export * from './auth/index.js';
 export * from './users/index.js';
@@ -13,16 +24,16 @@ export * from './notifications/index.js';
 export * from './admin/index.js';
 
 export class Controller extends BaseController {
-  #authController;
-  #usersController;
-  #profilesController;
-  #challengesController;
-  #participantsController;
-  #worksController;
-  #commentsController;
-  #likesController;
-  #notificationsController;
-  #adminController;
+  #authController: AuthController;
+  #usersController: UsersController;
+  #profilesController: ProfilesController;
+  #challengesController: ChallengesController;
+  #participantsController: ParticipantsController;
+  #worksController: WorksController;
+  #commentsController: CommentsController;
+  #likesController: LikesController;
+  #notificationsController: NotificationsController;
+  #adminController: AdminController;
 
   constructor({
     authController,
@@ -35,6 +46,17 @@ export class Controller extends BaseController {
     likesController,
     notificationsController,
     adminController,
+  }: {
+    authController: AuthController;
+    usersController: UsersController;
+    profilesController: ProfilesController;
+    challengesController: ChallengesController;
+    participantsController: ParticipantsController;
+    worksController: WorksController;
+    commentsController: CommentsController;
+    likesController: LikesController;
+    notificationsController: NotificationsController;
+    adminController: AdminController;
   }) {
     super();
     this.#authController = authController;
@@ -67,7 +89,7 @@ export class Controller extends BaseController {
     return this.router;
   }
 
-  ping(req, res) {
+  ping(req: Request, res: Response) {
     const time = new Date();
     const formattedTime = format(time, 'yyyy-MM-dd HH:mm:ss');
     const message = `현재 시간: ${formattedTime}`;

@@ -1,14 +1,15 @@
 import { NotFoundException } from '#exceptions';
 import { ERROR_MESSAGE } from '#constants';
+import type { ProfileRepository } from '#repositories';
 
 export class ProfilesService {
-  #profileRepository;
+  #profileRepository: ProfileRepository;
 
-  constructor({ profileRepository }) {
+  constructor({ profileRepository }: { profileRepository: ProfileRepository }) {
     this.#profileRepository = profileRepository;
   }
 
-  async getMyProfile(userId) {
+  async getMyProfile(userId: string) {
     const profile = await this.#profileRepository.findByUserId(userId);
 
     if (!profile) {
@@ -18,7 +19,7 @@ export class ProfilesService {
     return profile;
   }
 
-  async updateProfile(userId, data) {
+  async updateProfile(userId: string, data: Record<string, unknown>) {
     const profile = await this.#profileRepository.findByUserId(userId);
 
     if (!profile) {
@@ -28,7 +29,7 @@ export class ProfilesService {
     return this.#profileRepository.update(userId, data);
   }
 
-  async getProfileByUserId(userId) {
+  async getProfileByUserId(userId: string) {
     const profile = await this.#profileRepository.findByUserId(userId);
 
     if (!profile) {

@@ -1,14 +1,33 @@
 import { ERROR_MESSAGE } from '#constants';
 import { NotFoundException } from '#exceptions';
+import type { NotificationRepository } from '#repositories';
 
 export class NotificationsService {
-  #notificationRepository;
+  #notificationRepository: NotificationRepository;
 
-  constructor({ notificationRepository }) {
+  constructor({
+    notificationRepository,
+  }: {
+    notificationRepository: NotificationRepository;
+  }) {
     this.#notificationRepository = notificationRepository;
   }
 
-  async createNotification({ userId, type, targetId, targetUrl, message }) {
+  async createNotification({
+    userId,
+    actorId,
+    type,
+    targetId,
+    targetUrl,
+    message,
+  }: {
+    userId: string;
+    actorId?: string;
+    type?: string;
+    targetId?: string;
+    targetUrl?: string;
+    message?: string;
+  }) {
     if (!message) return null;
 
     return await this.#notificationRepository.create({
@@ -21,26 +40,37 @@ export class NotificationsService {
   }
 
   notificationMessages = {
-    adminReviewResult: (title, status, reason) => {
+    adminReviewResult: (title: string, status: string, reason?: string) => {
       const statusText =
         status === 'REJECTED' ? '반려' : status === 'DELETED' ? '삭제' : '승인';
       const reasonText = reason ? ` (사유: ${reason})` : '';
       return `[${title}] 챌린지가 관리자에 의해 ${statusText}되었습니다.${reasonText}`;
     },
 
-    challengeProgressUpdate: (title, status) => {
+    challengeProgressUpdate: (title: string, status: string) => {
       return `[${title}] 챌린지의 진행 상태가 '${status}'로 업데이트되었습니다.`;
     },
 
-    newWork: (challengeTitle) =>
+    newWork: (challengeTitle: string) =>
       `'${challengeTitle}' 챌린지에 작업물이 추가되었어요`,
 
-    challengeEnd: (challengeTitle) => `'${challengeTitle}'(이)가 마감되었어요`,
+    challengeEnd: (challengeTitle: string) =>
+      `'${challengeTitle}'(이)가 마감되었어요`,
 
-    challengeUpdate: (title) => `'${title}' 챌린지가 수정되었어요`,
+    challengeUpdate: (title: string) => `'${title}' 챌린지가 수정되었어요`,
   };
 
-  async listMyNotifications({ userId, page, limit }) {
+  async listMyNotifications({
+    userId,
+    page,
+    limit,
+    targetType,
+  }: {
+    userId: string;
+    page?: unknown;
+    limit?: unknown;
+    targetType?: unknown;
+  }) {
     const pageNum = Number(page) || 1;
     const perPage = Number(limit) || 10;
     const skip = (pageNum - 1) * perPage;
@@ -54,7 +84,13 @@ export class NotificationsService {
     return notifications;
   }
 
-  async deleteMyNotification({ userId, notificationId }) {
+  async deleteMyNotification({
+    userId,
+    notificationId,
+  }: {
+    userId: string;
+    notificationId: string;
+  }) {
     const notification =
       await this.#notificationRepository.findById(notificationId);
 
@@ -68,7 +104,15 @@ export class NotificationsService {
     });
   }
 
-  async markAsRead({ notificationId, userId, isRead }) {
+  async markAsRead({
+    notificationId,
+    userId,
+    isRead,
+  }: {
+    notificationId: string;
+    userId: string;
+    isRead?: boolean;
+  }) {
     const notification =
       await this.#notificationRepository.findById(notificationId);
 

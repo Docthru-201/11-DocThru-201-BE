@@ -3,7 +3,13 @@ import { escapeHtml } from '#utils';
 import { maskEmail } from '../common/utils/log-mask.util.js';
 
 // 비밀번호 재설정 메일 발송
-export async function sendPasswordResetEmail({ to, resetLink }) {
+export async function sendPasswordResetEmail({
+  to,
+  resetLink,
+}: {
+  to: string;
+  resetLink: string;
+}) {
   const host = process.env.SMTP_HOST?.trim();
   const port = Number(process.env.SMTP_PORT || '587');
   const user = process.env.SMTP_USER?.trim();
@@ -49,7 +55,7 @@ export async function sendPasswordResetEmail({ to, resetLink }) {
   } catch (err) {
     console.error(
       '[mail] 비밀번호 재설정 메일 발송 실패:',
-      err?.message ?? err,
+      err instanceof Error ? err.message : err,
     );
   }
 }

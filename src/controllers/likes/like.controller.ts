@@ -1,12 +1,14 @@
+import type { Request, Response, NextFunction } from 'express';
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { needsLogin, validate } from '#middlewares';
 import { workIdParamSchema } from '#controllers/schemas/baseSchema.js';
+import type { LikesService } from '#services';
 
 export class LikesController extends BaseController {
-  #likesService;
+  #likesService: LikesService;
 
-  constructor({ likesService }) {
+  constructor({ likesService }: { likesService: LikesService }) {
     super();
     this.#likesService = likesService;
   }
@@ -46,20 +48,22 @@ export class LikesController extends BaseController {
     return this.router;
   }
 
-  async getLikeCount(req, res, next) {
+  async getLikeCount(req: Request, res: Response, next: NextFunction) {
     try {
-      const count = await this.#likesService.getLikeCount(req.params.workId);
+      const count = await this.#likesService.getLikeCount(
+        req.params.workId as string,
+      );
       res.status(HTTP_STATUS.OK).json({ count });
     } catch (error) {
       next(error);
     }
   }
 
-  async getMyLikeStatus(req, res, next) {
+  async getMyLikeStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const isLiked = await this.#likesService.getMyLikeStatus(
         req.user.id,
-        req.params.workId,
+        req.params.workId as string,
       );
       res.status(HTTP_STATUS.OK).json({ isLiked });
     } catch (error) {
@@ -67,11 +71,11 @@ export class LikesController extends BaseController {
     }
   }
 
-  async like(req, res, next) {
+  async like(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await this.#likesService.like(
         req.user.id,
-        req.params.workId,
+        req.params.workId as string,
       );
       res.status(HTTP_STATUS.CREATED).json(result);
     } catch (error) {
@@ -79,9 +83,9 @@ export class LikesController extends BaseController {
     }
   }
 
-  async unlike(req, res, next) {
+  async unlike(req: Request, res: Response, next: NextFunction) {
     try {
-      await this.#likesService.unlike(req.user.id, req.params.workId);
+      await this.#likesService.unlike(req.user.id, req.params.workId as string);
       res.status(HTTP_STATUS.NO_CONTENT).send();
     } catch (error) {
       next(error);

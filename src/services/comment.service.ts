@@ -1,11 +1,18 @@
 import { ForbiddenException, NotFoundException } from '#exceptions';
+import type {
+  CommentRepository,
+  WorkRepository,
+  UserRepository,
+  ChallengeRepository,
+} from '#repositories';
+import type { NotificationsService } from '#services';
 
 export class CommentsService {
-  #commentRepository;
-  #workRepository;
-  #userRepository;
-  #challengeRepository;
-  #notificationsService;
+  #commentRepository: CommentRepository;
+  #workRepository: WorkRepository;
+  #userRepository: UserRepository;
+  #challengeRepository: ChallengeRepository;
+  #notificationsService: NotificationsService;
 
   constructor({
     commentRepository,
@@ -13,6 +20,12 @@ export class CommentsService {
     userRepository,
     challengeRepository,
     notificationsService,
+  }: {
+    commentRepository: CommentRepository;
+    workRepository: WorkRepository;
+    userRepository: UserRepository;
+    challengeRepository: ChallengeRepository;
+    notificationsService: NotificationsService;
   }) {
     this.#commentRepository = commentRepository;
     this.#workRepository = workRepository;
@@ -21,7 +34,7 @@ export class CommentsService {
     this.#notificationsService = notificationsService;
   }
 
-  async listCommentsByWorkId(workId) {
+  async listCommentsByWorkId(workId: string) {
     const work = await this.#workRepository.findById(workId);
     if (!work) {
       throw new NotFoundException('작업물을 찾을 수 없습니다.');
@@ -30,7 +43,11 @@ export class CommentsService {
     return this.#commentRepository.findManyByWorkId(workId);
   }
 
-  async createComment(userId, workId, data) {
+  async createComment(
+    userId: string,
+    workId: string,
+    data: { content: string; parentId?: string },
+  ) {
     const work = await this.#workRepository.findById(workId);
     if (!work) {
       throw new NotFoundException('작업물을 찾을 수 없습니다.');
@@ -45,9 +62,9 @@ export class CommentsService {
 
     const comment = await this.#commentRepository.create({
       content: data.content,
-      workId,
-      authorId: userId,
-      parentId: data.parentId || null,
+      work: { connect: { id: workId } },
+      ...(userId ? { author: { connect: { id: userId } } } : {}),
+      ...(data.parentId ? { parent: { connect: { id: data.parentId } } } : {}),
     });
 
     const challengeInfo =
@@ -77,7 +94,11 @@ export class CommentsService {
     return comment;
   }
 
-  async updateComment(commentId, userId, data) {
+  async updateComment(
+    commentId: string,
+    userId: string,
+    data: { content?: string; reason?: string },
+  ) {
     const comment = await this.#commentRepository.findById(commentId);
     if (!comment) {
       throw new NotFoundException('댓글이 존재하지 않습니다.');
@@ -100,7 +121,7 @@ export class CommentsService {
     }
 
     if (isAdmin) {
-      if (comment.authorId !== userId) {
+      if (comment.authorId !== userId && comment.authorId) {
         const reasonText = data.reason ? ` 사유: ${data.reason}` : '';
 
         await this.#notificationsService.createNotification({
@@ -149,7 +170,11 @@ export class CommentsService {
     return updatedComment;
   }
 
-  async deleteComment(commentId, userId, data: { reason?: string } = {}) {
+  async deleteComment(
+    commentId: string,
+    userId: string,
+    data: { reason?: string } = {},
+  ) {
     const comment = await this.#commentRepository.findById(commentId);
 
     if (!comment) {
@@ -192,7 +217,7 @@ export class CommentsService {
     }
 
     if (isAdmin) {
-      if (comment.authorId !== userId) {
+      if (comment.authorId !== userId && comment.authorId) {
         const reasonText = data.reason ? ` 사유: ${data.reason}` : '';
 
         await this.#notificationsService.createNotification({

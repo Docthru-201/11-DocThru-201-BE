@@ -1,10 +1,15 @@
+import type { Request, Response, NextFunction } from 'express';
 import { config, isProduction } from '#config';
 
 /**
  * 프로덕션 환경 + FORCE_HTTPS=true 일 때만 사용.
  * TLS 종료가 프록시에 있으면 TRUST_PROXY를 설정해야 X-Forwarded-Proto가 반영됨.
  */
-export function httpsRedirectMiddleware(req, res, next) {
+export function httpsRedirectMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   if (!isProduction || config.FORCE_HTTPS !== 'true') {
     return next();
   }

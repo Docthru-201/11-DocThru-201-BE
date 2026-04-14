@@ -1,3 +1,4 @@
+import type { Request } from 'express';
 import rateLimit from 'express-rate-limit';
 import { isProduction } from '#config';
 
@@ -6,7 +7,7 @@ const rateLimitMessage = {
   message: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.',
 };
 
-function normalizeBodyEmail(req) {
+function normalizeBodyEmail(req: Request) {
   const e = req.body?.email;
   if (typeof e === 'string' && e.trim()) {
     return e.trim().toLowerCase();

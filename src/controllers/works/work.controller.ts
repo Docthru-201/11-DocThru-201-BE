@@ -1,13 +1,15 @@
+import type { Request, Response, NextFunction } from 'express';
 import { BaseController } from '#controllers/base.controller.js';
 import { SUCCESS_MESSAGE, HTTP_STATUS } from '#constants';
 import { Router } from 'express';
 import { validate, needsLogin } from '#middlewares';
 import { workListQuerySchema } from './dto/work.dto.js';
+import type { WorksService } from '#services';
 
 export class WorksController extends BaseController {
-  #worksService;
+  #worksService: WorksService;
 
-  constructor({ worksService }) {
+  constructor({ worksService }: { worksService: WorksService }) {
     super();
     this.router = Router({ mergeParams: true });
     this.#worksService = worksService;
@@ -36,9 +38,9 @@ export class WorksController extends BaseController {
     return this.router;
   }
 
-  async getAllWorks(req, res) {
+  async getAllWorks(req: Request, res: Response) {
     const userId = req.user?.userId ?? req.user?.id;
-    const { id: challengeId } = req.params;
+    const challengeId = req.params.id as string;
     const { page = 1, pageSize = 5 } = req.query;
     const works = await this.#worksService.getAllWorks(
       userId,
@@ -56,9 +58,9 @@ export class WorksController extends BaseController {
     });
   }
 
-  async createWork(req, res, next) {
+  async createWork(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id: challengeId } = req.params;
+      const challengeId = req.params.id as string;
       const userId = req.user.id;
       const newWork = await this.#worksService.createWork(challengeId, userId);
 
@@ -72,9 +74,9 @@ export class WorksController extends BaseController {
     }
   }
 
-  async getWorkById(req, res, next) {
+  async getWorkById(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const userId = req.user?.id;
       const work = await this.#worksService.getWorkById(id, userId);
       res.status(HTTP_STATUS.OK).json(work);
@@ -83,9 +85,9 @@ export class WorksController extends BaseController {
     }
   }
 
-  async updateWork(req, res, next) {
+  async updateWork(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const userId = req.user.id;
       const { content, action, title } = req.body;
       const updated = await this.#worksService.updateWork(id, userId, {
@@ -99,9 +101,9 @@ export class WorksController extends BaseController {
     }
   }
 
-  async getMyWork(req, res, next) {
+  async getMyWork(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id: challengeId } = req.params;
+      const challengeId = req.params.id as string;
       const userId = req.user?.id;
       const work = await this.#worksService.getMyWork(challengeId, userId);
       res.status(HTTP_STATUS.OK).json(work);
@@ -110,9 +112,9 @@ export class WorksController extends BaseController {
     }
   }
 
-  async deleteWork(req, res, next) {
+  async deleteWork(req: Request, res: Response, next: NextFunction) {
     try {
-      await this.#worksService.deleteWork(req.params.id, req.user.id);
+      await this.#worksService.deleteWork(req.params.id as string, req.user.id);
       res.status(HTTP_STATUS.NO_CONTENT).send();
     } catch (error) {
       next(error);

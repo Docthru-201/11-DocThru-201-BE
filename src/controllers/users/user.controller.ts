@@ -1,19 +1,27 @@
+import type { Request, Response } from 'express';
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { validate, needsLogin } from '#middlewares';
 import { updateUserSchema, userIdParamSchema } from './dto/user.dto.js';
+import type { UsersService, StatsService, WorksService } from '#services';
+import type { ProfilesController } from '#controllers';
 
 export class UsersController extends BaseController {
-  #usersService;
-  #profilesController;
-  #statsService;
-  #worksService;
+  #usersService: UsersService;
+  #profilesController: ProfilesController;
+  #statsService: StatsService;
+  #worksService: WorksService;
 
   constructor({
     usersService,
     profilesController,
     statsService,
     worksService,
+  }: {
+    usersService: UsersService;
+    profilesController: ProfilesController;
+    statsService: StatsService;
+    worksService: WorksService;
   }) {
     super();
     this.#usersService = usersService;
@@ -48,12 +56,12 @@ export class UsersController extends BaseController {
     return this.router;
   }
 
-  async getMe(req, res) {
+  async getMe(req: Request, res: Response) {
     const user = await this.#usersService.getUserById(req.user.id);
     res.status(HTTP_STATUS.OK).json(user);
   }
 
-  async updateMe(req, res) {
+  async updateMe(req: Request, res: Response) {
     const updatedUser = await this.#usersService.updateUser(
       req.user.id,
       req.body,
@@ -61,21 +69,24 @@ export class UsersController extends BaseController {
     res.status(HTTP_STATUS.OK).json(updatedUser);
   }
 
-  async deleteMe(req, res) {
+  async deleteMe(req: Request, res: Response) {
     await this.#usersService.deleteUser(req.user.id);
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 
-  async getUserById(req, res) {
-    const user = await this.#usersService.getPublicProfile(req.params.userId);
+  async getUserById(req: Request, res: Response) {
+    const user = await this.#usersService.getPublicProfile(
+      req.params.userId as string,
+    );
     res.status(HTTP_STATUS.OK).json(user);
   }
 
-  async getMyStats(req, res) {
+  async getMyStats(req: Request, res: Response) {
     const stats = await this.#statsService.getMyStats(req.user.id);
     res.status(HTTP_STATUS.OK).json(stats);
   }
-  async getMyWorks(req, res) {
+
+  async getMyWorks(req: Request, res: Response) {
     const works = await this.#worksService.getMyWorks(req.user.id);
     res.status(HTTP_STATUS.OK).json(works);
   }

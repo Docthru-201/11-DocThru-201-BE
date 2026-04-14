@@ -1,13 +1,19 @@
+import type { Request, Response } from 'express';
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { needsLogin, validate } from '#middlewares';
 import { participantParamsSchema } from './dto/participant.dto.js';
 import express from 'express';
+import type { ParticipantsService } from '#services';
 
 export class ParticipantsController extends BaseController {
-  #participantsService;
+  #participantsService: ParticipantsService;
 
-  constructor({ participantsService }) {
+  constructor({
+    participantsService,
+  }: {
+    participantsService: ParticipantsService;
+  }) {
     super();
     this.#participantsService = participantsService;
     this.router = express.Router({ mergeParams: true });
@@ -25,8 +31,8 @@ export class ParticipantsController extends BaseController {
     return this.router;
   }
 
-  async create(req, res) {
-    const { challengeId } = req.params;
+  async create(req: Request, res: Response) {
+    const challengeId = req.params.challengeId as string;
     const userId = req.user.id;
 
     const result = await this.#participantsService.joinChallenge(

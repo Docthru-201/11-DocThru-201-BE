@@ -71,7 +71,7 @@ export const imageUrlSchema = z
   .url({ message: '올바른 이미지 URL 형식이 아닙니다.' })
   .optional();
 
-export const contentSchema = (maxLen, message) =>
+export const contentSchema = (maxLen: number, message?: string) =>
   z
     .string()
     .trim()

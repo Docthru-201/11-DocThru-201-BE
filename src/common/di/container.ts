@@ -6,6 +6,7 @@ import {
   Lifetime,
 } from 'awilix';
 import { prisma } from '#db/prisma.js';
+import type { PrismaClient } from '#generated/prisma/client.js';
 import {
   UserRepository,
   ProfileRepository,
@@ -48,7 +49,48 @@ import { AuthMiddleware } from '#middlewares';
 
 import { DeadlineScheduler } from './../utils/scheduler.js';
 
-export const createContainer = () => {
+export interface ContainerCradle {
+  prisma: PrismaClient;
+  authRepository: AuthRepository;
+  userRepository: UserRepository;
+  profileRepository: ProfileRepository;
+  challengeRepository: ChallengeRepository;
+  participantRepository: ParticipantRepository;
+  workRepository: WorkRepository;
+  commentRepository: CommentRepository;
+  likeRepository: LikeRepository;
+  notificationRepository: NotificationRepository;
+  passwordProvider: PasswordProvider;
+  tokenProvider: TokenProvider;
+  cookieProvider: CookieProvider;
+  jwtSecret: string | undefined;
+  authService: AuthService;
+  usersService: UsersService;
+  profilesService: ProfilesService;
+  challengesService: ChallengesService;
+  participantsService: ParticipantsService;
+  worksService: WorksService;
+  commentsService: CommentsService;
+  likesService: LikesService;
+  gradeService: GradeService;
+  notificationsService: NotificationsService;
+  statsService: StatsService;
+  authMiddleware: AuthMiddleware;
+  authController: AuthController;
+  usersController: UsersController;
+  profilesController: ProfilesController;
+  challengesController: ChallengesController;
+  participantsController: ParticipantsController;
+  worksController: WorksController;
+  commentsController: CommentsController;
+  likesController: LikesController;
+  notificationsController: NotificationsController;
+  adminController: AdminController;
+  controller: Controller;
+  deadlineScheduler: DeadlineScheduler;
+}
+
+export const createContainer = (): ContainerCradle => {
   const container = createAwilixContainer({
     injectionMode: InjectionMode.PROXY,
     strict: true,
@@ -138,5 +180,5 @@ export const createContainer = () => {
     }),
   });
 
-  return container.cradle;
+  return container.cradle as ContainerCradle;
 };

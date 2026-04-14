@@ -1,18 +1,24 @@
-export class WorkRepository {
-  #prisma;
+import type { PrismaClient, Prisma } from '#generated/prisma/client.js';
 
-  constructor({ prisma }) {
+export class WorkRepository {
+  #prisma: PrismaClient;
+
+  constructor({ prisma }: { prisma: PrismaClient }) {
     this.#prisma = prisma;
   }
 
-  async findById(id) {
+  async findById(id: string) {
     return this.#prisma.work.findUnique({
       where: { id },
     });
   }
 
   //현재 챌린지의 모든 work 조회 (SUBMITTED만 반환)
-  async findManyByChallengeId(challengeId, page, pageSize) {
+  async findManyByChallengeId(
+    challengeId: string,
+    page: number,
+    pageSize: number,
+  ) {
     const works = await this.#prisma.work.findMany({
       where: { challengeId, status: 'SUBMITTED' },
       include: {
@@ -45,10 +51,10 @@ export class WorkRepository {
     return works.map((work) => ({
       workId: work.id,
       author: {
-        authorId: work.user.id,
-        authorNickname: work.user.nickname,
-        grade: work.user.grade,
-        image: work.user.image,
+        authorId: work.user!.id,
+        authorNickname: work.user!.nickname,
+        grade: work.user!.grade,
+        image: work.user!.image,
       },
       challengeId: work.challengeId,
       challengeTitle: work.challenge.title,
@@ -64,7 +70,7 @@ export class WorkRepository {
   }
 
   // 본인 work 조회 (DRAFT 포함)
-  async findMyWorkByChallengeId(challengeId, userId) {
+  async findMyWorkByChallengeId(challengeId: string, userId: string) {
     return this.#prisma.work.findFirst({
       where: { challengeId, userId },
       include: {
@@ -82,7 +88,7 @@ export class WorkRepository {
   }
 
   // work 생성 및 참여자 추가
-  async createWork(challengeId, userId) {
+  async createWork(challengeId: string, userId: string) {
     const result = await this.#prisma.$transaction(async (tx) => {
       const participant = await tx.participant.upsert({
         where: {
@@ -107,7 +113,7 @@ export class WorkRepository {
     return result;
   }
   // 특정 챌린지에서 특정 작업물 조회
-  async hasSubmittedWork(challengeId, userId) {
+  async hasSubmittedWork(challengeId: string, userId: string) {
     const work = await this.#prisma.work.findFirst({
       where: { challengeId, userId },
     });
@@ -115,13 +121,13 @@ export class WorkRepository {
   }
 
   // 이미 제출한 작업물이 있는지 확인 (참여자 1명당 작업물 1개 제한)
-  async findWorkByParticipant(participantId) {
+  async findWorkByParticipant(participantId: string) {
     return this.#prisma.work.findUnique({
       where: { participantId },
     });
   }
 
-  async findByIdWithDetail(id) {
+  async findByIdWithDetail(id: string) {
     return this.#prisma.work.findUnique({
       where: { id },
       include: {
@@ -146,31 +152,31 @@ export class WorkRepository {
     });
   }
 
-  async create(data) {
+  async create(data: Prisma.WorkCreateInput) {
     return this.#prisma.work.create({ data });
   }
 
-  async update(id, data) {
+  async update(id: string, data: Prisma.WorkUpdateInput) {
     return this.#prisma.work.update({
       where: { id },
       data,
     });
   }
 
-  async delete(id) {
+  async delete(id: string) {
     return this.#prisma.work.delete({
       where: { id },
     });
   }
 
-  async countByUserId(userId) {
+  async countByUserId(userId: string) {
     return this.#prisma.work.count({
       where: { userId },
     });
   }
 
   /** 본인 작업물에 표시된 좋아요 수 합계(Work.likeCount 기준) */
-  async sumLikeCountByUserId(userId) {
+  async sumLikeCountByUserId(userId: string) {
     const agg = await this.#prisma.work.aggregate({
       where: { userId },
       _sum: { likeCount: true },
@@ -178,7 +184,7 @@ export class WorkRepository {
     return agg._sum.likeCount ?? 0;
   }
 
-  async findManyByUserId(userId) {
+  async findManyByUserId(userId: string) {
     return this.#prisma.work.findMany({
       where: { userId },
       include: {

@@ -1,3 +1,4 @@
+import type { PrismaClient } from '#generated/prisma/client.js';
 import { AuthProvider } from '#generated/prisma/enums.ts';
 import { REFRESH_TOKEN_EXPIRES_DAYS } from '../common/constants/auth.js';
 
@@ -9,38 +10,42 @@ const googleSocialInclude = {
 };
 
 export class AuthRepository {
-  #prisma;
+  #prisma: PrismaClient;
 
-  constructor({ prisma }) {
+  constructor({ prisma }: { prisma: PrismaClient }) {
     this.#prisma = prisma;
   }
 
-  findUserByEmail(email) {
+  findUserByEmail(email: string) {
     return this.#prisma.user.findUnique({
       where: { email },
       include: googleSocialInclude,
     });
   }
 
-  findUserByNickname(nickname) {
+  findUserByNickname(nickname: string) {
     return this.#prisma.user.findUnique({
       where: { nickname },
     });
   }
-  findUserById(id) {
+  findUserById(id: string) {
     return this.#prisma.user.findUnique({
       where: { id },
       include: googleSocialInclude,
     });
   }
 
-  createUser(data) {
+  createUser(data: {
+    email: string;
+    nickname: string;
+    password: string | null;
+  }) {
     return this.#prisma.user.create({
       data,
     });
   }
 
-  saveRefreshToken(userId, token) {
+  saveRefreshToken(userId: string, token: string) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRES_DAYS);
 
@@ -51,19 +56,19 @@ export class AuthRepository {
     });
   }
 
-  findRefreshToken(userId) {
+  findRefreshToken(userId: string) {
     return this.#prisma.refreshToken.findUnique({
       where: { userId },
     });
   }
 
-  deleteRefreshToken(userId) {
+  deleteRefreshToken(userId: string) {
     return this.#prisma.refreshToken.deleteMany({
       where: { userId },
     });
   }
 
-  upsertGoogleSocial(userId, providerId) {
+  upsertGoogleSocial(userId: string, providerId: string) {
     return this.#prisma.socialAccount.upsert({
       where: {
         userId_provider: {
@@ -80,7 +85,7 @@ export class AuthRepository {
     });
   }
 
-  async getGoogleUser(code) {
+  async getGoogleUser(code: string) {
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -118,13 +123,21 @@ export class AuthRepository {
     return userData;
   }
 
-  deletePendingPasswordResetsForUser(userId) {
+  deletePendingPasswordResetsForUser(userId: string) {
     return this.#prisma.passwordResetToken.deleteMany({
       where: { userId, usedAt: null },
     });
   }
 
-  createPasswordResetToken({ userId, tokenHash, expiresAt }) {
+  createPasswordResetToken({
+    userId,
+    tokenHash,
+    expiresAt,
+  }: {
+    userId: string;
+    tokenHash: string;
+    expiresAt: Date;
+  }) {
     return this.#prisma.passwordResetToken.create({
       data: { userId, tokenHash, expiresAt },
     });
@@ -133,7 +146,7 @@ export class AuthRepository {
   /**
    * 토큰 1회용 소비. 성공 시 userId, 실패(만료·이미 사용·없음) 시 null
    */
-  async consumePasswordResetToken(tokenHash) {
+  async consumePasswordResetToken(tokenHash: string) {
     return this.#prisma.$transaction(async (tx) => {
       const row = await tx.passwordResetToken.findUnique({
         where: { tokenHash },
@@ -156,14 +169,14 @@ export class AuthRepository {
     });
   }
 
-  updateUserPassword(userId, hashedPassword) {
+  updateUserPassword(userId: string, hashedPassword: string) {
     return this.#prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },
     });
   }
 
-  setUserLoginLockedUntil(userId, loginLockedUntil) {
+  setUserLoginLockedUntil(userId: string, loginLockedUntil: Date | null) {
     return this.#prisma.user.update({
       where: { id: userId },
       data: { loginLockedUntil },

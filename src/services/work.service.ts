@@ -5,14 +5,22 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '#exceptions';
+import type {
+  WorkRepository,
+  LikeRepository,
+  ChallengeRepository,
+  ParticipantRepository,
+} from '#repositories';
+import type { NotificationsService, GradeService } from '#services';
+import type { Prisma } from '#generated/prisma/client.js';
 
 export class WorksService {
-  #workRepository;
-  #likeRepository;
-  #challengeRepository;
-  #notificationsService;
-  #participantRepository;
-  #gradeService;
+  #workRepository: WorkRepository;
+  #likeRepository: LikeRepository;
+  #challengeRepository: ChallengeRepository;
+  #notificationsService: NotificationsService;
+  #participantRepository: ParticipantRepository;
+  #gradeService: GradeService;
 
   constructor({
     workRepository,
@@ -21,6 +29,13 @@ export class WorksService {
     notificationsService,
     participantRepository,
     gradeService,
+  }: {
+    workRepository: WorkRepository;
+    likeRepository: LikeRepository;
+    challengeRepository: ChallengeRepository;
+    notificationsService: NotificationsService;
+    participantRepository: ParticipantRepository;
+    gradeService: GradeService;
   }) {
     this.#workRepository = workRepository;
     this.#likeRepository = likeRepository;
@@ -32,7 +47,12 @@ export class WorksService {
 
   // 챌린지에 속한 모든 작업물을 페이지네이션 및 각 작업물의 좋아요 상태 포함하여 반환
   // userId 없음(비로그인): 목록만 반환, isLiked는 모두 false
-  async getAllWorks(userId, challengeId, page, pageSize) {
+  async getAllWorks(
+    userId: string | undefined,
+    challengeId: string,
+    page: number,
+    pageSize: number,
+  ) {
     if (!challengeId) {
       throw new BadRequestException(ERROR_MESSAGE.CHALLENGE_ID_REQUIRED);
     }
@@ -66,7 +86,7 @@ export class WorksService {
   }
 
   // 새로운 작업물을 생성하고 챌린지 참여자로 등록
-  async createWork(challengeId, userId) {
+  async createWork(challengeId: string, userId: string) {
     if (!challengeId || !userId) {
       throw new BadRequestException(ERROR_MESSAGE.REQUIRED_FIELDS_MISSING);
     }
@@ -79,7 +99,7 @@ export class WorksService {
     }
 
     // 2. 챌린지 마감 여부 확인
-    if (challenge.isClosed || challenge.status === 'CLOSED') {
+    if (challenge.isClosed) {
       throw new ForbiddenException(ERROR_MESSAGE.CHALLENGE_ALREADY_CLOSED);
     }
 
@@ -118,7 +138,7 @@ export class WorksService {
   }
 
   // 이미 등록된 작업물 확인
-  async isWorkDuplicate(challengeId, authorId) {
+  async isWorkDuplicate(challengeId: string, authorId: string) {
     const hasWork = await this.#workRepository.hasSubmittedWork(
       challengeId,
       authorId,
@@ -129,14 +149,22 @@ export class WorksService {
     }
   }
 
-  async updateWork(workId, userId, { content, action, title }) {
+  async updateWork(
+    workId: string,
+    userId: string,
+    {
+      content,
+      action,
+      title,
+    }: { content?: string; action?: string; title?: string },
+  ) {
     const work = await this.#workRepository.findById(workId);
 
     if (!work) throw new NotFoundException('작업물이 없습니다.');
     if (work.userId !== userId)
       throw new ForbiddenException('수정 권한이 없습니다.');
 
-    const updateData: Record<string, unknown> = {};
+    const updateData: Prisma.WorkUpdateInput = {};
     if (title !== undefined) updateData.title = title;
 
     if (action === 'SUBMIT') {
@@ -183,7 +211,7 @@ export class WorksService {
     return updatedWork;
   }
 
-  async getMyWork(challengeId, userId) {
+  async getMyWork(challengeId: string, userId: string | undefined) {
     if (!challengeId || !userId) {
       throw new BadRequestException(ERROR_MESSAGE.REQUIRED_FIELDS_MISSING);
     }
@@ -201,7 +229,7 @@ export class WorksService {
     return { ...work, isLiked };
   }
 
-  async deleteWork(workId, userId) {
+  async deleteWork(workId: string, userId: string) {
     const work = await this.#workRepository.findById(workId);
 
     if (!work) {
@@ -247,7 +275,7 @@ export class WorksService {
     }
   }
 
-  async getWorkById(workId, userId) {
+  async getWorkById(workId: string, userId: string | undefined) {
     const work = await this.#workRepository.findByIdWithDetail(workId);
 
     if (!work) {
@@ -262,7 +290,7 @@ export class WorksService {
     return { ...work, isLiked };
   }
 
-  async getMyWorks(userId) {
+  async getMyWorks(userId: string) {
     return this.#workRepository.findManyByUserId(userId);
   }
 }

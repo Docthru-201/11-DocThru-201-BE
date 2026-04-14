@@ -2,8 +2,11 @@
 // 종료 신호(SIGINT, SIGTERM)를 받으면
 // 서버 요청을 막고 → DB 연결을 닫고 → 프로세스를 종료
 
-export const setupGracefulShutdown = (server, prisma) => {
-  const shutdown = async (signal) => {
+import type { Server } from 'node:http';
+import type { PrismaClient } from '#generated/prisma/client.js';
+
+export const setupGracefulShutdown = (server: Server, prisma: PrismaClient) => {
+  const shutdown = async (signal: string) => {
     console.log(`\n${signal} 신호를 받았습니다. 서버를 종료합니다...`);
 
     try {

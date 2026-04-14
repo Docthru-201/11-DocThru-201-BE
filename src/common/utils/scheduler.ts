@@ -1,10 +1,18 @@
 import cron from 'node-cron';
+import type { ChallengeRepository } from '#repositories';
+import type { NotificationsService } from '#services';
 
 export class DeadlineScheduler {
-  #challengeRepository;
-  #notificationsService;
+  #challengeRepository: ChallengeRepository;
+  #notificationsService: NotificationsService;
 
-  constructor({ challengeRepository, notificationsService }) {
+  constructor({
+    challengeRepository,
+    notificationsService,
+  }: {
+    challengeRepository: ChallengeRepository;
+    notificationsService: NotificationsService;
+  }) {
     this.#challengeRepository = challengeRepository;
     this.#notificationsService = notificationsService;
   }

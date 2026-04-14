@@ -1,7 +1,9 @@
 // --------------------
 // comment.controller.js
 // --------------------
+import type { Request, Response } from 'express';
 import { BaseController } from '#controllers/base.controller.js';
+import type { CommentsService } from '#services';
 import { HTTP_STATUS } from '#constants';
 import { validate, needsLogin } from '#middlewares';
 import {
@@ -13,11 +15,11 @@ import {
 import express from 'express';
 
 export class CommentsController extends BaseController {
-  #commentsService; // 클래스 private 필드
+  #commentsService: CommentsService;
 
-  constructor({ commentsService }) {
+  constructor({ commentsService }: { commentsService: CommentsService }) {
     super();
-    this.#commentsService = commentsService; // 정확히 일치
+    this.#commentsService = commentsService;
     this.router = express.Router({ mergeParams: true });
   }
 
@@ -62,9 +64,9 @@ export class CommentsController extends BaseController {
   // Handler Methods
   // --------------------
 
-  async createComment(req, res) {
+  async createComment(req: Request, res: Response) {
     const userId = req.user.id;
-    const { workId } = req.params;
+    const workId = req.params.workId as string;
     const commentData = req.body;
 
     const newComment = await this.#commentsService.createComment(
@@ -76,15 +78,15 @@ export class CommentsController extends BaseController {
     res.status(HTTP_STATUS.CREATED).json(newComment);
   }
 
-  async getCommentsByWork(req, res) {
-    const { workId } = req.params;
+  async getCommentsByWork(req: Request, res: Response) {
+    const workId = req.params.workId as string;
     const comments = await this.#commentsService.listCommentsByWorkId(workId);
     res.status(HTTP_STATUS.OK).json(comments);
   }
 
-  async updateComment(req, res) {
+  async updateComment(req: Request, res: Response) {
     const userId = req.user.id;
-    const { id } = req.params;
+    const id = req.params.id as string;
     const commentData = req.body;
 
     const updatedComment = await this.#commentsService.updateComment(
@@ -96,9 +98,9 @@ export class CommentsController extends BaseController {
     res.status(HTTP_STATUS.OK).json(updatedComment);
   }
 
-  async deleteComment(req, res) {
+  async deleteComment(req: Request, res: Response) {
     const userId = req.user.id;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     await this.#commentsService.deleteComment(id, userId);
 

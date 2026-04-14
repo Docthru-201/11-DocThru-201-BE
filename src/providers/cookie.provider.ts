@@ -1,10 +1,15 @@
+import type { Request, Response } from 'express';
 import { config } from '#config';
 import { DAY_IN_MS, MINUTE_IN_MS } from '#constants';
 
 const isProd = () => config.NODE_ENV === 'production';
 
 /** 프로덕션: 크로스 사이트 fetch에 쿠키를 붙이려면 none + secure */
-function authCookieBaseOptions() {
+function authCookieBaseOptions(): {
+  path: string;
+  sameSite: 'none' | 'lax';
+  secure: boolean;
+} {
   const prod = isProd();
   return {
     path: '/',
@@ -17,7 +22,10 @@ export class CookieProvider {
   /**
    * 인증 후 새 토큰 발급. 세션 고정 완화: 기존 access/refresh 쿠키를 먼저 제거한 뒤 새 값 설정.
    */
-  setAuthCookies(res, tokens) {
+  setAuthCookies(
+    res: Response,
+    tokens: { accessToken: string; refreshToken: string },
+  ): void {
     this.clearAuthCookies(res);
 
     const { accessToken, refreshToken } = tokens;
@@ -36,13 +44,13 @@ export class CookieProvider {
     });
   }
 
-  clearAuthCookies(res) {
+  clearAuthCookies(res: Response): void {
     const base = authCookieBaseOptions();
     res.clearCookie('accessToken', base);
     res.clearCookie('refreshToken', base);
   }
 
-  getRefreshToken(req) {
+  getRefreshToken(req: Request): string | undefined {
     return req.cookies?.refreshToken;
   }
 }

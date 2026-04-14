@@ -5,6 +5,6 @@ export const ARGON2ID_HASH_OPTIONS = {
   type: argon2.argon2id,
 };
 
-export async function hashPasswordArgon2id(password) {
+export async function hashPasswordArgon2id(password: string): Promise<string> {
   return argon2.hash(password, ARGON2ID_HASH_OPTIONS);
 }

@@ -1,3 +1,4 @@
+import type { Request, Response } from 'express';
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import {
@@ -6,6 +7,8 @@ import {
   needsAdmin,
   auditAdminAction,
 } from '#middlewares';
+import type { ChallengesService } from '#services';
+import type { WorksController } from '#controllers';
 import {
   createChallengeSchema,
   challengeIdParamSchema,
@@ -15,10 +18,16 @@ import {
 } from './dto/challenge.dto.js';
 
 export class ChallengesController extends BaseController {
-  #challengesService;
-  #worksController;
+  #challengesService: ChallengesService;
+  #worksController: WorksController;
 
-  constructor({ challengesService, worksController }) {
+  constructor({
+    challengesService,
+    worksController,
+  }: {
+    challengesService: ChallengesService;
+    worksController: WorksController;
+  }) {
     super();
     this.#challengesService = challengesService;
     this.#worksController = worksController;
@@ -76,19 +85,19 @@ export class ChallengesController extends BaseController {
     return this.router;
   }
 
-  async findAll(req, res) {
+  async findAll(req: Request, res: Response) {
     const challenges = await this.#challengesService.listChallenges(req.query);
     res.status(HTTP_STATUS.OK).json(challenges);
   }
   // Parameter통일 필요(id -> challengeId로 swlee)
-  async findById(req, res) {
-    const { id: challengeId } = req.params;
+  async findById(req: Request, res: Response) {
+    const challengeId = req.params.id as string;
     const challenge =
       await this.#challengesService.getChallengeDetail(challengeId);
     res.status(HTTP_STATUS.OK).json(challenge);
   }
 
-  async create(req, res) {
+  async create(req: Request, res: Response) {
     const challengeData = req.body;
     const userId = req.user.id;
 
@@ -99,8 +108,8 @@ export class ChallengesController extends BaseController {
     res.status(HTTP_STATUS.CREATED).json(newChallenge);
   }
 
-  async update(req, res) {
-    const { id } = req.params;
+  async update(req: Request, res: Response) {
+    const id = req.params.id as string;
     const updateData = req.body;
     const updateChallenge = await this.#challengesService.updateChallenge(
       id,
@@ -110,16 +119,16 @@ export class ChallengesController extends BaseController {
     res.status(HTTP_STATUS.OK).json(updateChallenge);
   }
 
-  async delete(req, res) {
-    const { id } = req.params;
+  async delete(req: Request, res: Response) {
+    const id = req.params.id as string;
 
     await this.#challengesService.deleteChallenge(id, req.user);
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 
-  async getMyChallenges(req, res) {
+  async getMyChallenges(req: Request, res: Response) {
     const userId = req.user.id;
-    const { tab } = req.query;
+    const tab = req.query.tab as string | undefined;
 
     const payload = await this.#challengesService.getMyChallengesForTabs(
       userId,

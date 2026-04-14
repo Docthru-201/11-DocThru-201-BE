@@ -6,7 +6,7 @@ import { ARGON2ID_HASH_OPTIONS } from '#utils/argon2-hash.js';
 const BCRYPT_HASH_PREFIX = /^\$2[aby]\$/;
 
 export class PasswordProvider {
-  async hash(password) {
+  async hash(password: string): Promise<string> {
     try {
       return await argon2.hash(password, ARGON2ID_HASH_OPTIONS);
     } catch {
@@ -14,7 +14,7 @@ export class PasswordProvider {
     }
   }
 
-  async compare(password, hashedPassword) {
+  async compare(password: string, hashedPassword: string): Promise<boolean> {
     try {
       if (hashedPassword == null || hashedPassword === '') {
         return false;

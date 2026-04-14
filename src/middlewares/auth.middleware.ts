@@ -1,15 +1,32 @@
-export class AuthMiddleware {
-  #tokenProvider;
-  #authService;
-  #cookieProvider;
+import type { Request, Response, NextFunction } from 'express';
+import type { TokenProvider } from '#providers';
+import type { AuthService } from '#services';
+import type { CookieProvider } from '#providers';
 
-  constructor({ tokenProvider, authService, cookieProvider }) {
+export class AuthMiddleware {
+  #tokenProvider: TokenProvider;
+  #authService: AuthService;
+  #cookieProvider: CookieProvider;
+
+  constructor({
+    tokenProvider,
+    authService,
+    cookieProvider,
+  }: {
+    tokenProvider: TokenProvider;
+    authService: AuthService;
+    cookieProvider: CookieProvider;
+  }) {
     this.#tokenProvider = tokenProvider;
     this.#authService = authService;
     this.#cookieProvider = cookieProvider;
   }
 
-  async authenticate(req, res, next) {
+  async authenticate(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { accessToken, refreshToken } = req.cookies;
 

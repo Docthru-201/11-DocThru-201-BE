@@ -2,47 +2,62 @@ import { ERROR_MESSAGE } from '#constants';
 import { NotFoundException } from '#exceptions';
 import { getCursorParams, parseCursorResult } from '#utils';
 import { requireAdmin } from '../common/utils/permission.util.js';
+import type { ChallengeRepository } from '#repositories';
+import type { NotificationsService } from '#services';
+import type { Prisma } from '#generated/prisma/client.js';
 
 export class ChallengesService {
-  #challengeRepository;
-  #notificationsService;
+  #challengeRepository: ChallengeRepository;
+  #notificationsService: NotificationsService;
 
-  constructor({ challengeRepository, notificationsService }) {
+  constructor({
+    challengeRepository,
+    notificationsService,
+  }: {
+    challengeRepository: ChallengeRepository;
+    notificationsService: NotificationsService;
+  }) {
     this.#challengeRepository = challengeRepository;
     this.#notificationsService = notificationsService;
   }
 
-  async listChallenges(query) {
-    const { cursor, limit, status, category, type, keyword } = query;
+  async listChallenges(query: Record<string, unknown>) {
+    const cursor = query.cursor as string | undefined;
+    const limit = query.limit as string | number | undefined;
+    const status = query.status as string | undefined;
+    const category = query.category as string | undefined;
+    const type = query.type as string | undefined;
+    const keyword = query.keyword as string | undefined;
 
-    const where = {
+    const where: Prisma.ChallengeWhereInput = {
       deletedAt: null,
-      ...(status ? { status } : {}),
-      ...(category && { category }),
-      ...(type && { type }),
-      ...(keyword && {
-        OR: [
-          {
-            title: {
-              contains: keyword,
-              mode: 'insensitive',
-            },
-          },
-          {
-            description: {
-              contains: keyword,
-              mode: 'insensitive',
-            },
-          },
-        ],
-      }),
+      ...(status
+        ? { status: status as Prisma.ChallengeWhereInput['status'] }
+        : {}),
+      ...(category
+        ? { category: category as Prisma.ChallengeWhereInput['category'] }
+        : {}),
+      ...(type ? { type: type as Prisma.ChallengeWhereInput['type'] } : {}),
+      ...(keyword
+        ? {
+            OR: [
+              { title: { contains: keyword, mode: 'insensitive' as const } },
+              {
+                description: {
+                  contains: keyword,
+                  mode: 'insensitive' as const,
+                },
+              },
+            ],
+          }
+        : {}),
     };
 
-    const orderBy = { id: 'asc' };
+    const orderBy: Prisma.ChallengeOrderByWithRelationInput = { id: 'asc' };
 
     const paginationParams = getCursorParams({
       cursor,
-      limit,
+      limit: typeof limit === 'string' ? Number(limit) : limit,
       cursorKey: 'id',
     });
 
@@ -84,33 +99,41 @@ export class ChallengesService {
     };
   }
 
-  #mapChallengeListItem(row) {
-    const { _count, ...rest } = row;
-    const deadline = rest.deadline;
+  #mapChallengeListItem(row: Record<string, unknown>) {
+    const typedRow = row as {
+      _count?: { participants?: number };
+      deadline?: Date | string;
+      maxParticipants?: number;
+      [key: string]: unknown;
+    };
+    const { _count, deadline, maxParticipants, ...rest } = typedRow;
     const deadlineDate =
-      deadline instanceof Date ? deadline : new Date(deadline);
+      deadline instanceof Date ? deadline : new Date(deadline ?? 0);
     const participantCount = _count?.participants ?? 0;
 
     return {
       ...rest,
-      currentParticipants: participantCount,
       deadline: deadlineDate.toISOString().slice(0, 10),
+      maxParticipants,
+      currentParticipants: participantCount,
       isDeadlinePassed: deadlineDate < new Date(),
-      isRecruitmentFull: participantCount >= rest.maxParticipants,
+      isRecruitmentFull: participantCount >= (maxParticipants ?? 0),
       isParticipating: false,
     };
   }
 
-  async getChallengeDetail(challengeId) {
+  async getChallengeDetail(challengeId: string) {
     const challenge = await this.#findChallengeOrThrow(challengeId);
     return challenge;
   }
 
-  async createChallenge(data) {
-    const challenge = await this.#challengeRepository.create(data);
+  async createChallenge(data: Record<string, unknown>) {
+    const challenge = await this.#challengeRepository.create(
+      data as Prisma.ChallengeCreateInput,
+    );
 
     await this.#challengeRepository.createParticipant({
-      userId: data.authorId,
+      userId: data.authorId as string,
       challengeId: challenge.id,
     });
 
@@ -131,7 +154,11 @@ export class ChallengesService {
     return challenge;
   }
 
-  async updateChallenge(id, updateData, actor) {
+  async updateChallenge(
+    id: string,
+    updateData: Record<string, unknown>,
+    actor: Express.User,
+  ) {
     requireAdmin(actor);
     await this.#findChallengeOrThrow(id);
 
@@ -179,7 +206,7 @@ export class ChallengesService {
     return updatedChallenge;
   }
 
-  async deleteChallenge(id, actor) {
+  async deleteChallenge(id: string, actor: Express.User) {
     requireAdmin(actor);
     const challenge = await this.#findChallengeOrThrow(id);
 
@@ -214,11 +241,11 @@ export class ChallengesService {
     }
   }
 
-  async getChallengesByUser(userId) {
+  async getChallengesByUser(userId: string) {
     return await this.#challengeRepository.findByUserId(userId);
   }
 
-  async getMyChallengesForTabs(userId, tab) {
+  async getMyChallengesForTabs(userId: string, tab: unknown) {
     const normalizedTab =
       tab === 'applied' || tab === 'done' || tab === 'participating'
         ? tab
@@ -275,6 +302,13 @@ export class ChallengesService {
     keyword,
     userId,
     actor,
+  }: {
+    page?: number;
+    pageSize?: number;
+    sort?: string;
+    keyword?: string;
+    userId?: string;
+    actor: Express.User;
   }) {
     requireAdmin(actor);
     const offset = (page - 1) * pageSize;
@@ -282,8 +316,8 @@ export class ChallengesService {
     const options: {
       skip: number;
       take: number;
-      where: Record<string, unknown>;
-      orderBy: Record<string, unknown>;
+      where: Prisma.ChallengeWhereInput;
+      orderBy: Prisma.ChallengeOrderByWithRelationInput;
     } = {
       skip: offset,
       take: pageSize,
@@ -298,7 +332,8 @@ export class ChallengesService {
     const statusValues = ['pending', 'approved', 'rejected'];
 
     if (statusValues.includes(sort.toLowerCase())) {
-      options.where.status = sort.toUpperCase();
+      options.where.status =
+        sort.toUpperCase() as Prisma.ChallengeWhereInput['status'];
     } else {
       const sortOptions: Record<string, Record<string, string>> = {
         createdAt_asc: { createdAt: 'asc' },
@@ -322,12 +357,16 @@ export class ChallengesService {
     return await this.#challengeRepository.findAllChallenges(options);
   }
 
-  async getChallengeDetailById(challengeId, actor) {
+  async getChallengeDetailById(challengeId: string, actor: Express.User) {
     requireAdmin(actor);
     return await this.#challengeRepository.findChallengeDetailById(challengeId);
   }
 
-  async updateChallengeStatus(challengeId, data, actor) {
+  async updateChallengeStatus(
+    challengeId: string,
+    data: Record<string, unknown>,
+    actor: Express.User,
+  ) {
     requireAdmin(actor);
     await this.#findChallengeOrThrow(challengeId);
     // 논리적으로 Admin은 마감날짜에 관계없이 승인/거절/삭제 처리 가능하도록 제외
@@ -395,7 +434,7 @@ export class ChallengesService {
     return updatedChallenge;
   }
 
-  async #findChallengeOrThrow(challengeId) {
+  async #findChallengeOrThrow(challengeId: string) {
     const challenge =
       await this.#challengeRepository.findChallengeById?.(challengeId);
 

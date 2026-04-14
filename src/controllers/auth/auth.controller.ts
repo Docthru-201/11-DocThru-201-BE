@@ -1,6 +1,9 @@
+import type { Request, Response } from 'express';
 import { BaseController } from '#controllers/base.controller.js';
 import { HTTP_STATUS } from '#constants';
 import { validate, needsLogin } from '#middlewares';
+import type { AuthService } from '#services';
+import type { CookieProvider } from '#providers';
 import {
   signupSchema,
   loginSchema,
@@ -18,10 +21,16 @@ import { BadRequestException } from '#exceptions';
 import { exposeAuthTokensInBody } from '#config';
 
 export class AuthController extends BaseController {
-  #authService;
-  #cookieProvider;
+  #authService: AuthService;
+  #cookieProvider: CookieProvider;
 
-  constructor({ authService, cookieProvider }) {
+  constructor({
+    authService,
+    cookieProvider,
+  }: {
+    authService: AuthService;
+    cookieProvider: CookieProvider;
+  }) {
     super();
     this.#authService = authService;
     this.#cookieProvider = cookieProvider;
@@ -82,27 +91,27 @@ export class AuthController extends BaseController {
     return this.router;
   }
 
-  async requestPasswordReset(req, res) {
+  async requestPasswordReset(req: Request, res: Response) {
     const body = await this.#authService.requestPasswordReset(req.body, {
       ip: req.ip,
     });
     res.status(HTTP_STATUS.OK).json(body);
   }
 
-  async confirmPasswordReset(req, res) {
+  async confirmPasswordReset(req: Request, res: Response) {
     const body = await this.#authService.confirmPasswordReset(req.body, {
       ip: req.ip,
     });
     res.status(HTTP_STATUS.OK).json(body);
   }
 
-  async signup(req, res) {
+  async signup(req: Request, res: Response) {
     const user = await this.#authService.signup(req.body);
 
     res.status(HTTP_STATUS.CREATED).json(user);
   }
 
-  async login(req, res) {
+  async login(req: Request, res: Response) {
     const { user, accessToken, refreshToken } = await this.#authService.login(
       req.body,
       { ip: req.ip, userAgent: req.get('user-agent') },
@@ -122,7 +131,7 @@ export class AuthController extends BaseController {
     res.status(HTTP_STATUS.OK).json(user);
   }
 
-  async logout(req, res) {
+  async logout(req: Request, res: Response) {
     await this.#authService.logout(req.user.id);
 
     this.#cookieProvider.clearAuthCookies(res);
@@ -130,18 +139,19 @@ export class AuthController extends BaseController {
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 
-  async logoutAll(req, res) {
+  async logoutAll(req: Request, res: Response) {
     await this.#authService.logoutAll(req.user.id);
 
     this.#cookieProvider.clearAuthCookies(res);
 
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
-  async refresh(req, res) {
+  async refresh(req: Request, res: Response) {
     const refreshToken = this.#cookieProvider.getRefreshToken(req);
 
-    const { accessToken, refreshToken: newRefreshToken } =
-      await this.#authService.refresh(refreshToken);
+    const {
+      tokens: { accessToken, refreshToken: newRefreshToken },
+    } = await this.#authService.refresh(refreshToken);
 
     this.#cookieProvider.setAuthCookies(res, {
       accessToken,
@@ -159,8 +169,8 @@ export class AuthController extends BaseController {
     res.sendStatus(HTTP_STATUS.NO_CONTENT);
   }
 
-  async oauthLogin(req, res) {
-    const { provider } = req.params;
+  async oauthLogin(req: Request, res: Response) {
+    const provider = req.params.provider as string;
 
     const { url, state } = this.#authService.getOAuthLoginUrl(provider);
 
@@ -171,8 +181,8 @@ export class AuthController extends BaseController {
 
     return res.redirect(url);
   }
-  async oauthCallback(req, res) {
-    const { provider } = req.params;
+  async oauthCallback(req: Request, res: Response) {
+    const provider = req.params.provider as string;
     const { code, state } = req.query;
 
     const savedState = req.cookies.oauth_state;
@@ -182,7 +192,7 @@ export class AuthController extends BaseController {
     res.clearCookie('oauth_state');
 
     const { user, accessToken, refreshToken } =
-      await this.#authService.oauthLogin(provider, code, {
+      await this.#authService.oauthLogin(provider, code as string, {
         ip: req.ip,
         userAgent: req.get('user-agent'),
       });
@@ -193,11 +203,13 @@ export class AuthController extends BaseController {
       process.env.CLIENT_BASE_URL?.trim()?.replace(/\/$/, '') ||
       'http://localhost:3000';
     const pathAfterLogin =
-      user.role === 'ADMIN' ? '/admin/management' : '/challenges';
+      (user as { role?: string })?.role === 'ADMIN'
+        ? '/admin/management'
+        : '/challenges';
     return res.redirect(`${clientBase}${pathAfterLogin}`);
   }
 
-  async me(req, res) {
+  async me(req: Request, res: Response) {
     const user = await this.#authService.me(req.user.id);
     res.status(HTTP_STATUS.OK).json(user);
   }

@@ -1,11 +1,13 @@
-export class UserRepository {
-  #prisma;
+import type { PrismaClient, Prisma } from '#generated/prisma/client.js';
 
-  constructor({ prisma }) {
+export class UserRepository {
+  #prisma: PrismaClient;
+
+  constructor({ prisma }: { prisma: PrismaClient }) {
     this.#prisma = prisma;
   }
 
-  async findUserById(userId) {
+  async findUserById(userId: string) {
     return await this.#prisma.user.findUnique({
       where: {
         id: userId,
@@ -24,20 +26,20 @@ export class UserRepository {
     });
   }
 
-  findUserByNickname(nickname) {
+  findUserByNickname(nickname: string) {
     return this.#prisma.user.findUnique({
       where: { nickname },
     });
   }
 
-  updateUser(id, data) {
+  updateUser(id: string, data: Prisma.UserUpdateInput) {
     return this.#prisma.user.update({
       where: { id },
       data,
     });
   }
 
-  deleteUser(id) {
+  deleteUser(id: string) {
     return this.#prisma.user.delete({
       where: { id },
     });
